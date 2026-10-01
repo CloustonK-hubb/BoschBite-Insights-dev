@@ -11,7 +11,8 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router";
 import { useFormContext } from "react-hook-form";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
-import { PostList, PostCreate, PostEdit, UserList, UserShow} from "../src/pages/posts";
+import { PostList, PostCreate, PostEdit, UserList,} from "../src/pages/posts";
+import { PostShow, UserShow } from "./pages/posts/show";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -174,6 +175,8 @@ const App: React.FC = () => {
   };
 
 //Refine component 
+//Here you will edit the pages that appear in the navigation 
+//Must add the page content to the routes otherwise will throw an error 
   return (
     <BrowserRouter>
       <ThemeProvider theme={RefineThemes.Blue}>
@@ -186,7 +189,7 @@ const App: React.FC = () => {
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
-              {name: "posts", list: "/posts", edit: "/posts/edit/:id",create: "/posts/create",},
+              {name: "posts", list: "/posts", show: "/posts/edit/id", edit: "/posts/edit/:id",create: "/posts/create",},
               {name: "users", list: "/users", show: "/users/show/:id"}
             ]}
             options={{
@@ -214,6 +217,7 @@ const App: React.FC = () => {
        
                 <Route path="/posts"> 
                   <Route index element={<PostList />} />
+                  <Route path="edit/:id" element={<PostShow />} />
                   <Route path="create" element={<PostCreate />} />
                   <Route path="edit/:id" element={<PostEdit />} />
                 </Route>
@@ -222,7 +226,7 @@ const App: React.FC = () => {
                 <Route index element={<UserList />} />
                 <Route path="show/:id" element={<UserShow />} />
               </Route>
-          </Route>
+          </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
 
               <Route
                 element={
