@@ -11,12 +11,14 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router";
 import { useFormContext } from "react-hook-form";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
-
-import { PostList, PostCreate, PostEdit } from "../src/pages/posts";
+import { PostList, PostCreate, PostEdit, UserList, UserShow} from "../src/pages/posts";
 
 /**
  *  mock auth credentials to simulate authentication
  */
+//Auth Provider 
+//Setting default credential values 
+//Can replace the default values with generalised values from the database once they are created 
 const authCredentials = {
   email: "demo@refine.dev",
   password: "demodemo",
@@ -25,22 +27,23 @@ const authCredentials = {
 const App: React.FC = () => {
   const authProvider: AuthProvider = {
     login: async ({ providerName, email }) => {
+      //Login through Google option
       if (providerName === "google") {
         window.location.href = "https://accounts.google.com/o/oauth2/v2/auth";
         return {
           success: true,
         };
       }
-
+      //Log in with Github option 
       if (providerName === "github") {
         window.location.href = "https://github.com/login/oauth/authorize";
         return {
           success: true,
         };
       }
-
+      //Log in with Email
       if (email === authCredentials.email) {
-        localStorage.setItem("email", email);
+        localStorage.setItem("email", email); //Would need to replace localStorage with a real call to your database
         return {
           success: true,
           redirectTo: "/",
@@ -55,6 +58,7 @@ const App: React.FC = () => {
         },
       };
     },
+    //Option to register 
     register: async (params) => {
       if (params.email === authCredentials.email && params.password) {
         localStorage.setItem("email", params.email);
@@ -71,6 +75,7 @@ const App: React.FC = () => {
         },
       };
     },
+    //Update password option on login page 
     updatePassword: async (params) => {
       if (params.password === authCredentials.password) {
         //we can update password here
@@ -86,6 +91,7 @@ const App: React.FC = () => {
         },
       };
     },
+    //Forgot password option on login page 
     forgotPassword: async (params) => {
       if (params.email === authCredentials.email) {
         //we can send email with reset password link here
@@ -101,6 +107,7 @@ const App: React.FC = () => {
         },
       };
     },
+    //logout option: clears storage and redirects to login page 
     logout: async () => {
       localStorage.removeItem("email");
       return {
@@ -108,6 +115,7 @@ const App: React.FC = () => {
         redirectTo: "/login",
       };
     },
+    //runs when any data request fails and a 401 triggers a logout.
     onError: async (error) => {
       if (error.response?.status === 401) {
         return {
@@ -117,6 +125,7 @@ const App: React.FC = () => {
 
       return { error };
     },
+    //called on navigation to decide whether the user is logged in
     check: async () =>
       localStorage.getItem("email")
         ? {
@@ -131,15 +140,19 @@ const App: React.FC = () => {
             logout: true,
             redirectTo: "/login",
           },
+    //Both getPermissions and getIdentity feed role checks and the avatar/name in the header
+    //Can replace these values with the columns that hold the required information 
     getPermissions: async () => ["admin"],
     getIdentity: async () => ({
       id: 1,
-      name: "Jane Doe",
-      avatar:
-        "https://unsplash.com/photos/IWLOvomUmWU/download?force=true&w=640",
+      name: "Kaitlyn Clouston",
+      avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSaKEl-u9RPdgXv1JO4sPnJCAo1Kcpvd8KdldReLnujxQ&s=10"
+        //"https://unsplash.com/photos/IWLOvomUmWU/download?force=true&w=640",
     }),
   };
 
+  //Optional for the login page 
+  //If chosen to remove, delete the rememberMe prop as well 
   const RememeberMe = () => {
     const { register } = useFormContext();
 
@@ -160,6 +173,7 @@ const App: React.FC = () => {
     );
   };
 
+//Refine component 
   return (
     <BrowserRouter>
       <ThemeProvider theme={RefineThemes.Blue}>
@@ -172,12 +186,8 @@ const App: React.FC = () => {
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
-              {
-                name: "posts",
-                list: "/posts",
-                edit: "/posts/edit/:id",
-                create: "/posts/create",
-              },
+              {name: "posts", list: "/posts", edit: "/posts/edit/:id",create: "/posts/create",},
+              {name: "users", list: "/users", show: "/users/show/:id"}
             ]}
             options={{
               syncWithLocation: true,
@@ -201,13 +211,18 @@ const App: React.FC = () => {
                   index
                   element={<NavigateToResource resource="posts" />}
                 />
-
-                <Route path="/posts">
+       
+                <Route path="/posts"> 
                   <Route index element={<PostList />} />
                   <Route path="create" element={<PostCreate />} />
                   <Route path="edit/:id" element={<PostEdit />} />
                 </Route>
+              
+              <Route path="/users">
+                <Route index element={<UserList />} />
+                <Route path="show/:id" element={<UserShow />} />
               </Route>
+          </Route>
 
               <Route
                 element={

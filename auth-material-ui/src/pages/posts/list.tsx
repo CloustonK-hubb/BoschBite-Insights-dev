@@ -1,11 +1,10 @@
 import { useMany } from "@refinedev/core";
 import { EditButton, List, useDataGrid } from "@refinedev/mui";
 import React from "react";
-
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-
 import type { ICategory, IPost } from "../../interfaces";
 
+//List object for a post 
 export const PostList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IPost>();
 
@@ -77,6 +76,31 @@ export const PostList: React.FC = () => {
       >
         <DataGrid {...dataGridProps} columns={columns} />
       </div>
+    </List>
+  );
+};
+
+//List object for Users
+export const UserList: React.FC = () => {
+  const { dataGridProps } = useDataGrid({ resource: "users" });
+
+  const columns = React.useMemo<GridColDef[]>(
+    () => [
+      { field: "id", headerName: "ID", width: 80 },
+      { field: "firstName", headerName: "First name", flex: 1 },
+      { field: "lastName", headerName: "Last name", flex: 1 },
+      { field: "email", headerName: "Email", flex: 1 },
+      { field: "birthday", headerName: "Birthday", flex: 1}, 
+      { field: "skills", headerName: "Skills", flex: 1}, 
+      { field: "avatar", headerName: "Avatar", flex: 1},
+      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.id} />},
+    ],
+    []
+  );
+
+  return (
+    <List>
+      <DataGrid {...dataGridProps} columns={columns} autoHeight />
     </List>
   );
 };
