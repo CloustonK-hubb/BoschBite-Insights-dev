@@ -17,9 +17,10 @@ export const TransactionList: React.FC = () => {
       { field: "vendor_id", headerName: "Vendor ID", type: "number", width: 110 },
       { field: "datetime", headerName: "Date & time", flex: 1, minWidth: 180, renderCell: ({ row }) => (
           <DateField value={row.datetime} format="DD MMM YYYY HH:mm" />),},
-      {field: "value",headerName: "Value", type: "number", width: 110,
+      {field: "value",headerName: "Transaction value", type: "number", width: 110,
         renderCell: ({ row }) => Number(row.value).toFixed(2),},
       { field: "discount", headerName: "Discount", type: "number", width: 110 },
+      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.transaction_id} />}
     ],
     []
   );

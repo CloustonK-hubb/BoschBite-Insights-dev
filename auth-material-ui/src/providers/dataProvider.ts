@@ -34,11 +34,12 @@ export const dataProvider: DataProvider = {
     return { data: data ?? [], total: count ?? 0 };
   },
 
-  getOne: async ({ resource, id }) => {
+  getOne: async ({ resource, id, meta }) => {
+    const idColumn: string = meta?.idColumnName ?? "id"
     const { data, error } = await supabaseClient
       .from(resource)
       .select("*")
-      .eq("id", id)
+      .eq(idColumn, id)
       .single();
 
     if (error) throw toHttpError(error);

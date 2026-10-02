@@ -12,7 +12,7 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
 import { dataProvider } from "./providers/dataProvider";
 import { TransactionList, PostCreate, PostEdit, UserList,} from "../src/pages/posts";
-import { PostShow, UserShow } from "./pages/posts/show";
+import { TransactionShow, UserShow } from "./pages/posts/show";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -189,7 +189,7 @@ const App: React.FC = () => {
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
-              {name: "Transaction", list: "/transaction",}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
+              {name: "Transaction", list: "/transaction", show: "/transaction/show/:id",}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
               {name: "users", list: "/users", show: "/users/show/:id"}
             ]}
             options={{
@@ -222,8 +222,8 @@ const App: React.FC = () => {
                   <Route path="edit/:id" element={<PostEdit />} />
                 </Route>*/}
                <Route path = "/transaction"> 
-               <Route index element={<TransactionList/>}/>
-              
+                <Route index element={<TransactionList/>}/>
+                <Route path="show/:id" element={<TransactionShow />} />
               </Route> 
               
               <Route path="/users">
