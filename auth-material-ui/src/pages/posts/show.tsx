@@ -38,6 +38,7 @@ export const PostShow: React.FC = () => {
     </Show>
   );
 };
+
 export const UserShow: React.FC = () => {
   const { query } = useShow({ resource: "users" });
   const user = query.data?.data;

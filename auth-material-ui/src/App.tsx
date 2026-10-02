@@ -5,13 +5,13 @@ import GlobalStyles from "@mui/material/GlobalStyles";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import { ThemeProvider } from "@mui/material/styles";
-import dataProvider from "@refinedev/simple-rest";
 import routerProvider, {NavigateToResource, CatchAllNavigate,UnsavedChangesNotifier,DocumentTitleHandler,} from "@refinedev/react-router";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router";
 import { useFormContext } from "react-hook-form";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
-import { PostList, PostCreate, PostEdit, UserList,} from "../src/pages/posts";
+import { dataProvider } from "./providers/dataProvider";
+import { TransactionList, PostCreate, PostEdit, UserList,} from "../src/pages/posts";
 import { PostShow, UserShow } from "./pages/posts/show";
 
 /**
@@ -185,11 +185,11 @@ const App: React.FC = () => {
         <RefineSnackbarProvider>
           <Refine
             authProvider={authProvider}
-            dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+            dataProvider={dataProvider}
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
-              {name: "posts", list: "/posts", show: "/posts/edit/id", edit: "/posts/edit/:id",create: "/posts/create",},
+              {name: "Transaction", list: "/transaction",}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
               {name: "users", list: "/users", show: "/users/show/:id"}
             ]}
             options={{
@@ -215,12 +215,16 @@ const App: React.FC = () => {
                   element={<NavigateToResource resource="posts" />}
                 />
        
-                <Route path="/posts"> 
+                {/*<Route path="/posts"> 
                   <Route index element={<PostList />} />
-                  <Route path="edit/:id" element={<PostShow />} />
+                  <Route path="show/:id" element={<PostShow />} />
                   <Route path="create" element={<PostCreate />} />
                   <Route path="edit/:id" element={<PostEdit />} />
-                </Route>
+                </Route>*/}
+               <Route path = "/transaction"> 
+               <Route index element={<TransactionList/>}/>
+              
+              </Route> 
               
               <Route path="/users">
                 <Route index element={<UserList />} />
