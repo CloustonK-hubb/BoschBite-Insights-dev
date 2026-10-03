@@ -12,6 +12,7 @@
     "@refinedev/cli": "^2.16.52",
     "@refinedev/core": "^5.0.12",
     "@refinedev/supabase": "^6.0.2",
+    "@supabase/server": "^1.9.0",
     "@supabase/supabase-js": "^2.117.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
