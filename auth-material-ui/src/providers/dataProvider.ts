@@ -8,14 +8,15 @@ const toHttpError = (error: { message: string }): HttpError => ({
 });
 
 export const dataProvider: DataProvider = {
-  getList: async ({ resource, pagination, sorters, filters }) => {
+  getList: async ({ resource, pagination, sorters, filters, meta }) => {
     const { currentPage = 1, pageSize = 10 } = pagination ?? {};
     const from = (currentPage - 1) * pageSize;
     const to = from + pageSize - 1;
+    const select: string = meta?.select??"*;"
 
     let query = supabaseClient
       .from(resource)
-      .select("*", { count: "exact" });
+      .select(select, { count: "exact" });
 
     filters?.forEach((filter) => {
       if (!("field" in filter)) return;
@@ -35,10 +36,12 @@ export const dataProvider: DataProvider = {
   },
 
   getOne: async ({ resource, id, meta }) => {
-    const idColumn: string = meta?.idColumnName ?? "id"
+    const idColumn: string = meta?.idColumnName ?? "id";
+    const select: string = meta?.select ?? "*";
     const { data, error } = await supabaseClient
+    
       .from(resource)
-      .select("*")
+      .select(select)
       .eq(idColumn, id)
       .single();
 

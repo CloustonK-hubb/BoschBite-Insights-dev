@@ -11,8 +11,8 @@ import { useFormContext } from "react-hook-form";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
 import { dataProvider } from "./providers/dataProvider";
-import { TransactionList, PostCreate, PostEdit, StudentList,} from "../src/pages/posts";
-import { TransactionShow, UserShow } from "./pages/posts/show";
+import { TransactionList, PostCreate, PostEdit, StudentList, VendorList, VendorTypesList} from "../src/pages/posts";
+import { TransactionShow, StudentShow } from "./pages/posts/show";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -189,8 +189,10 @@ const App: React.FC = () => {
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
-              {name: "Transaction", list: "/transaction", show: "/transaction/show/:id",}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
-              {name: "Student", list: "/student", show: "/users/show/:id"}
+              { name: "Transaction", list: "/transaction", show: "/transaction/show/:id",}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
+              { name: "Student", list: "/student", show: "/student/show/:id",},
+              { name: "Vendor", list: "/vendor"},
+              { name: "Vendor_Type", list: "/vendor_type"}
             ]}
             options={{
               syncWithLocation: true,
@@ -228,7 +230,17 @@ const App: React.FC = () => {
               
               <Route path="/student">
                 <Route index element={<StudentList />} />
-                <Route path="show/:id" element={<UserShow />} />
+                <Route path="show/:id" element={<StudentShow />} />
+              </Route>
+
+              <Route path="/vendor">
+                <Route index element={<VendorList />} />
+                {/*<Route path="show/:id" element={<StudentShow />} />*/}
+              </Route>
+
+              <Route path="/vendor_type">
+                <Route index element={<VendorTypesList />} />
+                {/*<Route path="show/:id" element={<StudentShow />} />*/}
               </Route>
           </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
 

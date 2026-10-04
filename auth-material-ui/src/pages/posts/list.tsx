@@ -37,7 +37,7 @@ export const TransactionList: React.FC = () => {
   );
 };
 
-//List object for Users
+//List object for Students
 export const StudentList: React.FC = () => {
   const { dataGridProps } = useDataGrid({ resource: "Student" });
 
@@ -51,7 +51,7 @@ export const StudentList: React.FC = () => {
       { field: "gender", headerName: "Gender", flex: 1}, 
       { field: "phone", headerName: "Cell number", flex: 1},
       { field: "address", headerName: "Address", felx: 1},
-      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.id} />},
+      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.id_number} />},
     ],
     []
   );
@@ -59,6 +59,48 @@ export const StudentList: React.FC = () => {
   return (
     <List>
       <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.id_number}autoHeight />
+    </List>
+  );
+};
+
+//List object for vendors
+export const VendorList: React.FC = () => {
+  const { dataGridProps } = useDataGrid({ resource: "Vendor", meta: { select: "*, Vendor_Type(name)" },});
+
+  const columns = React.useMemo<GridColDef[]>(
+    () => [
+      { field: "vendor_id", headerName: "ID", width: 80 },
+      { field: "name", headerName: "Vendor name", flex: 1 },
+      { field: "address", headerName: "Address", flex: 1 },
+      { field: "gps", headerName: "GPS coordinates", flex: 1 },
+      { field: "type_id", headerName: "Vendor type", flex: 1, sortable: false, renderCell: ({ row }) => row.Vendor_Type?.name ?? "-",}, 
+      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.vendor_id} />},
+    ],
+    []
+  );
+
+  return (
+    <List>
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.vendor_id}autoHeight />
+    </List>
+  );
+};
+
+export const VendorTypesList: React.FC = () => {
+  const { dataGridProps } = useDataGrid({ resource: "Vendor_Type" });
+
+  const columns = React.useMemo<GridColDef[]>(
+    () => [
+      { field: "type_id", headerName: "ID", width: 80 },
+      { field: "name", headerName: "Vendor type", flex: 1 },
+      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.type_id} />},
+    ],
+    []
+  );
+
+  return (
+    <List>
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.type_id}autoHeight />
     </List>
   );
 };
