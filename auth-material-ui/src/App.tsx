@@ -11,7 +11,7 @@ import { useFormContext } from "react-hook-form";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
 import { dataProvider } from "./providers/dataProvider";
-import { TransactionList, PostCreate, PostEdit, UserList,} from "../src/pages/posts";
+import { TransactionList, PostCreate, PostEdit, StudentList,} from "../src/pages/posts";
 import { TransactionShow, UserShow } from "./pages/posts/show";
 
 /**
@@ -190,7 +190,7 @@ const App: React.FC = () => {
             notificationProvider={useNotificationProvider}
             resources={[
               {name: "Transaction", list: "/transaction", show: "/transaction/show/:id",}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
-              {name: "users", list: "/users", show: "/users/show/:id"}
+              {name: "Student", list: "/student", show: "/users/show/:id"}
             ]}
             options={{
               syncWithLocation: true,
@@ -226,8 +226,8 @@ const App: React.FC = () => {
                 <Route path="show/:id" element={<TransactionShow />} />
               </Route> 
               
-              <Route path="/users">
-                <Route index element={<UserList />} />
+              <Route path="/student">
+                <Route index element={<StudentList />} />
                 <Route path="show/:id" element={<UserShow />} />
               </Route>
           </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}

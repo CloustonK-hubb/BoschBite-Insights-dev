@@ -38,18 +38,19 @@ export const TransactionList: React.FC = () => {
 };
 
 //List object for Users
-export const UserList: React.FC = () => {
-  const { dataGridProps } = useDataGrid({ resource: "users" });
+export const StudentList: React.FC = () => {
+  const { dataGridProps } = useDataGrid({ resource: "Student" });
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
-      { field: "id", headerName: "ID", width: 80 },
-      { field: "firstName", headerName: "First name", flex: 1 },
-      { field: "lastName", headerName: "Last name", flex: 1 },
+      { field: "id_number", headerName: "ID", width: 80 },
+      { field: "first_name", headerName: "First name", flex: 1 },
+      { field: "last_name", headerName: "Last name", flex: 1 },
       { field: "email", headerName: "Email", flex: 1 },
-      { field: "birthday", headerName: "Birthday", flex: 1}, 
-      { field: "skills", headerName: "Skills", flex: 1}, 
-      { field: "avatar", headerName: "Avatar", flex: 1},
+      { field: "dob", headerName: "Date of Birth", flex: 1, renderCell: ({ row }) => (<DateField value={row.dob} format="YYYY-MM-DD" />)}, 
+      { field: "gender", headerName: "Gender", flex: 1}, 
+      { field: "phone", headerName: "Cell number", flex: 1},
+      { field: "address", headerName: "Address", felx: 1},
       { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.id} />},
     ],
     []
@@ -57,7 +58,7 @@ export const UserList: React.FC = () => {
 
   return (
     <List>
-      <DataGrid {...dataGridProps} columns={columns} autoHeight />
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.id_number}autoHeight />
     </List>
   );
 };

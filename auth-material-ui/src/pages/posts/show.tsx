@@ -5,7 +5,7 @@ import React from "react";
 
 //Show page for posts table 
 export const TransactionShow: React.FC = () => {
-  const { query } = useShow({ resource: "transaction" });
+  const { query } = useShow({ resource: "Transaction", meta : { idColumnName: "transaction_id"} });
   const transaction = query.data?.data;
 
   return (
@@ -34,9 +34,9 @@ export const TransactionShow: React.FC = () => {
 };
 
 
-export const UserShow: React.FC = () => {
-  const { query } = useShow({ resource: "users" });
-  const user = query.data?.data;
+export const StudentShow: React.FC = () => {
+  const { query } = useShow({ resource: "Student" });
+  const student = query.data?.data;
 
   return (
     <Show isLoading={query.isLoading}>
