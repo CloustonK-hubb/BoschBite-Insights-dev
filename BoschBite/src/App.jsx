@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Login from "./Login";
 import { supabaseClient } from "./lib/supabaseClient";
 
+
 function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
