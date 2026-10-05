@@ -12,7 +12,7 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
 import { dataProvider } from "./providers/dataProvider";
 import { TransactionList, PostCreate, PostEdit, StudentList, VendorList, VendorTypesList} from "../src/pages/posts";
-import { TransactionShow, StudentShow } from "./pages/posts/show";
+import { TransactionShow, StudentShow, VendorShow, VendorTypeShow } from "./pages/posts/show";
 import StorageIcon from "@mui/icons-material/Storage";
 
 /**
@@ -195,8 +195,8 @@ const App: React.FC = () => {
               //Adding the relevant CRUD pages to the grouping using: meta: {parent: "data-management"}
               { name: "Transaction", list: "/transaction", show: "/transaction/show/:id", meta: {parent: "data-management"}}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
               { name: "Student", list: "/student", show: "/student/show/:id",meta: {parent: "data-management"}},
-              { name: "Vendor", list: "/vendor", meta: {parent: "data-management"}},
-              { name: "Vendor_Type", list: "/vendor_type", meta: {parent: "data-management"}}
+              { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "data-management"}},
+              { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "data-management"}}
             ]}
             options={{
               syncWithLocation: true,
@@ -240,12 +240,12 @@ const App: React.FC = () => {
 
               <Route path="/vendor">
                 <Route index element={<VendorList />} />
-                {/*<Route path="show/:id" element={<VendorShow />} />*/}
+                <Route path="show/:id" element={<VendorShow />}/>
               </Route>
 
               <Route path="/vendor_type">
                 <Route index element={<VendorTypesList />} />
-                {/*<Route path="show/:id" element={<VendorTypeShow />} />*/}
+                <Route path="show/:id" element={<VendorTypeShow />} />
               </Route>
           </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
 
