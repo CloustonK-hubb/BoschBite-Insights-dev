@@ -51,7 +51,12 @@ export const StudentList: React.FC = () => {
       { field: "gender", headerName: "Gender", flex: 1}, 
       { field: "phone", headerName: "Cell number", flex: 1},
       { field: "address", headerName: "Address", felx: 1},
-      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.id_number} />},
+      { field: "actions", headerName: "Actions", sortable: false, width: 100, renderCell: ({ row }) => ( <>
+        <ShowButton hideText recordItemId={row.id_number} />
+        <EditButton hideText recordItemId= {row.id_number}/>
+      </>
+      )
+      },
     ],
     []
   );
@@ -63,7 +68,7 @@ export const StudentList: React.FC = () => {
   );
 };
 
-//List object for vendors
+//List object for Vendors
 export const VendorList: React.FC = () => {
   const { dataGridProps } = useDataGrid({ resource: "Vendor", meta: { select: "*, Vendor_Type(name)" },});
 
@@ -86,6 +91,7 @@ export const VendorList: React.FC = () => {
   );
 };
 
+//List object for Vendor Types
 export const VendorTypesList: React.FC = () => {
   const { dataGridProps } = useDataGrid({ resource: "Vendor_Type" });
 

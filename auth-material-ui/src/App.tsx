@@ -11,8 +11,9 @@ import { useFormContext } from "react-hook-form";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
 import { dataProvider } from "./providers/dataProvider";
-import { TransactionList, PostCreate, PostEdit, StudentList, VendorList, VendorTypesList} from "../src/pages/posts";
+import { TransactionList, StudentList, VendorList, VendorTypesList} from "../src/pages/posts";
 import { TransactionShow, StudentShow, VendorShow, VendorTypeShow } from "./pages/posts/show";
+import { StudentEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 
 /**
@@ -194,7 +195,7 @@ const App: React.FC = () => {
               { name: "data-management", meta: { label: "Data Management", icon: <StorageIcon/>}},
               //Adding the relevant CRUD pages to the grouping using: meta: {parent: "data-management"}
               { name: "Transaction", list: "/transaction", show: "/transaction/show/:id", meta: {parent: "data-management"}}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
-              { name: "Student", list: "/student", show: "/student/show/:id",meta: {parent: "data-management"}},
+              { name: "Student", list: "/student", show: "/student/show/:id", edit: "student/edit/:id", meta: {parent: "data-management"}},
               { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "data-management"}},
               { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "data-management"}}
             ]}
@@ -236,6 +237,7 @@ const App: React.FC = () => {
               <Route path="/student">
                 <Route index element={<StudentList />} />
                 <Route path="show/:id" element={<StudentShow />} />
+                <Route path="edit/:id" element={<StudentEdit />} />
               </Route>
 
               <Route path="/vendor">
