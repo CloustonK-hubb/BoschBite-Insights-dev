@@ -69,3 +69,48 @@ export const StudentShow: React.FC = () => {
     </Show>
   );
 };
+
+export const VendorShow: React.FC = () => {
+  const { query } = useShow({ resource: "Vendor", meta : { idColumnName: "vendor_id"}});
+  const vendor = query.data?.data;
+
+  return (
+    <Show isLoading={query.isLoading}>
+      <Stack gap={1}>
+        <Typography variant="body1" fontWeight="bold">ID</Typography>
+        <TextField value={vendor?.vendor_id} />
+
+        <Typography variant="body1" fontWeight="bold">Vendor name</Typography>
+        <TextField value={vendor?.name} />
+
+        <Typography variant="body1" fontWeight="bold">Address</Typography>
+        <TextField value={vendor?.address} />
+
+        <Typography variant="body1" fontWeight="bold">GPS coordinates</Typography>
+        <TextField value={vendor?.gps} />
+
+        <Typography variant="body1" fontWeight="bold">Vendor type </Typography>
+        <TextField value={vendor?.type_id} />
+
+      </Stack>
+    </Show>
+  );
+};
+
+export const VendorTypeShow: React.FC = () => {
+  const { query } = useShow({ resource: "Vendor_Type", meta : { idColumnName: "type_id"}});
+  const vendor_type = query.data?.data;
+
+  return (
+    <Show isLoading={query.isLoading}>
+      <Stack gap={1}>
+        <Typography variant="body1" fontWeight="bold">ID</Typography>
+        <TextField value={vendor_type?.type_id} />
+
+        <Typography variant="body1" fontWeight="bold">Vendor name</Typography>
+        <TextField value={vendor_type?.name} />
+
+      </Stack>
+    </Show>
+  );
+};

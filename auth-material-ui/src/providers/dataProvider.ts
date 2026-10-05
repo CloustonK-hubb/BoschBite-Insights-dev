@@ -32,7 +32,7 @@ export const dataProvider: DataProvider = {
     const { data, error, count } = await query.range(from, to);
     if (error) throw toHttpError(error);
 
-    return { data: data ?? [], total: count ?? 0 };
+    return { data: (data ?? []) as any[], total: count ?? 0 };
   },
 
   getOne: async ({ resource, id, meta }) => {
@@ -46,7 +46,7 @@ export const dataProvider: DataProvider = {
       .single();
 
     if (error) throw toHttpError(error);
-    return { data };
+    return { data: data as any };
   },
 
   create: async ({ resource, variables }) => {
@@ -60,11 +60,15 @@ export const dataProvider: DataProvider = {
     return { data };
   },
 
-  update: async ({ resource, id, variables }) => {
+  update: async ({ resource, id, variables, meta }) => {
+    const idColumn: string = meta?.idColumnName ?? "id";
+    const values = {...(variables as Record<string, unknown>)};
+    delete values[idColumn];
+
     const { data, error } = await supabaseClient
       .from(resource)
-      .update(variables as object)
-      .eq("id", id)
+      .update(values)
+      .eq(idColumn, id)
       .select()
       .single();
 
@@ -72,11 +76,13 @@ export const dataProvider: DataProvider = {
     return { data };
   },
 
-  deleteOne: async ({ resource, id }) => {
+  deleteOne: async ({ resource, id, meta }) => {
+    const idColumn: string = meta?.idColumnName ?? "id";
+
     const { data, error } = await supabaseClient
       .from(resource)
       .delete()
-      .eq("id", id)
+      .eq(idColumn, id)
       .select()
       .single();
 
