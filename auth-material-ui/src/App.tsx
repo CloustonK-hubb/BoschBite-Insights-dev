@@ -5,18 +5,25 @@ import GlobalStyles from "@mui/material/GlobalStyles";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import { ThemeProvider } from "@mui/material/styles";
-import dataProvider from "@refinedev/simple-rest";
 import routerProvider, {NavigateToResource, CatchAllNavigate,UnsavedChangesNotifier,DocumentTitleHandler,} from "@refinedev/react-router";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router";
 import { useFormContext } from "react-hook-form";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
-
-import { PostList, PostCreate, PostEdit } from "../src/pages/posts";
+import { dataProvider } from "./providers/dataProvider";
+import { TransactionList, StudentList, VendorList, VendorTypesList} from "../src/pages/posts";
+import { TransactionShow, StudentShow, VendorShow, VendorTypeShow } from "./pages/posts/show";
+import { StudentEdit } from "./pages/posts/edit";
+import StorageIcon from "@mui/icons-material/Storage";
+import { DashboardPage } from "./pages/dashboard";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 
 /**
  *  mock auth credentials to simulate authentication
  */
+//Auth Provider 
+//Setting default credential values 
+//Can replace the default values with generalised values from the database once they are created 
 const authCredentials = {
   email: "demo@refine.dev",
   password: "demodemo",
@@ -25,22 +32,23 @@ const authCredentials = {
 const App: React.FC = () => {
   const authProvider: AuthProvider = {
     login: async ({ providerName, email }) => {
+      //Login through Google option
       if (providerName === "google") {
         window.location.href = "https://accounts.google.com/o/oauth2/v2/auth";
         return {
           success: true,
         };
       }
-
+      //Log in with Github option 
       if (providerName === "github") {
         window.location.href = "https://github.com/login/oauth/authorize";
         return {
           success: true,
         };
       }
-
+      //Log in with Email
       if (email === authCredentials.email) {
-        localStorage.setItem("email", email);
+        localStorage.setItem("email", email); //Would need to replace localStorage with a real call to your database
         return {
           success: true,
           redirectTo: "/",
@@ -55,6 +63,7 @@ const App: React.FC = () => {
         },
       };
     },
+    //Option to register 
     register: async (params) => {
       if (params.email === authCredentials.email && params.password) {
         localStorage.setItem("email", params.email);
@@ -71,6 +80,7 @@ const App: React.FC = () => {
         },
       };
     },
+    //Update password option on login page 
     updatePassword: async (params) => {
       if (params.password === authCredentials.password) {
         //we can update password here
@@ -86,6 +96,7 @@ const App: React.FC = () => {
         },
       };
     },
+    //Forgot password option on login page 
     forgotPassword: async (params) => {
       if (params.email === authCredentials.email) {
         //we can send email with reset password link here
@@ -101,6 +112,7 @@ const App: React.FC = () => {
         },
       };
     },
+    //logout option: clears storage and redirects to login page 
     logout: async () => {
       localStorage.removeItem("email");
       return {
@@ -108,6 +120,7 @@ const App: React.FC = () => {
         redirectTo: "/login",
       };
     },
+    //runs when any data request fails and a 401 triggers a logout.
     onError: async (error) => {
       if (error.response?.status === 401) {
         return {
@@ -117,29 +130,35 @@ const App: React.FC = () => {
 
       return { error };
     },
-    check: async () =>
-      localStorage.getItem("email")
-        ? {
-            authenticated: true,
-          }
-        : {
-            authenticated: false,
-            error: {
-              message: "Check failed",
-              name: "Not authenticated",
-            },
-            logout: true,
-            redirectTo: "/login",
-          },
+      check: async () => ({ authenticated: true }), // DEMO ONLY  
+    //called on navigation to decide whether the user is logged in
+    // check: async () =>
+    //   localStorage.getItem("email")
+    //     ? {
+    //         authenticated: true,
+    //       }
+    //     : {
+    //         authenticated: false,
+    //         error: {
+    //           message: "Check failed",
+    //           name: "Not authenticated",
+    //         },
+    //         logout: true,
+    //         redirectTo: "/login",
+    //       },
+    //Both getPermissions and getIdentity feed role checks and the avatar/name in the header
+    //Can replace these values with the columns that hold the required information 
     getPermissions: async () => ["admin"],
     getIdentity: async () => ({
       id: 1,
-      name: "Jane Doe",
-      avatar:
-        "https://unsplash.com/photos/IWLOvomUmWU/download?force=true&w=640",
+      name: "Kaitlyn Clouston",
+      avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSaKEl-u9RPdgXv1JO4sPnJCAo1Kcpvd8KdldReLnujxQ&s=10"
+        //"https://unsplash.com/photos/IWLOvomUmWU/download?force=true&w=640",
     }),
   };
 
+  //Optional for the login page 
+  //If chosen to remove, delete the rememberMe prop as well 
   const RememeberMe = () => {
     const { register } = useFormContext();
 
@@ -160,6 +179,9 @@ const App: React.FC = () => {
     );
   };
 
+//Refine component 
+//Here you will edit the pages that appear in the navigation 
+//Must add the page content to the routes otherwise will throw an error 
   return (
     <BrowserRouter>
       <ThemeProvider theme={RefineThemes.Blue}>
@@ -168,16 +190,18 @@ const App: React.FC = () => {
         <RefineSnackbarProvider>
           <Refine
             authProvider={authProvider}
-            dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+            dataProvider={dataProvider}
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
-              {
-                name: "posts",
-                list: "/posts",
-                edit: "/posts/edit/:id",
-                create: "/posts/create",
-              },
+              { name: "dashboard", list: "/", meta: { label: "Business Dashboard", icon: <DashboardIcon /> } },
+              //Creating a CRUD grouping: 
+              { name: "data-management", meta: { label: "Data Management", icon: <StorageIcon/>}},
+              //Adding the relevant CRUD pages to the grouping using: meta: {parent: "data-management"}
+              { name: "Transaction", list: "/transaction", show: "/transaction/show/:id", meta: {parent: "data-management"}}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
+              { name: "Student", list: "/student", show: "/student/show/:id", edit: "student/edit/:id", meta: {parent: "data-management"}},
+              { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "data-management"}},
+              { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "data-management"}}
             ]}
             options={{
               syncWithLocation: true,
@@ -197,22 +221,41 @@ const App: React.FC = () => {
                   </Authenticated>
                 }
               >
-                <Route
-                  index
-                  element={<NavigateToResource resource="posts" />}
-                />
-
-                <Route path="/posts">
+               <Route index element={<DashboardPage />} />
+       
+                {/* Example: 
+                <Route path="/posts"> 
                   <Route index element={<PostList />} />
+                  <Route path="show/:id" element={<PostShow />} />
                   <Route path="create" element={<PostCreate />} />
                   <Route path="edit/:id" element={<PostEdit />} />
-                </Route>
+                </Route>*/}
+               <Route path = "/transaction"> 
+                <Route index element={<TransactionList/>}/>
+                <Route path="show/:id" element={<TransactionShow />} />
+              </Route> 
+              
+              <Route path="/student">
+                <Route index element={<StudentList />} />
+                <Route path="show/:id" element={<StudentShow />} />
+                <Route path="edit/:id" element={<StudentEdit />} />
               </Route>
+
+              <Route path="/vendor">
+                <Route index element={<VendorList />} />
+                <Route path="show/:id" element={<VendorShow />}/>
+              </Route>
+
+              <Route path="/vendor_type">
+                <Route index element={<VendorTypesList />} />
+                <Route path="show/:id" element={<VendorTypeShow />} />
+              </Route>
+          </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
 
               <Route
                 element={
                   <Authenticated key="auth-pages" fallback={<Outlet />}>
-                    <NavigateToResource resource="posts" />
+                    <NavigateToResource resource="dashboard" />
                   </Authenticated>
                 }
               >
