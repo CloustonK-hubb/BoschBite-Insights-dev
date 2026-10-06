@@ -968,7 +968,7 @@
     "@tanstack/react-query" "^5.81.5"
     error-stack-parser "^2.1.4"
 
-"@refinedev/mui@^8.0.3":
+"@refinedev/mui@^8.0.2":
   version "8.0.2"
   resolved "https://registry.yarnpkg.com/@refinedev/mui/-/mui-8.0.2.tgz#7fb6ca93def7778a56ef6bdbcdc648171093fc0e"
   integrity sha512-YGs2wa9xKPNlbPHRvMZDhCgatbH/Ibhgxe+qJXzrrNC2s5NwBbirrb/o+ge2BB1i7CaKL7jSSTAEgCJGVC0kPw==

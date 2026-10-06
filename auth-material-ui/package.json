@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc && refine build",
-    "dev": "refine dev",
+    "dev": "vite",
     "refine": "refine",
     "start": "refine start"
   },
@@ -29,7 +29,7 @@
     "@mui/x-data-grid": "^8.24.0",
     "@refinedev/cli": "^2.16.52",
     "@refinedev/core": "^5.0.12",
-    "@refinedev/mui": "^8.0.3",
+    "@refinedev/mui": "^8.0.2",
     "@refinedev/react-hook-form": "^5.0.4",
     "@refinedev/react-router": "^2.0.4",
     "@refinedev/simple-rest": "^6.0.1",
