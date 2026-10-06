@@ -15,6 +15,8 @@ import { TransactionList, StudentList, VendorList, VendorTypesList} from "../src
 import { TransactionShow, StudentShow, VendorShow, VendorTypeShow } from "./pages/posts/show";
 import { StudentEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
+import { DashboardPage } from "./pages/dashboard";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -128,21 +130,22 @@ const App: React.FC = () => {
 
       return { error };
     },
+      check: async () => ({ authenticated: true }), // DEMO ONLY  
     //called on navigation to decide whether the user is logged in
-    check: async () =>
-      localStorage.getItem("email")
-        ? {
-            authenticated: true,
-          }
-        : {
-            authenticated: false,
-            error: {
-              message: "Check failed",
-              name: "Not authenticated",
-            },
-            logout: true,
-            redirectTo: "/login",
-          },
+    // check: async () =>
+    //   localStorage.getItem("email")
+    //     ? {
+    //         authenticated: true,
+    //       }
+    //     : {
+    //         authenticated: false,
+    //         error: {
+    //           message: "Check failed",
+    //           name: "Not authenticated",
+    //         },
+    //         logout: true,
+    //         redirectTo: "/login",
+    //       },
     //Both getPermissions and getIdentity feed role checks and the avatar/name in the header
     //Can replace these values with the columns that hold the required information 
     getPermissions: async () => ["admin"],
@@ -191,6 +194,7 @@ const App: React.FC = () => {
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
+              { name: "dashboard", list: "/", meta: { label: "Dashboard", icon: <DashboardIcon /> } },
               //Creating a CRUD grouping: 
               { name: "data-management", meta: { label: "Data Management", icon: <StorageIcon/>}},
               //Adding the relevant CRUD pages to the grouping using: meta: {parent: "data-management"}
@@ -217,10 +221,7 @@ const App: React.FC = () => {
                   </Authenticated>
                 }
               >
-                <Route
-                  index
-                  element={<NavigateToResource resource="posts" />}
-                />
+               <Route index element={<DashboardPage />} />
        
                 {/* Example: 
                 <Route path="/posts"> 
@@ -254,7 +255,7 @@ const App: React.FC = () => {
               <Route
                 element={
                   <Authenticated key="auth-pages" fallback={<Outlet />}>
-                    <NavigateToResource resource="posts" />
+                    <NavigateToResource resource="dashboard" />
                   </Authenticated>
                 }
               >
