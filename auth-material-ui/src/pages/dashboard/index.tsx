@@ -247,7 +247,7 @@ export const DashboardPage = () => {
 
       {/* Row 2: Orders and demand, Peer benchmark */}
       <Box sx={blockRow}>
-        <Block title="Orders and demand" span={8}>
+        <Block title="Orders and Demand" span={8}>
           <Box sx={row}>
             <Stat label="Today's orders" value={num(s?.todays_orders)} />
             <Stat label="Avg order today" value={rand(s?.todays_avg_order_value)} />

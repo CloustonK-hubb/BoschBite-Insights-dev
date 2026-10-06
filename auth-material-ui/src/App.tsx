@@ -194,7 +194,7 @@ const App: React.FC = () => {
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
-              { name: "dashboard", list: "/", meta: { label: "Dashboard", icon: <DashboardIcon /> } },
+              { name: "dashboard", list: "/", meta: { label: "Business Dashboard", icon: <DashboardIcon /> } },
               //Creating a CRUD grouping: 
               { name: "data-management", meta: { label: "Data Management", icon: <StorageIcon/>}},
               //Adding the relevant CRUD pages to the grouping using: meta: {parent: "data-management"}
