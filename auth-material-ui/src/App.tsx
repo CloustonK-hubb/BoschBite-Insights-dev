@@ -17,6 +17,7 @@ import { StudentEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 import { DashboardPage } from "./pages/dashboard";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import { createTheme, responsiveFontSizes } from "@mui/material";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -28,6 +29,19 @@ const authCredentials = {
   email: "demo@refine.dev",
   password: "demodemo",
 };
+
+//Setting the theme
+let customTheme = createTheme({
+  palette: {
+    primary: {
+      main: "#2B3F72",
+    },
+    secondary: {
+      main: "#D72C32",
+    },
+  },
+});
+
 
 const App: React.FC = () => {
   const authProvider: AuthProvider = {
@@ -184,7 +198,7 @@ const App: React.FC = () => {
 //Must add the page content to the routes otherwise will throw an error 
   return (
     <BrowserRouter>
-      <ThemeProvider theme={RefineThemes.Blue}>
+      <ThemeProvider theme={customTheme}>
         <CssBaseline />
         <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
         <RefineSnackbarProvider>
