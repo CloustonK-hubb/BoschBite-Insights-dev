@@ -217,10 +217,13 @@ const App: React.FC = () => {
               { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "data-management"}},
               { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "data-management"}}
             ]}
-            options={{
-              syncWithLocation: true,
-              warnWhenUnsavedChanges: true,
-            }}
+          options={{
+  syncWithLocation: true,
+  warnWhenUnsavedChanges: true,
+  title: {
+    text: "BoschBite Insights",
+  },
+}}
           >
             <Routes>
               <Route
