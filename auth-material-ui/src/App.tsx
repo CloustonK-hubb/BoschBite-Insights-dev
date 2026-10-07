@@ -11,9 +11,9 @@ import { useFormContext } from "react-hook-form";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
 import { dataProvider } from "./providers/dataProvider";
-import { TransactionList, StudentList, VendorList, VendorTypesList, CalendarList, PromoWindowList} from "../src/pages/posts";
-import { TransactionShow, StudentShow, VendorShow, VendorTypeShow, CalendarShow, PromoWindowShow } from "./pages/posts/show";
-import { StudentEdit } from "./pages/posts/edit";
+import { TransactionList, StudentList, VendorList, VendorTypesList, CalendarList, PromoWindowList, KPIList} from "../src/pages/posts";
+import { TransactionShow, StudentShow, VendorShow, VendorTypeShow, CalendarShow, PromoWindowShow, KPIShow } from "./pages/posts/show";
+import { CalendarEdit, PromoWindowEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 import { DashboardPage } from "./pages/dashboard";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -218,8 +218,9 @@ const App: React.FC = () => {
               { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "BoschCard-data"}},
               { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "BoschCard-data"}},
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
-              { name: "Calendar", list: "/calendar", show: "/calendar/show/:id",  meta: {parent: "BoschBites-data"}},
-              { name: "Promotion window", list: "/promo_window", show: "/promo_window/show/:id",  meta: {parent: "BoschBites-data"}},
+              { name: "Calendar", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", meta: {label: "Calendar", parent: "BoschBites-data"}},
+              { name: "Promotion window", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id", meta: {label: "Promotion Window", parent: "BoschBites-data"}},
+              { name: "KPI values", list: "/kpi_tx_base", show: "/kpi_tx_base/show/:id", meta: {parent: "BoschBites-data"}},
             ]}
           options={{
   syncWithLocation: true,
@@ -274,11 +275,18 @@ const App: React.FC = () => {
               <Route path="/calendar">
                 <Route index element={<CalendarList />} />
                 <Route path="show/:id" element={<CalendarShow />} />
+                <Route path="edit/:id" element={<CalendarEdit />} />
               </Route>
 
               <Route path="/promo_window">
                 <Route index element={<PromoWindowList />} />
                 <Route path="show/:id" element={<PromoWindowShow />} />
+                <Route path="edit/:id" element={<PromoWindowEdit />} />
+              </Route>
+
+              <Route path="/kpi_tx_base">
+                <Route index element={<KPIList />} />
+                <Route path="show/:id" element={<KPIShow />} />
               </Route>
           </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
 
