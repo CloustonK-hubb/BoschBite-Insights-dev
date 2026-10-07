@@ -30,7 +30,7 @@ const authCredentials = {
   password: "demodemo",
 };
 
-//Setting the theme
+//Setting the theme 
 let customTheme = createTheme({
   palette: {
     primary: {
