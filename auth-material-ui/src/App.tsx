@@ -213,14 +213,16 @@ const App: React.FC = () => {
               { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
               { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
               //Adding the relevant CRUD pages to the first grouping using: meta: {parent: "BoschCard-data"}
-              { name: "Transaction", list: "/transaction", show: "/transaction/show/:id", meta: {parent: "BoschCard-data"}}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
+              { name: "Transaction", list: "/transaction", show: "/transaction/show/:id", meta: {parent: "BoschCard-data"}},
               { name: "Student", list: "/student", show: "/student/show/:id", meta: {parent: "BoschCard-data"}},
               { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "BoschCard-data"}},
               { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "BoschCard-data"}},
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
-              { name: "Calendar", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", meta: {label: "Calendar", parent: "BoschBites-data"}},
-              { name: "Promotion window", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id", meta: {label: "Promotion Window", parent: "BoschBites-data"}},
-              { name: "KPI values", list: "/kpi_tx_base", show: "/kpi_tx_base/show/:id", meta: {parent: "BoschBites-data"}},
+              { name: "Calendar", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", 
+                meta: {label: "Calendar", parent: "BoschBites-data", canDelete: true}},
+              { name: "Promo_Window", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id", 
+                meta: {label: "Promotion Window", parent: "BoschBites-data", canDelete: true}},
+              { name: "kpi_tx_base", list: "/kpi_tx_base", show: "/kpi_tx_base/show/:id", meta: {parent: "BoschBites-data"}},
             ]}
           options={{
   syncWithLocation: true,

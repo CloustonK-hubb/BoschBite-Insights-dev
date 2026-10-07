@@ -1,9 +1,10 @@
 import { useMany } from "@refinedev/core";
-import { EditButton, List, useDataGrid, DateField } from "@refinedev/mui";
+import { EditButton, List, useDataGrid, DateField, ShowButton, DeleteButton } from "@refinedev/mui";
 import React from "react";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import type { ICategory, IPost } from "../../interfaces";
-import { ShowButton } from "@refinedev/mui";
+import { Box } from "@mui/material";
+
 
 //List object for a transaction 
 
@@ -123,10 +124,11 @@ export const CalendarList: React.FC = () => {
       { field: "start_date", headerName: "Start date", flex: 1 },
       { field: "end_date", headerName: "End date", flex: 1 },
       { field: "period_type", headerName: "Period category", flex: 1 },
-      { field: "actions", headerName: "Actions", sortable: false, width: 100, renderCell: ({ row }) => ( <>
+      { field: "actions", headerName: "Actions", sortable: false, width: 150, renderCell: ({ row }) => ( <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, height: "100%" }}>
         <ShowButton hideText recordItemId={row.period_id} />
         <EditButton hideText recordItemId= {row.period_id}/>
-      </>
+       <DeleteButton hideText recordItemId= {row.promo_id} meta ={{ idColumnName: "period_id"}}/>
+      </Box>
       )},
     ],
     []
@@ -151,10 +153,11 @@ export const PromoWindowList: React.FC = () => {
       { field: "start_date", headerName: "Start date", flex: 1 },
       { field: "end_date", headerName: "End date", flex: 1 },
       { field: "duration_days", headerName: "Duration (days)", flex: 1 },
-      { field: "actions", headerName: "Actions", sortable: false, width: 100, renderCell: ({ row }) => ( <>
+      { field: "actions", headerName: "Actions", sortable: false, width: 150, renderCell: ({ row }) => ( <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, height: "100%" }}>
         <ShowButton hideText recordItemId={row.promo_id} />
         <EditButton hideText recordItemId= {row.promo_id}/>
-      </>
+        <DeleteButton hideText recordItemId= {row.promo_id} meta ={{ idColumnName: "promo_id"}}/>
+      </Box>
       )},
     ],
     []
