@@ -11,8 +11,8 @@ import { useFormContext } from "react-hook-form";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
 import { dataProvider } from "./providers/dataProvider";
-import { TransactionList, StudentList, VendorList, VendorTypesList} from "../src/pages/posts";
-import { TransactionShow, StudentShow, VendorShow, VendorTypeShow } from "./pages/posts/show";
+import { TransactionList, StudentList, VendorList, VendorTypesList, CalendarList, PromoWindowList} from "../src/pages/posts";
+import { TransactionShow, StudentShow, VendorShow, VendorTypeShow, CalendarShow, PromoWindowShow } from "./pages/posts/show";
 import { StudentEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 import { DashboardPage } from "./pages/dashboard";
@@ -209,13 +209,17 @@ const App: React.FC = () => {
             notificationProvider={useNotificationProvider}
             resources={[
               { name: "dashboard", list: "/", meta: { label: "Business Dashboard", icon: <DashboardIcon /> } },
-              //Creating a CRUD grouping: 
-              { name: "data-management", meta: { label: "Data Management", icon: <StorageIcon/>}},
-              //Adding the relevant CRUD pages to the grouping using: meta: {parent: "data-management"}
-              { name: "Transaction", list: "/transaction", show: "/transaction/show/:id", meta: {parent: "data-management"}}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
-              { name: "Student", list: "/student", show: "/student/show/:id", edit: "student/edit/:id", meta: {parent: "data-management"}},
-              { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "data-management"}},
-              { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "data-management"}}
+              //Creating the grouping for the navigation: 
+              { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
+              { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
+              //Adding the relevant CRUD pages to the first grouping using: meta: {parent: "BoschCard-data"}
+              { name: "Transaction", list: "/transaction", show: "/transaction/show/:id", meta: {parent: "BoschCard-data"}}, //show: "/posts/show/id", edit: "/posts/edit/:id",create: "/posts/create",},
+              { name: "Student", list: "/student", show: "/student/show/:id", meta: {parent: "BoschCard-data"}},
+              { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "BoschCard-data"}},
+              { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "BoschCard-data"}},
+              //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
+              { name: "Calendar", list: "/calendar", show: "/calendar/show/:id",  meta: {parent: "BoschBites-data"}},
+              { name: "Promotion window", list: "/promo_window", show: "/promo_window/show/:id",  meta: {parent: "BoschBites-data"}},
             ]}
           options={{
   syncWithLocation: true,
@@ -255,7 +259,6 @@ const App: React.FC = () => {
               <Route path="/student">
                 <Route index element={<StudentList />} />
                 <Route path="show/:id" element={<StudentShow />} />
-                <Route path="edit/:id" element={<StudentEdit />} />
               </Route>
 
               <Route path="/vendor">
@@ -266,6 +269,16 @@ const App: React.FC = () => {
               <Route path="/vendor_type">
                 <Route index element={<VendorTypesList />} />
                 <Route path="show/:id" element={<VendorTypeShow />} />
+              </Route>
+
+              <Route path="/calendar">
+                <Route index element={<CalendarList />} />
+                <Route path="show/:id" element={<CalendarShow />} />
+              </Route>
+
+              <Route path="/promo_window">
+                <Route index element={<PromoWindowList />} />
+                <Route path="show/:id" element={<PromoWindowShow />} />
               </Route>
           </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
 

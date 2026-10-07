@@ -110,3 +110,49 @@ export const VendorTypesList: React.FC = () => {
     </List>
   );
 };
+
+//List object for the Calendar
+export const CalendarList: React.FC = () => {
+  const { dataGridProps } = useDataGrid({ resource: "Calendar" });
+
+  const columns = React.useMemo<GridColDef[]>(
+    () => [
+      { field: "period_id", headerName: "ID", width: 80 },
+      { field: "function", headerName: "Calendar function", flex: 1 },
+      { field: "year", headerName: "Year", flex: 1 },
+      { field: "start_date", headerName: "Start date", flex: 1 },
+      { field: "end_date", headerName: "End date", flex: 1 },
+      { field: "period_type", headerName: "Period category", flex: 1 },
+      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.period_id} />},
+    ],
+    []
+  );
+
+  return (
+    <List>
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.period_id}autoHeight />
+    </List>
+  );
+};
+
+export const PromoWindowList: React.FC = () => {
+  const { dataGridProps } = useDataGrid({ resource: "Promo_Window" });
+
+  const columns = React.useMemo<GridColDef[]>(
+    () => [
+      { field: "vendor_id", headerName: "Vendor ID", width: 80 },
+      { field: "promo_number", headerName: "Promo number", flex: 1 },
+      { field: "start_date", headerName: "Start date", flex: 1 },
+      { field: "end_date", headerName: "End date", flex: 1 },
+      { field: "duration_days", headerName: "Duration (days)", flex: 1 },
+      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.promo_id} />},
+    ],
+    []
+  );
+
+  return (
+    <List>
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.promo_id}autoHeight />
+    </List>
+  );
+};
