@@ -1,9 +1,10 @@
 import { useMany } from "@refinedev/core";
-import { EditButton, List, useDataGrid, DateField } from "@refinedev/mui";
+import { EditButton, List, useDataGrid, DateField, ShowButton, DeleteButton } from "@refinedev/mui";
 import React from "react";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import type { ICategory, IPost } from "../../interfaces";
-import { ShowButton } from "@refinedev/mui";
+import { Box } from "@mui/material";
+
 
 //List object for a transaction 
 
@@ -107,6 +108,90 @@ export const VendorTypesList: React.FC = () => {
   return (
     <List>
       <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.type_id}autoHeight />
+    </List>
+  );
+};
+
+//List object for the Calendar
+export const CalendarList: React.FC = () => {
+  const { dataGridProps } = useDataGrid({ resource: "Calendar" });
+
+  const columns = React.useMemo<GridColDef[]>(
+    () => [
+      { field: "period_id", headerName: "ID", width: 80 },
+      { field: "function", headerName: "Calendar function", flex: 1 },
+      { field: "year", headerName: "Year", flex: 1 },
+      { field: "start_date", headerName: "Start date", flex: 1 },
+      { field: "end_date", headerName: "End date", flex: 1 },
+      { field: "period_type", headerName: "Period category", flex: 1 },
+      { field: "actions", headerName: "Actions", sortable: false, width: 150, renderCell: ({ row }) => ( <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, height: "100%" }}>
+        <ShowButton hideText recordItemId={row.period_id} />
+        <EditButton hideText recordItemId= {row.period_id}/>
+       <DeleteButton hideText recordItemId= {row.promo_id} meta ={{ idColumnName: "period_id"}}/>
+      </Box>
+      )},
+    ],
+    []
+  );
+
+  return (
+    <List>
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.period_id}autoHeight />
+    </List>
+  );
+};
+
+//List objetc for the Promo_window table
+export const PromoWindowList: React.FC = () => {
+  const { dataGridProps } = useDataGrid({ resource: "Promo_Window", meta: { select: "*, Vendor(name)" }, });
+
+  const columns = React.useMemo<GridColDef[]>(
+    () => [
+      { field: "promo_id", headerName: "Promotion ID", width: 150 },
+      { field: "vendor_id", headerName: "Vendor name", width: 240, renderCell: ({ row }) => row.Vendor?.name ?? "-", },
+      { field: "promo_number", headerName: "Promotion number", width: 150 },
+      { field: "start_date", headerName: "Start date", flex: 1 },
+      { field: "end_date", headerName: "End date", flex: 1 },
+      { field: "duration_days", headerName: "Duration (days)", flex: 1 },
+      { field: "actions", headerName: "Actions", sortable: false, width: 150, renderCell: ({ row }) => ( <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, height: "100%" }}>
+        <ShowButton hideText recordItemId={row.promo_id} />
+        <EditButton hideText recordItemId= {row.promo_id}/>
+        <DeleteButton hideText recordItemId= {row.promo_id} meta ={{ idColumnName: "promo_id"}}/>
+      </Box>
+      )},
+    ],
+    []
+  );
+
+  return (
+    <List>
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.promo_id}autoHeight />
+    </List>
+  );
+};
+
+//List object for the KPI table
+export const KPIList: React.FC = () => {
+  const { dataGridProps } = useDataGrid({ resource: "kpi_tx_base", meta: { select: "*, Vendor(name)" }, });
+
+  const columns = React.useMemo<GridColDef[]>(
+    () => [
+      { field: "transaction_id", headerName: "Transaction ID", width: 150 },
+      { field: "vendor_id", headerName: "Vendor name", width: 240, renderCell: ({ row }) => row.Vendor?.name ?? "-", },
+      { field: "datetime", headerName: "Long date", width: 150 },
+      { field: "local_date", headerName: "Short date", flex: 1 },
+      { field: "hour_of_day", headerName: "Hour of the day", flex: 1 },
+      { field: "meal_period", headerName: "Meal category", flex: 1 },
+      { field: "value", headerName: "Value", flex: 1 },
+      { field: "discount", headerName: "Discount(%)", flex: 1 },
+      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.promo_id} />},
+    ],
+    []
+  );
+
+  return (
+    <List>
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.transaction_id}autoHeight />
     </List>
   );
 };
