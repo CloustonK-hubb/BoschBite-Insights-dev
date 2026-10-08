@@ -27,6 +27,8 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router";
 
 import { dataProvider } from "./providers/dataProvider";
 
+import { ProfileList } from "./pages/Profile/ProfileList";
+
 import {
   TransactionList,
   StudentList,
@@ -53,6 +55,9 @@ import { createTheme } from "@mui/material";
 import { supabaseClient } from "./lib/supabaseClient";
 
 import Register from "./components/Register";
+
+import Pending from "./components/Pending";
+import Denied from "./components/Denied";
 
 
 /* =========================
@@ -85,39 +90,74 @@ const App: React.FC = () => {
 
     /* LOGIN */
 
-    login: async ({ email, password }) => {
+   login: async ({ email, password }) => {
 
-      if (!email || !password) {
-        return {
-          success: false,
-          error: {
-            message: "Please enter your email and password.",
-            name: "Missing credentials",
-          },
-        };
-      }
+  if (!email || !password) {
+    return {
+      success: false,
+      error: {
+        message: "Please enter your email and password.",
+        name: "Missing credentials",
+      },
+    };
+  }
 
-      const { error } =
-        await supabaseClient.auth.signInWithPassword({
-          email,
-          password,
-        });
+  const { data, error } =
+    await supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) {
-        return {
-          success: false,
-          error: {
-            message: error.message,
-            name: "Login failed",
-          },
-        };
-      }
+  if (error) {
+    return {
+      success: false,
+      error: {
+        message: error.message,
+        name: "Login failed",
+      },
+    };
+  }
 
-      return {
-        success: true,
-        redirectTo: "/",
-      };
-    },
+  const { data: profile, error: profileError } =
+    await supabaseClient
+      .from("profiles")
+      .select("status")
+      .eq("id", data.user.id)
+      .single();
+
+  if (profileError || !profile) {
+    await supabaseClient.auth.signOut();
+
+    return {
+      success: false,
+      error: {
+        message: "Your profile could not be found.",
+        name: "Profile not found",
+      },
+    };
+  }
+
+  if (profile.status === "pending") {
+    return {
+      success: true,
+      redirectTo: "/pending",
+    };
+  }
+
+  if (profile.status === "denied") {
+  await supabaseClient.auth.signOut();
+
+  return {
+    success: true,
+    redirectTo: "/denied",
+  };
+}
+
+  return {
+    success: true,
+    redirectTo: "/",
+  };
+},
 
 
     /* REGISTER */
@@ -270,27 +310,70 @@ const App: React.FC = () => {
     /* CHECK AUTHENTICATION */
 
     check: async () => {
+  const {
+    data: { session },
+  } = await supabaseClient.auth.getSession();
 
-      const {
-        data: { session },
-      } = await supabaseClient.auth.getSession();
+  if (!session) {
+    return {
+      authenticated: false,
+      error: {
+        message: "You are not authenticated.",
+        name: "Not authenticated",
+      },
+      logout: true,
+      redirectTo: "/login",
+    };
+  }
 
-      if (session) {
-        return {
-          authenticated: true,
-        };
-      }
+  const { data: profile, error } = await supabaseClient
+    .from("profiles")
+    .select("status")
+    .eq("id", session.user.id)
+    .single();
 
-      return {
-        authenticated: false,
-        error: {
-          message: "You are not authenticated.",
-          name: "Not authenticated",
-        },
-        logout: true,
-        redirectTo: "/login",
-      };
-    },
+  if (error || !profile) {
+    await supabaseClient.auth.signOut();
+
+    return {
+      authenticated: false,
+      error: {
+        message: "Your profile could not be found.",
+        name: "Profile not found",
+      },
+      logout: true,
+      redirectTo: "/login",
+    };
+  }
+
+  if (profile.status === "pending") {
+    return {
+      authenticated: false,
+      error: {
+        message: "Your account is awaiting verification.",
+        name: "Account pending",
+      },
+      logout: true,
+      redirectTo: "/pending",
+    };
+  }
+
+  if (profile.status === "denied") {
+    return {
+      authenticated: false,
+      error: {
+        message: "Your account access has been denied.",
+        name: "Account denied",
+      },
+      logout: true,
+      redirectTo: "/denied",
+    };
+  }
+
+  return {
+    authenticated: true,
+  };
+},
 
 
     /* USER PERMISSIONS */
@@ -419,6 +502,14 @@ const App: React.FC = () => {
               },
 
               {
+                name: "profiles",
+                list: "/profiles",
+                meta: {
+                  label: "User Profiles",
+                },
+              },
+
+              {
                 name: "Vendor_Type",
                 list: "/vendor_type",
                 show: "/vendor_type/show/:id",
@@ -534,8 +625,18 @@ const App: React.FC = () => {
                   />
 
                 </Route>
+                
+                <Route path="/profiles" element={<ProfileList />} />
 
               </Route>
+
+              {/* =========================
+    PUBLIC ACCOUNT STATUS PAGES
+========================= */}
+
+<Route path="/pending" element={<Pending />} />
+
+<Route path="/denied" element={<Denied />} /> 
 
 
               {/* =========================
