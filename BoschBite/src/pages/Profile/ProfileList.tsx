@@ -1,10 +1,20 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useGetIdentity } from "@refinedev/core";
 import { List } from "@refinedev/mui";
+import { Navigate } from "react-router";
 import {
+  Alert,
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  MenuItem,
   Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
@@ -16,95 +26,72 @@ import {
 
 import { supabaseClient } from "./../../lib/supabaseClient";
 
+type Role = "boschbite_admin" | "vendor_admin" | "vendor_manager";
+
 type Profile = {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
-  role: string;
+  role: Role;
   vendor_id: number | null;
   vendor_name: string | null;
   status: "pending" | "verified" | "denied";
   created_at: string;
 };
 
-export const ProfileList = () => {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
+type Identity = {
+  id: string;
+  role: Role | null;
+  vendor_id: number | null;
+};
 
-  const fetchProfiles = async () => {
-    setLoading(true);
+const ROLE_LABELS: Record<Role, string> = {
+  boschbite_admin: "BoschBite Admin",
+  vendor_admin: "Vendor Admin",
+  vendor_manager: "Vendor Manager",
+};
 
-    const { data, error } = await supabaseClient
-      .from("profiles")
-      .select(
-        "id, first_name, last_name, email, role, vendor_id, vendor_name, status, created_at",
-      )
-      .order("created_at", { ascending: true });
+const VENDOR_ROLES: Role[] = ["vendor_admin", "vendor_manager"];
+const ALL_ROLES: Role[] = ["boschbite_admin", ...VENDOR_ROLES];
 
-    if (error) {
-      console.error("Error fetching profiles:", error);
-      setLoading(false);
-      return;
-    }
+const roleLabel = (role: string) => ROLE_LABELS[role as Role] ?? role;
 
-    setProfiles(data ?? []);
-    setLoading(false);
+/* =========================
+   TABLE (defined outside the page
+   component so it is not remounted
+   on every render)
+========================= */
+
+type ProfileTableProps = {
+  profiles: Profile[];
+  me: Identity;
+  isBosch: boolean;
+  showVerifyDeny?: boolean;
+  onStatus: (profile: Profile, status: "verified" | "denied") => void;
+  onRole: (profile: Profile, role: Role) => void;
+  onRemove: (profile: Profile) => void;
+};
+
+const ProfileTable = ({
+  profiles,
+  me,
+  isBosch,
+  showVerifyDeny = false,
+  onStatus,
+  onRole,
+  onRemove,
+}: ProfileTableProps) => {
+  const roleOptions = isBosch ? ALL_ROLES : VENDOR_ROLES;
+
+  // Can this viewer change the role of / remove this row?
+  const canManage = (p: Profile) => {
+    if (p.id === me.id) return false; // never yourself
+    if (isBosch) return true;
+    return VENDOR_ROLES.includes(p.role); // vendor admin: vendor roles only
   };
 
-  useEffect(() => {
-    fetchProfiles();
-  }, []);
-
-  const updateStatus = async (
-    profileId: string,
-    status: "verified" | "denied",
-  ) => {
-    const { error } = await supabaseClient
-      .from("profiles")
-      .update({ status })
-      .eq("id", profileId);
-
-    if (error) {
-      console.error("Error updating profile:", error);
-      return;
-    }
-
-    await fetchProfiles();
-  };
-
-  const pendingProfiles = profiles.filter(
-    (profile) => profile.status === "pending",
-  );
-
-  const verifiedProfiles = profiles.filter(
-    (profile) => profile.status === "verified",
-  );
-
-  const deniedProfiles = profiles.filter(
-    (profile) => profile.status === "denied",
-  );
-
-  const roleLabel = (role: string) => {
-    switch (role) {
-      case "boschbite_admin":
-        return "BoschBite Admin";
-      case "vendor_admin":
-        return "Vendor Admin";
-      case "vendor_manager":
-        return "Vendor Manager";
-      default:
-        return role;
-    }
-  };
-
-  const ProfileTable = ({
-    profiles,
-    showActions = false,
-  }: {
-    profiles: Profile[];
-    showActions?: boolean;
-  }) => (
+  return (
     <TableContainer component={Paper}>
       <Table>
         <TableHead>
@@ -114,163 +101,303 @@ export const ProfileList = () => {
             <TableCell>Role</TableCell>
             <TableCell>Vendor</TableCell>
             <TableCell>Created</TableCell>
-            {showActions && <TableCell>Actions</TableCell>}
+            <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
 
         <TableBody>
           {profiles.length === 0 ? (
             <TableRow>
-              <TableCell
-                colSpan={showActions ? 6 : 5}
-                align="center"
-              >
+              <TableCell colSpan={6} align="center">
                 No profiles in this section.
               </TableCell>
             </TableRow>
           ) : (
-            profiles.map((profile) => (
-              <TableRow key={profile.id}>
-                <TableCell>
-                  {profile.first_name} {profile.last_name}
-                </TableCell>
+            profiles.map((p) => {
+              const manage = canManage(p);
 
-                <TableCell>{profile.email}</TableCell>
+              return (
+                <TableRow key={p.id}>
+                  <TableCell>
+                    {p.first_name} {p.last_name}
+                  </TableCell>
 
-                <TableCell>
-                  {roleLabel(profile.role)}
-                </TableCell>
+                  <TableCell>{p.email}</TableCell>
 
-                <TableCell>
-                  {profile.vendor_name ?? "—"}
-                </TableCell>
+                  <TableCell>
+                    {manage ? (
+                      <Select
+                        size="small"
+                        value={p.role}
+                        onChange={(e) => onRole(p, e.target.value as Role)}
+                        sx={{ minWidth: 160 }}
+                      >
+                        {roleOptions.map((r) => (
+                          <MenuItem key={r} value={r}>
+                            {ROLE_LABELS[r]}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    ) : (
+                      roleLabel(p.role)
+                    )}
+                  </TableCell>
 
-                <TableCell>
-                  {new Date(
-                    profile.created_at,
-                  ).toLocaleDateString()}
-                </TableCell>
+                  <TableCell>{p.vendor_name ?? "—"}</TableCell>
 
-                {showActions && (
+                  <TableCell>
+                    {new Date(p.created_at).toLocaleDateString()}
+                  </TableCell>
+
                   <TableCell>
                     <Box sx={{ display: "flex", gap: 1 }}>
-                      <Button
-                        variant="contained"
-                        color="success"
-                        size="small"
-                        onClick={() =>
-                          updateStatus(
-                            profile.id,
-                            "verified",
-                          )
-                        }
-                      >
-                        Verify
-                      </Button>
+                      {isBosch && showVerifyDeny && (
+                        <>
+                          <Button
+                            variant="contained"
+                            color="success"
+                            size="small"
+                            onClick={() => onStatus(p, "verified")}
+                          >
+                            Verify
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            onClick={() => onStatus(p, "denied")}
+                          >
+                            Deny
+                          </Button>
+                        </>
+                      )}
 
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        onClick={() =>
-                          updateStatus(
-                            profile.id,
-                            "denied",
-                          )
-                        }
-                      >
-                        Deny
-                      </Button>
+                      {isBosch && p.status === "denied" && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => onStatus(p, "verified")}
+                        >
+                          Verify
+                        </Button>
+                      )}
+
+                      {manage && (
+                        <Button
+                          variant="text"
+                          color="error"
+                          size="small"
+                          onClick={() => onRemove(p)}
+                        >
+                          Remove
+                        </Button>
+                      )}
+
+                      {!isBosch && showVerifyDeny && (
+                        <Typography variant="body2" color="text.secondary">
+                          Awaiting BoschBite approval
+                        </Typography>
+                      )}
                     </Box>
                   </TableCell>
-                )}
-              </TableRow>
-            ))
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>
     </TableContainer>
   );
+};
+
+/* =========================
+   PAGE
+========================= */
+
+export const ProfileList = () => {
+  const { data: me, isLoading: identityLoading } = useGetIdentity<Identity>();
+
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [toRemove, setToRemove] = useState<Profile | null>(null);
+
+  const isBosch = me?.role === "boschbite_admin";
+  const isVendorAdmin = me?.role === "vendor_admin";
+  const allowed = isBosch || isVendorAdmin;
+
+  const fetchProfiles = useCallback(async () => {
+    if (!me || !allowed) return;
+
+    setLoading(true);
+
+    let query = supabaseClient
+      .from("profiles")
+      .select(
+        "id, first_name, last_name, email, role, vendor_id, vendor_name, status, created_at",
+      )
+      .order("created_at", { ascending: true });
+
+    // RLS enforces this too; filtering here keeps the UI consistent.
+    if (isVendorAdmin) {
+      query = query.eq("vendor_id", me.vendor_id);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      setErrorMessage(`Could not load profiles: ${error.message}`);
+      setLoading(false);
+      return;
+    }
+
+    setProfiles((data ?? []) as Profile[]);
+    setLoading(false);
+  }, [me, allowed, isVendorAdmin]);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, [fetchProfiles]);
+
+  /* ---------- actions ---------- */
+
+  const updateStatus = async (
+    profile: Profile,
+    status: "verified" | "denied",
+  ) => {
+    setErrorMessage(null);
+
+    const { data, error } = await supabaseClient
+      .from("profiles")
+      .update({ status })
+      .eq("id", profile.id)
+      .select("id");
+
+    // RLS can block a write without an error: zero rows come back.
+    if (error || !data || data.length === 0) {
+      setErrorMessage(
+        error?.message ?? "You are not allowed to change this profile.",
+      );
+      return;
+    }
+
+    await fetchProfiles();
+  };
+
+  const updateRole = async (profile: Profile, role: Role) => {
+    if (role === profile.role) return;
+    setErrorMessage(null);
+
+    const { data, error } = await supabaseClient
+      .from("profiles")
+      .update({ role })
+      .eq("id", profile.id)
+      .select("id");
+
+    if (error || !data || data.length === 0) {
+      setErrorMessage(
+        error?.message ?? "You are not allowed to change this role.",
+      );
+      return;
+    }
+
+    await fetchProfiles();
+  };
+
+  const confirmRemove = async () => {
+    if (!toRemove) return;
+    setErrorMessage(null);
+
+    const { data, error } = await supabaseClient
+      .from("profiles")
+      .delete()
+      .eq("id", toRemove.id)
+      .select("id");
+
+    setToRemove(null);
+
+    if (error || !data || data.length === 0) {
+      setErrorMessage(
+        error?.message ?? "You are not allowed to remove this profile.",
+      );
+      return;
+    }
+
+    await fetchProfiles();
+  };
+
+  /* ---------- guards (after all hooks) ---------- */
+
+  if (identityLoading || !me) return null;
+
+  if (!allowed) return <Navigate to="/" replace />;
+
+  const pending = profiles.filter((p) => p.status === "pending");
+  const verified = profiles.filter((p) => p.status === "verified");
+  const denied = profiles.filter((p) => p.status === "denied");
+
+  const section = (
+    title: string,
+    list: Profile[],
+    color: "warning" | "success" | "error",
+    showVerifyDeny = false,
+    isLast = false,
+  ) => (
+    <Box sx={{ mb: isLast ? 0 : 5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+        <Typography variant="h5">{title}</Typography>
+        <Chip label={list.length} color={color} size="small" />
+      </Box>
+
+      <ProfileTable
+        profiles={list}
+        me={me}
+        isBosch={isBosch}
+        showVerifyDeny={showVerifyDeny}
+        onStatus={updateStatus}
+        onRole={updateRole}
+        onRemove={setToRemove}
+      />
+    </Box>
+  );
 
   return (
     <List title="Profile Management">
-      {/* PENDING */}
-
-      <Box sx={{ mb: 5 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            mb: 2,
-          }}
+      {errorMessage && (
+        <Alert
+          severity="error"
+          onClose={() => setErrorMessage(null)}
+          sx={{ mb: 3 }}
         >
-          <Typography variant="h5">
-            Pending
-          </Typography>
+          {errorMessage}
+        </Alert>
+      )}
 
-          <Chip
-            label={pendingProfiles.length}
-            color="warning"
-            size="small"
-          />
-        </Box>
+      {loading ? (
+        <Typography>Loading profiles…</Typography>
+      ) : (
+        <>
+          {section("Pending", pending, "warning", true)}
+          {section("Verified", verified, "success")}
+          {section("Denied", denied, "error", false, true)}
+        </>
+      )}
 
-        <ProfileTable
-          profiles={pendingProfiles}
-          showActions
-        />
-      </Box>
-
-      {/* VERIFIED */}
-
-      <Box sx={{ mb: 5 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          <Typography variant="h5">
-            Verified
-          </Typography>
-
-          <Chip
-            label={verifiedProfiles.length}
-            color="success"
-            size="small"
-          />
-        </Box>
-
-        <ProfileTable profiles={verifiedProfiles} />
-      </Box>
-
-      {/* DENIED */}
-
-      <Box>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          <Typography variant="h5">
-            Denied
-          </Typography>
-
-          <Chip
-            label={deniedProfiles.length}
-            color="error"
-            size="small"
-          />
-        </Box>
-
-        <ProfileTable profiles={deniedProfiles} />
-      </Box>
+      <Dialog open={!!toRemove} onClose={() => setToRemove(null)}>
+        <DialogTitle>Remove profile?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {toRemove?.first_name} {toRemove?.last_name} ({toRemove?.email})
+            will lose access to BoschBite Insights.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setToRemove(null)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={confirmRemove}>
+            Remove profile
+          </Button>
+        </DialogActions>
+      </Dialog>
     </List>
   );
 };

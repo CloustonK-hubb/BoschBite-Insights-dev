@@ -391,24 +391,23 @@ const App: React.FC = () => {
     /* USER IDENTITY */
 
     getIdentity: async () => {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return null;
 
-      const {
-        data: { user },
-      } = await supabaseClient.auth.getUser();
+  const { data: p } = await supabaseClient
+    .from("profiles")
+    .select("first_name, last_name, role, vendor_id")
+    .eq("id", user.id)
+    .single();
 
-      if (!user) {
-        return null;
-      }
-
-      return {
-        id: user.id,
-        name:
-          user.user_metadata?.first_name ||
-          user.email ||
-          "User",
-        email: user.email,
-      };
-    },
+  return {
+    id: user.id,
+    name: p ? `${p.first_name} ${p.last_name}` : user.email,
+    email: user.email,
+    role: p?.role ?? null,
+    vendor_id: p?.vendor_id ?? null,
+  };
+},
 
 
     /* HANDLE AUTH ERRORS */
@@ -661,6 +660,7 @@ const App: React.FC = () => {
                   element={
                     <AuthPage
                       type="login"
+                      rememberMe={<></>}
                     />
                   }
                 />
