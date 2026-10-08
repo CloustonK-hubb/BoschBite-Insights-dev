@@ -17,8 +17,8 @@ import { CalendarEdit, PromoWindowEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 import { DashboardPage } from "./pages/dashboard";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import { createTheme, responsiveFontSizes } from "@mui/material";
-
+import { customTheme } from "./providers/theme";
+import { Box, Typography } from "@mui/material";
 /**
  *  mock auth credentials to simulate authentication
  */
@@ -29,18 +29,6 @@ const authCredentials = {
   email: "demo@refine.dev",
   password: "demodemo",
 };
-
-//Setting the theme 
-let customTheme = createTheme({
-  palette: {
-    primary: {
-      main: "#2B3F72",
-    },
-    secondary: {
-      main: "#D72C32",
-    },
-  },
-});
 
 
 const App: React.FC = () => {
@@ -227,9 +215,8 @@ const App: React.FC = () => {
           options={{
   syncWithLocation: true,
   warnWhenUnsavedChanges: true,
-  title: {
-    text: "BoschBite Insights",
-  },
+  title: { text: "BoschBite Insights", icon: (
+      <image href= "/BoschBites-logo-cropped.png" width= "25" height="25"/> )},
 }}
           >
             <Routes>
@@ -239,7 +226,15 @@ const App: React.FC = () => {
                     key="authenticated-routes"
                     fallback={<CatchAllNavigate to="/login" />}
                   >
-                    <ThemedLayout>
+                    {/* Editing the header of the app */}
+                    <ThemedLayout Title= {({ collapsed }) => (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <img src= "BoschBites-logo-cropped.png" alt="BoschBites logo" style={{ height: collapsed ? 50 : 63}} />
+                        {!collapsed && (
+                      <Typography fontWeight={500} fontSize={16} color="#382322">BoschBite Insights</Typography> )}
+                      </Box>
+                      )}
+                      >
                       <Outlet />
                     </ThemedLayout>
                   </Authenticated>
@@ -302,35 +297,17 @@ const App: React.FC = () => {
                 <Route
                   path="/login"
                   element={
-                    <AuthPage
-                      type="login"
+                    <AuthPage type="login"
                       rememberMe={<RememeberMe />}
-                      formProps={{
-                        defaultValues: {
-                          ...authCredentials,
-                        },
+                      formProps={{ defaultValues: {...authCredentials,},
                       }}
                       providers={[
-                        {
-                          name: "google",
-                          label: "Sign in with Google",
-                          icon: (
-                            <GoogleIcon
-                              style={{
-                                fontSize: 24,
-                              }}
-                            />
+                        { name: "google", label: "Sign in with Google",
+                          icon: ( <GoogleIcon style={{fontSize: 24,}}/>
                           ),
                         },
-                        {
-                          name: "github",
-                          label: "Sign in with GitHub",
-                          icon: (
-                            <GitHubIcon
-                              style={{
-                                fontSize: 24,
-                              }}
-                            />
+                        { name: "github", label: "Sign in with GitHub",
+                          icon: ( <GitHubIcon style={{fontSize: 24,}}/>
                           ),
                         },
                       ]}
@@ -340,29 +317,13 @@ const App: React.FC = () => {
                 <Route
                   path="/register"
                   element={
-                    <AuthPage
-                      type="register"
-                      providers={[
-                        {
-                          name: "google",
-                          label: "Sign in with Google",
-                          icon: (
-                            <GoogleIcon
-                              style={{
-                                fontSize: 24,
-                              }}
-                            />
+                    <AuthPage type="register" providers={[
+                        { name: "google", label: "Sign in with Google",
+                          icon: ( <GoogleIcon style={{fontSize: 24,}}/>
                           ),
                         },
-                        {
-                          name: "github",
-                          label: "Sign in with GitHub",
-                          icon: (
-                            <GitHubIcon
-                              style={{
-                                fontSize: 24,
-                              }}
-                            />
+                        { name: "github", label: "Sign in with GitHub",
+                          icon: ( <GitHubIcon style={{fontSize: 24,}}/>
                           ),
                         },
                       ]}
