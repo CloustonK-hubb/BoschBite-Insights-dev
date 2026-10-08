@@ -8,13 +8,13 @@ import { ShowButton } from "@refinedev/mui";
 //List object for a transaction 
 
 export const TransactionList: React.FC = () => {
-  const { dataGridProps } = useDataGrid({ resource: "Transaction" });
+  const { dataGridProps } = useDataGrid({ resource: "Transaction", meta: { select: "*, Vendor(name), Student(first_name, last_name)"  }, });
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
       { field: "transaction_id", headerName: "ID", type: "number", width: 90 },
-      { field: "student_id", headerName: "Student ID", flex: 1, minWidth: 130 },
-      { field: "vendor_id", headerName: "Vendor ID", type: "number", width: 110 },
+      { field: "student_id", headerName: "Student name", flex: 1, minWidth: 130, renderCell: ({ row }) => row.Student?`${row.Student.first_name} ${row.Student.last_name}` : row.id_number, },
+      { field: "vendor_id", headerName: "Vendor name", type: "number", width: 110, renderCell: ({ row }) => row.Vendor?.name ?? row.vendor_id, },
       { field: "datetime", headerName: "Date & time", flex: 1, minWidth: 180, renderCell: ({ row }) => (
           <DateField value={row.datetime} format="DD MMM YYYY HH:mm" />),},
       {field: "value",headerName: "Transaction value", type: "number", width: 110,
@@ -51,7 +51,12 @@ export const StudentList: React.FC = () => {
       { field: "gender", headerName: "Gender", flex: 1}, 
       { field: "phone", headerName: "Cell number", flex: 1},
       { field: "address", headerName: "Address", felx: 1},
-      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.id_number} />},
+      { field: "actions", headerName: "Actions", sortable: false, width: 100, renderCell: ({ row }) => ( <>
+        <ShowButton hideText recordItemId={row.id_number} />
+        <EditButton hideText recordItemId= {row.id_number}/>
+      </>
+      )
+      },
     ],
     []
   );
@@ -63,7 +68,7 @@ export const StudentList: React.FC = () => {
   );
 };
 
-//List object for vendors
+//List object for Vendors
 export const VendorList: React.FC = () => {
   const { dataGridProps } = useDataGrid({ resource: "Vendor", meta: { select: "*, Vendor_Type(name)" },});
 
@@ -86,6 +91,7 @@ export const VendorList: React.FC = () => {
   );
 };
 
+//List object for Vendor Types
 export const VendorTypesList: React.FC = () => {
   const { dataGridProps } = useDataGrid({ resource: "Vendor_Type" });
 
