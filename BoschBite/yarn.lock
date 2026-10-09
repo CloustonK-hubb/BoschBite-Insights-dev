@@ -1017,6 +1017,21 @@
     tslib "^2.6.2"
     warn-once "^0.1.0"
 
+"@refinedev/core@^5.0.5":
+  version "5.0.12"
+  resolved "https://registry.npmjs.org/@refinedev/core/-/core-5.0.12.tgz"
+  integrity sha512-9y5Bi9Lb7XyJmM55b8rCeBTDRCBU41p47OymJldasLfrtpUm2EwI+27DjjNpHTOugymiZsIbLlPtHCPQIXBHcg==
+  dependencies:
+    "@refinedev/devtools-internal" "2.0.2"
+    "@tanstack/react-query" "^5.81.5"
+    lodash "^4.17.21"
+    lodash-es "^4.17.21"
+    papaparse "^5.3.0"
+    pluralize "^8.0.0"
+    qs "^6.10.1"
+    tslib "^2.6.2"
+    warn-once "^0.1.0"
+
 "@refinedev/devtools-internal@2.0.2":
   version "2.0.2"
   resolved "https://registry.npmjs.org/@refinedev/devtools-internal/-/devtools-internal-2.0.2.tgz"
@@ -1111,13 +1126,6 @@
   dependencies:
     axios "^1.11.0"
     query-string "^7.1.1"
-
-"@refinedev/supabase@^6.0.2":
-  version "6.0.2"
-  resolved "https://registry.yarnpkg.com/@refinedev/supabase/-/supabase-6.0.2.tgz#25f28ba297f3cae6aedfc573c98e263eefb40565"
-  integrity sha512-D3pPI8by8gNAOU9zyfC7a/r76ZSE1fkEJz0CXophwn1LU1/oOUsacoJz28kNsXUKiX6JB0FJiu83VNkr5a4t/Q==
-  dependencies:
-    "@supabase/supabase-js" "^2.7.0"
 
 "@refinedev/ui-types@^2.0.0":
   version "2.0.1"
@@ -1297,18 +1305,18 @@
     "@supabase/phoenix" "0.4.5"
     tslib "2.8.1"
 
-"@supabase/storage-js@2.117.3":
-  version "2.117.3"
-  resolved "https://registry.yarnpkg.com/@supabase/storage-js/-/storage-js-2.117.3.tgz#9e478ee60fdc2c1a1513666e3d66e258b0073982"
-  integrity sha512-QhUxFC33Crlw6WDeA4hLADdi1PzjI3c4UJs7ivWHHEnU7ulmCWEZSDaRCuIfmsjUwbHYaIfRNFQNsm+IsGYS6w==
+"@supabase/storage-js@2.117.2":
+  version "2.117.2"
+  resolved "https://registry.npmjs.org/@supabase/storage-js/-/storage-js-2.117.2.tgz"
+  integrity sha512-8gAJoVaxZa/War2kFRfJMxGk4M190Q7lJ70BofwGlRxU/u9pIodd6XyTvmXkxOKXWuIYtkDaYPZrIAUt1T/7FQ==
   dependencies:
     iceberg-js "^0.8.1"
     tslib "2.8.1"
 
-"@supabase/supabase-js@^2.117.3", "@supabase/supabase-js@^2.7.0":
-  version "2.117.3"
-  resolved "https://registry.yarnpkg.com/@supabase/supabase-js/-/supabase-js-2.117.3.tgz#ba75d3e7cc33065c65bccd013af5e6d8518424a5"
-  integrity sha512-K+f8PimXDunPWQ63CKRXaF5pbVPJxmfw5ryAnh0s9S9PkwcuqBjiSpIaqpF7KLDljeYwXIL85ST8QxaO0+XuvA==
+"@supabase/supabase-js@^2.117.2":
+  version "2.117.2"
+  resolved "https://registry.npmjs.org/@supabase/supabase-js/-/supabase-js-2.117.2.tgz"
+  integrity sha512-eSG2VKnHR+Clp1PmidZ1/weJ8PJwoybjva3L2GgKqFG4YDS1Iqmc61psKGZP5xw6OMT2O7ZorPR42PY6q1BOXg==
   dependencies:
     "@supabase/auth-js" "2.117.3"
     "@supabase/functions-js" "2.117.3"
@@ -2056,7 +2064,7 @@ csstype@^3.0.2, csstype@^3.1.3, csstype@^3.2.2:
   resolved "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz"
   integrity sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==
 
-"d3-array@2 - 3", "d3-array@2.10.0 - 3", "d3-array@2.5.0 - 3", d3-array@^3.2.4:
+"d3-array@2 - 3", "d3-array@2.10.0 - 3", d3-array@^3.2.4:
   version "3.2.4"
   resolved "https://registry.npmjs.org/d3-array/-/d3-array-3.2.4.tgz"
   integrity sha512-tdQAmyA18i4J7wprpYq8ClcxZy3SC31QMeByyCFyRt7BVHdREQZ5lpzoe5mFEYZUWe+oq8HBvk9JjpibyEV4Jg==
@@ -2068,17 +2076,10 @@ csstype@^3.0.2, csstype@^3.1.3, csstype@^3.2.2:
   resolved "https://registry.npmjs.org/d3-color/-/d3-color-3.1.0.tgz"
   integrity sha512-zg/chbXyeBtMQ1LbD/WSoW2DpC3I0mpmPdW+ynRTj/x2DAWYrIY7qeZIHidozwV24m4iavr15lNwIwLxRmOxhA==
 
-"d3-format@1 - 3", d3-format@^3.1.2:
+"d3-format@1 - 3", d3-format@^3.1.0:
   version "3.1.2"
   resolved "https://registry.npmjs.org/d3-format/-/d3-format-3.1.2.tgz"
   integrity sha512-AJDdYOdnyRDV5b6ArilzCPPwc1ejkHcoyFarqlPqT7zRYjhavcT3uSrqcMvsgh2CgoPbK3RCwyHaVyxYcP2Arg==
-
-d3-geo@^3.1.1:
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/d3-geo/-/d3-geo-3.1.1.tgz#6027cf51246f9b2ebd64f99e01dc7c3364033a4d"
-  integrity sha512-637ln3gXKXOwhalDzinUgY83KzNWZRKbYubaG+fGVuc/dxO64RRljtCTnf5ecMyE1RIdtqpkVcq0IbtU2S8j2Q==
-  dependencies:
-    d3-array "2.5.0 - 3"
 
 "d3-interpolate@1.2.0 - 3", d3-interpolate@^3.0.1:
   version "3.0.1"
