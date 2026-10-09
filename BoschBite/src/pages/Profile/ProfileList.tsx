@@ -35,7 +35,7 @@ type Profile = {
   email: string;
   role: Role;
   vendor_id: number | null;
-  vendor_name: string | null;
+  Vendor: { name: string } | null;
   status: "pending" | "verified" | "denied";
   created_at: string;
 };
@@ -99,7 +99,7 @@ const ProfileTable = ({
             <TableCell>Name</TableCell>
             <TableCell>Email</TableCell>
             <TableCell>Role</TableCell>
-            <TableCell>Vendor</TableCell>
+            <TableCell>Vendor Name</TableCell>
             <TableCell>Created</TableCell>
             <TableCell>Actions</TableCell>
           </TableRow>
@@ -143,7 +143,7 @@ const ProfileTable = ({
                     )}
                   </TableCell>
 
-                  <TableCell>{p.vendor_name ?? "—"}</TableCell>
+                  <TableCell>{p.Vendor?.name ?? "—"}</TableCell>
 
                   <TableCell>
                     {new Date(p.created_at).toLocaleDateString()}
@@ -234,7 +234,7 @@ export const ProfileList = () => {
     let query = supabaseClient
       .from("profiles")
       .select(
-        "id, first_name, last_name, email, role, vendor_id, vendor_name, status, created_at",
+        "id, first_name, last_name, email, role, vendor_id, status, created_at, Vendor(name)",
       )
       .order("created_at", { ascending: true });
 
@@ -251,7 +251,7 @@ export const ProfileList = () => {
       return;
     }
 
-    setProfiles((data ?? []) as Profile[]);
+    setProfiles((data ?? []) as unknown as Profile[]);
     setLoading(false);
   }, [me, allowed, isVendorAdmin]);
 
