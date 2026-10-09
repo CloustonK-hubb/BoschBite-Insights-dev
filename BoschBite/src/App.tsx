@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   Refine,
   type AuthProvider,
@@ -18,12 +20,17 @@ import { ThemeProvider } from "@mui/material/styles";
 
 import routerProvider, {
   NavigateToResource,
-  CatchAllNavigate,
   UnsavedChangesNotifier,
   DocumentTitleHandler,
 } from "@refinedev/react-router";
 
-import { BrowserRouter, Routes, Route, Outlet } from "react-router";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Outlet,
+  Navigate,
+} from "react-router";
 
 import { dataProvider } from "./providers/dataProvider";
 
@@ -77,6 +84,53 @@ const customTheme = createTheme({
 
 
 /* =========================
+   ACCESS REDIRECT
+   Used when someone is not allowed into the app.
+   Sends pending / denied users to their status page
+   and everyone else to the login page.
+========================= */
+
+const AccessRedirect = () => {
+  const [target, setTarget] = useState<string | null>(null);
+
+  useEffect(() => {
+    const decide = async () => {
+      const {
+        data: { session },
+      } = await supabaseClient.auth.getSession();
+
+      if (!session) {
+        setTarget("/login");
+        return;
+      }
+
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("status")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profile?.status === "pending") {
+        setTarget("/pending");
+        return;
+      }
+
+      if (profile?.status === "denied") {
+        setTarget("/denied");
+        return;
+      }
+
+      setTarget("/login");
+    };
+
+    decide();
+  }, []);
+
+  return target ? <Navigate to={target} replace /> : null;
+};
+
+
+/* =========================
    APP
 ========================= */
 
@@ -90,74 +144,75 @@ const App: React.FC = () => {
 
     /* LOGIN */
 
-   login: async ({ email, password }) => {
+    login: async ({ email, password }) => {
 
-  if (!email || !password) {
-    return {
-      success: false,
-      error: {
-        message: "Please enter your email and password.",
-        name: "Missing credentials",
-      },
-    };
-  }
+      if (!email || !password) {
+        return {
+          success: false,
+          error: {
+            message: "Please enter your email and password.",
+            name: "Missing credentials",
+          },
+        };
+      }
 
-  const { data, error } =
-    await supabaseClient.auth.signInWithPassword({
-      email,
-      password,
-    });
+      const { data, error } =
+        await supabaseClient.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-  if (error) {
-    return {
-      success: false,
-      error: {
-        message: error.message,
-        name: "Login failed",
-      },
-    };
-  }
+      if (error) {
+        return {
+          success: false,
+          error: {
+            message: error.message,
+            name: "Login failed",
+          },
+        };
+      }
 
-  const { data: profile, error: profileError } =
-    await supabaseClient
-      .from("profiles")
-      .select("status")
-      .eq("id", data.user.id)
-      .single();
+      const { data: profile, error: profileError } =
+        await supabaseClient
+          .from("profiles")
+          .select("status")
+          .eq("id", data.user.id)
+          .single();
 
-  if (profileError || !profile) {
-    await supabaseClient.auth.signOut();
+      if (profileError || !profile) {
+        await supabaseClient.auth.signOut();
 
-    return {
-      success: false,
-      error: {
-        message: "Your profile could not be found.",
-        name: "Profile not found",
-      },
-    };
-  }
+        return {
+          success: false,
+          error: {
+            message: "Your profile could not be found.",
+            name: "Profile not found",
+          },
+        };
+      }
 
-  if (profile.status === "pending") {
-    return {
-      success: true,
-      redirectTo: "/pending",
-    };
-  }
+      // The Pending and Denied pages sign the user out themselves
+      // once they have arrived, so the redirect is not interrupted.
 
-  if (profile.status === "denied") {
-  await supabaseClient.auth.signOut();
+      if (profile.status === "pending") {
+        return {
+          success: true,
+          redirectTo: "/pending",
+        };
+      }
 
-  return {
-    success: true,
-    redirectTo: "/denied",
-  };
-}
+      if (profile.status === "denied") {
+        return {
+          success: true,
+          redirectTo: "/denied",
+        };
+      }
 
-  return {
-    success: true,
-    redirectTo: "/",
-  };
-},
+      return {
+        success: true,
+        redirectTo: "/",
+      };
+    },
 
 
     /* REGISTER */
@@ -203,7 +258,7 @@ const App: React.FC = () => {
 
       return {
         success: true,
-        redirectTo: "/login",
+        redirectTo: "/pending",
       };
     },
 
@@ -310,104 +365,115 @@ const App: React.FC = () => {
     /* CHECK AUTHENTICATION */
 
     check: async () => {
-  const {
-    data: { session },
-  } = await supabaseClient.auth.getSession();
+      const {
+        data: { session },
+      } = await supabaseClient.auth.getSession();
 
-  if (!session) {
-    return {
-      authenticated: false,
-      error: {
-        message: "You are not authenticated.",
-        name: "Not authenticated",
-      },
-      logout: true,
-      redirectTo: "/login",
-    };
-  }
+      if (!session) {
+        return {
+          authenticated: false,
+          error: {
+            message: "You are not authenticated.",
+            name: "Not authenticated",
+          },
+          logout: true,
+          redirectTo: "/login",
+        };
+      }
 
-  const { data: profile, error } = await supabaseClient
-    .from("profiles")
-    .select("status")
-    .eq("id", session.user.id)
-    .single();
+      const { data: profile, error } = await supabaseClient
+        .from("profiles")
+        .select("status")
+        .eq("id", session.user.id)
+        .single();
 
-  if (error || !profile) {
-    await supabaseClient.auth.signOut();
+      if (error || !profile) {
+        await supabaseClient.auth.signOut();
 
-    return {
-      authenticated: false,
-      error: {
-        message: "Your profile could not be found.",
-        name: "Profile not found",
-      },
-      logout: true,
-      redirectTo: "/login",
-    };
-  }
+        return {
+          authenticated: false,
+          error: {
+            message: "Your profile could not be found.",
+            name: "Profile not found",
+          },
+          logout: true,
+          redirectTo: "/login",
+        };
+      }
 
-  if (profile.status === "pending") {
-    return {
-      authenticated: false,
-      error: {
-        message: "Your account is awaiting verification.",
-        name: "Account pending",
-      },
-      logout: true,
-      redirectTo: "/pending",
-    };
-  }
+      // No `logout: true` for pending / denied, otherwise Refine
+      // logs the user out and sends them to /login instead.
 
-  if (profile.status === "denied") {
-    return {
-      authenticated: false,
-      error: {
-        message: "Your account access has been denied.",
-        name: "Account denied",
-      },
-      logout: true,
-      redirectTo: "/denied",
-    };
-  }
+      if (profile.status === "pending") {
+        return {
+          authenticated: false,
+          error: {
+            message: "Your account is awaiting verification.",
+            name: "Account pending",
+          },
+          redirectTo: "/pending",
+        };
+      }
 
-  return {
-    authenticated: true,
-  };
-},
+      if (profile.status === "denied") {
+        return {
+          authenticated: false,
+          error: {
+            message: "Your account access has been denied.",
+            name: "Account denied",
+          },
+          redirectTo: "/denied",
+        };
+      }
+
+      return {
+        authenticated: true,
+      };
+    },
 
 
     /* USER PERMISSIONS */
 
     getPermissions: async () => {
+      const {
+        data: { user },
+      } = await supabaseClient.auth.getUser();
 
-      // TEMPORARY
-      // We will connect this to the profiles/roles
-      // table once the basic authentication works.
+      if (!user) return null;
 
-      return ["admin"];
+      const { data } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      return data?.role ?? null;
     },
 
 
     /* USER IDENTITY */
 
     getIdentity: async () => {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return null;
+      const {
+        data: { user },
+      } = await supabaseClient.auth.getUser();
 
-  const { data: p } = await supabaseClient
-    .from("profiles")
-    .select("first_name, last_name, role, vendor_id")
-    .eq("id", user.id)
-    .single();
+      if (!user) return null;
 
-  return {
-    id: user.id,
-    name: p ? `${p.first_name} ${p.last_name}` : user.email,
-    email: user.email,
-    role: p?.role ?? null,
-    vendor_id: p?.vendor_id ?? null,
-  };
-},
+      const { data: p } = await supabaseClient
+        .from("profiles")
+        .select("first_name, last_name, role, vendor_id")
+        .eq("id", user.id)
+        .single();
+
+      return {
+        id: user.id,
+        name: p ? `${p.first_name} ${p.last_name}` : user.email,
+        email: user.email,
+        role: p?.role ?? null,
+        vendor_id: p?.vendor_id ?? null,
+      };
+    },
 
 
     /* HANDLE AUTH ERRORS */
@@ -537,9 +603,7 @@ const App: React.FC = () => {
                 element={
                   <Authenticated
                     key="authenticated-routes"
-                    fallback={
-                      <CatchAllNavigate to="/login" />
-                    }
+                    fallback={<AccessRedirect />}
                   >
                     <ThemedLayout>
                       <Outlet />
@@ -624,18 +688,19 @@ const App: React.FC = () => {
                   />
 
                 </Route>
-                
+
                 <Route path="/profiles" element={<ProfileList />} />
 
               </Route>
 
+
               {/* =========================
-    PUBLIC ACCOUNT STATUS PAGES
-========================= */}
+                  PUBLIC ACCOUNT STATUS PAGES
+              ========================= */}
 
-<Route path="/pending" element={<Pending />} />
+              <Route path="/pending" element={<Pending />} />
 
-<Route path="/denied" element={<Denied />} /> 
+              <Route path="/denied" element={<Denied />} />
 
 
               {/* =========================
@@ -703,7 +768,10 @@ const App: React.FC = () => {
 
               <Route
                 element={
-                  <Authenticated key="catch-all">
+                  <Authenticated
+                    key="catch-all"
+                    fallback={<AccessRedirect />}
+                  >
                     <ThemedLayout>
                       <Outlet />
                     </ThemedLayout>

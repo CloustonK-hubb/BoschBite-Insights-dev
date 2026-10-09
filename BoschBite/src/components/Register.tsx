@@ -109,13 +109,15 @@ function Register() {
       return;
     }
 
-    setSuccess(
-      "Account created successfully. Your account is awaiting verification.",
-    );
+    navigate("/pending");
 
-    setTimeout(() => {
-      navigate("/login");
-    }, 1500);
+    // setSuccess(
+    //   "Account created successfully. Your account is awaiting verification.",
+    // );
+
+    // setTimeout(() => {
+    //   navigate("/login");
+    // }, 1500);
   };
 
   return (

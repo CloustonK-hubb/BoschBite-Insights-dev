@@ -1,8 +1,14 @@
 import { Box, Button, Paper, Typography } from "@mui/material";
 import { useNavigate } from "react-router";
+import { useEffect } from "react";
+import { supabaseClient } from "../lib/supabaseClient";
 
 function Pending() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabaseClient.auth.signOut({ scope: "local" });
+  }, []);
 
   return (
     <Box
