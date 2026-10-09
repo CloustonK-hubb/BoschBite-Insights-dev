@@ -1,85 +1,25 @@
 import { useEffect, useState } from "react";
-
-import {
-  Refine,
-  type AuthProvider,
-  Authenticated,
-} from "@refinedev/core";
-
-import {
-  ThemedLayout,
-  ErrorComponent,
-  useNotificationProvider,
-  RefineSnackbarProvider,
-  AuthPage,
-} from "@refinedev/mui";
-
+import { Refine,type AuthProvider,Authenticated,} from "@refinedev/core";
+import {ThemedLayout, ErrorComponent, RefineThemes, useNotificationProvider, RefineSnackbarProvider,AuthPage,} from "@refinedev/mui";
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import { ThemeProvider } from "@mui/material/styles";
-
-import routerProvider, {
-  NavigateToResource,
-  UnsavedChangesNotifier,
-  DocumentTitleHandler,
-} from "@refinedev/react-router";
-
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Outlet,
-  Navigate,
-} from "react-router";
-
+import routerProvider, {NavigateToResource, UnsavedChangesNotifier,DocumentTitleHandler,} from "@refinedev/react-router";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router";
 import { dataProvider } from "./providers/dataProvider";
-
 import { ProfileList } from "./pages/Profile/ProfileList";
-
-import {
-  TransactionList,
-  StudentList,
-  VendorList,
-  VendorTypesList,
-} from "./pages/posts";
-
-import {
-  TransactionShow,
-  StudentShow,
-  VendorShow,
-  VendorTypeShow,
-} from "./pages/posts/show";
-
+import { TransactionList, StudentList, VendorList, VendorTypesList} from "../src/pages/posts";
+import { TransactionShow, StudentShow, VendorShow, VendorTypeShow } from "./pages/posts/show";
 import { StudentEdit } from "./pages/posts/edit";
-
 import StorageIcon from "@mui/icons-material/Storage";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-
 import { DashboardPage } from "./pages/dashboard";
-
-import { createTheme } from "@mui/material";
-
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import { customTheme } from "./providers/theme";
+import { Box, Typography } from "@mui/material";
 import { supabaseClient } from "./lib/supabaseClient";
-
 import Register from "./components/Register";
-
 import Pending from "./components/Pending";
 import Denied from "./components/Denied";
-
-
-/* =========================
-   THEME
-
-const customTheme = createTheme({
-  palette: {
-    primary: {
-      main: "#2B3F72",
-    },
-    secondary: {
-      main: "#D72C32",
-    },
-  },
-});
 
 
 /* =========================
@@ -87,6 +27,7 @@ const customTheme = createTheme({
    Used when someone is not allowed into the app.
    Sends pending / denied users to their status page
    and everyone else to the login page.
+========================= */
 
 const AccessRedirect = () => {
   const [target, setTarget] = useState<string | null>(null);
@@ -128,15 +69,13 @@ const AccessRedirect = () => {
 };
 
 
-/* =========================
-   APP
-
 const App: React.FC = () => {
 
   /* =========================
      SUPABASE AUTH PROVIDER
   ========================= */
 
+  //Auth Provider 
   const authProvider: AuthProvider = {
 
     /* LOGIN */
@@ -214,6 +153,7 @@ const App: React.FC = () => {
 
     /* REGISTER */
 
+    //Option to register 
     register: async ({
       email,
       password,
@@ -262,6 +202,7 @@ const App: React.FC = () => {
 
     /* FORGOT PASSWORD */
 
+    //Forgot password option on login page 
     forgotPassword: async ({ email }) => {
 
       if (!email) {
@@ -301,6 +242,7 @@ const App: React.FC = () => {
 
     /* UPDATE PASSWORD */
 
+    //Update password option on login page 
     updatePassword: async ({ password }) => {
 
       if (!password) {
@@ -337,6 +279,7 @@ const App: React.FC = () => {
 
     /* LOGOUT */
 
+    //logout option: clears storage and redirects to login page 
     logout: async () => {
 
       const { error } =
@@ -361,6 +304,7 @@ const App: React.FC = () => {
 
     /* CHECK AUTHENTICATION */
 
+    //called on navigation to decide whether the user is logged in
     check: async () => {
       const {
         data: { session },
@@ -431,6 +375,8 @@ const App: React.FC = () => {
 
     /* USER PERMISSIONS */
 
+    //Both getPermissions and getIdentity feed role checks and the avatar/name in the header
+    //Can replace these values with the columns that hold the required information 
     getPermissions: async () => {
       const {
         data: { user },
@@ -475,6 +421,7 @@ const App: React.FC = () => {
 
     /* HANDLE AUTH ERRORS */
 
+    //runs when any data request fails and a 401 triggers a logout.
     onError: async (error) => {
 
       if (error.response?.status === 401) {
@@ -489,207 +436,115 @@ const App: React.FC = () => {
     },
   };
 
-
-  /* =========================
-     APPLICATION
-  ========================= */
-
+//Refine component 
+//Here you will edit the pages that appear in the navigation 
+//Must add the page content to the routes otherwise will throw an error 
   return (
     <BrowserRouter>
-
       <ThemeProvider theme={customTheme}>
-
         <CssBaseline />
-
-        <GlobalStyles
-          styles={{
-            html: {
-              WebkitFontSmoothing: "auto",
-            },
-          }}
-        />
-
+        <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
         <RefineSnackbarProvider>
-
           <Refine
             authProvider={authProvider}
             dataProvider={dataProvider}
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
-
             resources={[
-              {
-                name: "dashboard",
-                list: "/",
-                meta: {
-                  label: "Business Dashboard",
-                  icon: <DashboardIcon />,
-                },
-              },
-
-              {
-                name: "data-management",
-                meta: {
-                  label: "Data Management",
-                  icon: <StorageIcon />,
-                },
-              },
-
-              {
-                name: "Transaction",
-                list: "/transaction",
-                show: "/transaction/show/:id",
-                meta: {
-                  parent: "data-management",
-                },
-              },
-
-              {
-                name: "Student",
-                list: "/student",
-                show: "/student/show/:id",
-                edit: "student/edit/:id",
-                meta: {
-                  parent: "data-management",
-                },
-              },
-
-              {
-                name: "Vendor",
-                list: "/vendor",
-                show: "/vendor/show/:id",
-                meta: {
-                  parent: "data-management",
-                },
-              },
-
-              {
-                name: "profiles",
-                list: "/profiles",
-                meta: {
-                  label: "User Profiles",
-                },
-              },
-
-              {
-                name: "Vendor_Type",
-                list: "/vendor_type",
-                show: "/vendor_type/show/:id",
-                meta: {
-                  parent: "data-management",
-                },
-              },
+              { name: "dashboard", list: "/", meta: { label: "Business Dashboard", icon: <DashboardIcon /> } },
+              //Creating the grouping for the navigation: 
+              { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
+              { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
+              //Adding the relevant CRUD pages to the first grouping using: meta: {parent: "BoschCard-data"}
+              { name: "Transaction", list: "/transaction", show: "/transaction/show/:id", meta: {parent: "BoschCard-data"}},
+              { name: "Student", list: "/student", show: "/student/show/:id", edit: "/student/edit/:id", meta: {parent: "BoschCard-data"}},
+              { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "BoschCard-data"}},
+              { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "BoschCard-data"}},
+              //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
+              { name: "Calendar", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", 
+                meta: {label: "Calendar", parent: "BoschBites-data", canDelete: true}},
+              { name: "Promo_Window", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id", 
+                meta: {label: "Promotion Window", parent: "BoschBites-data", canDelete: true}},
+              { name: "kpi_tx_base", list: "/kpi_tx_base", show: "/kpi_tx_base/show/:id", meta: {parent: "BoschBites-data"}},
+              { name: "profiles", list: "/profiles", meta: { label: "User Profiles" } },
             ]}
-
-            options={{
-              syncWithLocation: true,
-              warnWhenUnsavedChanges: true,
-              title: {
-                text: "BoschBite Insights",
-              },
-            }}
+          options={{
+  syncWithLocation: true,
+  warnWhenUnsavedChanges: true,
+  title: { text: "BoschBite Insights", icon: (
+      <image href= "/BoschBites-logo-cropped.png" width= "25" height="25"/> )},
+}}
           >
-
             <Routes>
-
-              {/* =========================
-                  PROTECTED APPLICATION
-              ========================= */}
-
               <Route
                 element={
                   <Authenticated
                     key="authenticated-routes"
                     fallback={<AccessRedirect />}
                   >
-                    <ThemedLayout>
+                    {/* Editing the header of the app */}
+                    <ThemedLayout Title= {({ collapsed }) => (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <img src= "BoschBites-logo-cropped.png" alt="BoschBites logo" style={{ height: collapsed ? 50 : 63}} />
+                        {!collapsed && (
+                      <Typography fontWeight={500} fontSize={16} color="#382322">BoschBite Insights</Typography> )}
+                      </Box>
+                      )}
+                      >
                       <Outlet />
                     </ThemedLayout>
                   </Authenticated>
                 }
               >
-
-                <Route
-                  index
-                  element={<DashboardPage />}
-                />
-
-                {/* TRANSACTIONS */}
-
-                <Route path="/transaction">
-
-                  <Route
-                    index
-                    element={<TransactionList />}
-                  />
-
-                  <Route
-                    path="show/:id"
-                    element={<TransactionShow />}
-                  />
-
-                </Route>
-
-
-                {/* STUDENTS */}
-
-                <Route path="/student">
-
-                  <Route
-                    index
-                    element={<StudentList />}
-                  />
-
-                  <Route
-                    path="show/:id"
-                    element={<StudentShow />}
-                  />
-
-                  <Route
-                    path="edit/:id"
-                    element={<StudentEdit />}
-                  />
-
-                </Route>
-
-
-                {/* VENDORS */}
-
-                <Route path="/vendor">
-
-                  <Route
-                    index
-                    element={<VendorList />}
-                  />
-
-                  <Route
-                    path="show/:id"
-                    element={<VendorShow />}
-                  />
-
-                </Route>
-
-
-                {/* VENDOR TYPES */}
-
-                <Route path="/vendor_type">
-
-                  <Route
-                    index
-                    element={<VendorTypesList />}
-                  />
-
-                  <Route
-                    path="show/:id"
-                    element={<VendorTypeShow />}
-                  />
-
-                </Route>
-
-                <Route path="/profiles" element={<ProfileList />} />
-
+               <Route index element={<DashboardPage />} />
+       
+                {/* Example: 
+                <Route path="/posts"> 
+                  <Route index element={<PostList />} />
+                  <Route path="show/:id" element={<PostShow />} />
+                  <Route path="create" element={<PostCreate />} />
+                  <Route path="edit/:id" element={<PostEdit />} />
+                </Route>*/}
+               <Route path = "/transaction"> 
+                <Route index element={<TransactionList/>}/>
+                <Route path="show/:id" element={<TransactionShow />} />
+              </Route> 
+              
+              <Route path="/student">
+                <Route index element={<StudentList />} />
+                <Route path="show/:id" element={<StudentShow />} />
+                <Route path="edit/:id" element={<StudentEdit />} />
               </Route>
 
+              <Route path="/vendor">
+                <Route index element={<VendorList />} />
+                <Route path="show/:id" element={<VendorShow />}/>
+              </Route>
+
+              <Route path="/vendor_type">
+                <Route index element={<VendorTypesList />} />
+                <Route path="show/:id" element={<VendorTypeShow />} />
+              </Route>
+
+              {/* <Route path="/calendar">
+                <Route index element={<CalendarList />} />
+                <Route path="show/:id" element={<CalendarShow />} />
+                <Route path="edit/:id" element={<CalendarEdit />} />
+              </Route>
+
+              <Route path="/promo_window">
+                <Route index element={<PromoWindowList />} />
+                <Route path="show/:id" element={<PromoWindowShow />} />
+                <Route path="edit/:id" element={<PromoWindowEdit />} />
+              </Route>
+
+              <Route path="/kpi_tx_base">
+                <Route index element={<KPIList />} />
+                <Route path="show/:id" element={<KPIShow />} />
+              </Route> */}
+
+              <Route path="/profiles" element={<ProfileList />} />
+          </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
 
               {/* =========================
                   PUBLIC ACCOUNT STATUS PAGES
@@ -699,69 +554,31 @@ const App: React.FC = () => {
 
               <Route path="/denied" element={<Denied />} />
 
-
-              {/* =========================
-                  AUTHENTICATION PAGES
-              ========================= */}
-
               <Route
                 element={
-                  <Authenticated
-                    key="auth-pages"
-                    fallback={<Outlet />}
-                  >
+                  <Authenticated key="auth-pages" fallback={<Outlet />}>
                     <NavigateToResource resource="dashboard" />
                   </Authenticated>
                 }
               >
-
-                {/* LOGIN */}
-
                 <Route
                   path="/login"
                   element={
-                    <AuthPage
-                      type="login"
+                    <AuthPage type="login"
                       rememberMe={<></>}
                     />
                   }
                 />
-
-
-                {/* REGISTER */}
-
                 <Route path="/register" element={<Register />} />
-
-
-                {/* FORGOT PASSWORD */}
-
                 <Route
                   path="/forgot-password"
-                  element={
-                    <AuthPage
-                      type="forgotPassword"
-                    />
-                  }
+                  element={<AuthPage type="forgotPassword" />}
                 />
-
-
-                {/* UPDATE PASSWORD */}
-
                 <Route
                   path="/update-password"
-                  element={
-                    <AuthPage
-                      type="updatePassword"
-                    />
-                  }
+                  element={<AuthPage type="updatePassword" />}
                 />
-
               </Route>
-
-
-              {/* =========================
-                  CATCH ALL
-              ========================= */}
 
               <Route
                 element={
@@ -775,26 +592,14 @@ const App: React.FC = () => {
                   </Authenticated>
                 }
               >
-
-                <Route
-                  path="*"
-                  element={<ErrorComponent />}
-                />
-
+                <Route path="*" element={<ErrorComponent />} />
               </Route>
-
             </Routes>
-
             <UnsavedChangesNotifier />
-
             <DocumentTitleHandler />
-
           </Refine>
-
         </RefineSnackbarProvider>
-
       </ThemeProvider>
-
     </BrowserRouter>
   );
 };
