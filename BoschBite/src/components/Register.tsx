@@ -45,6 +45,7 @@ function Register() {
       const { data, error } = await supabaseClient
         .from("Vendor")
         .select("vendor_id, name")
+        .eq("type_id", 1)
         .order("name");
 
       if (error) {
