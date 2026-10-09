@@ -69,7 +69,6 @@ import Denied from "./components/Denied";
 
 /* =========================
    THEME
-========================= */
 
 const customTheme = createTheme({
   palette: {
@@ -88,7 +87,6 @@ const customTheme = createTheme({
    Used when someone is not allowed into the app.
    Sends pending / denied users to their status page
    and everyone else to the login page.
-========================= */
 
 const AccessRedirect = () => {
   const [target, setTarget] = useState<string | null>(null);
@@ -132,7 +130,6 @@ const AccessRedirect = () => {
 
 /* =========================
    APP
-========================= */
 
 const App: React.FC = () => {
 
