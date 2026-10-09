@@ -1,362 +1,800 @@
-import { Refine,type AuthProvider,Authenticated,} from "@refinedev/core";
-import {ThemedLayout, ErrorComponent, RefineThemes, useNotificationProvider, RefineSnackbarProvider,AuthPage,} from "@refinedev/mui";
+import { useEffect, useState } from "react";
+
+import {
+  Refine,
+  type AuthProvider,
+  Authenticated,
+} from "@refinedev/core";
+
+import {
+  ThemedLayout,
+  ErrorComponent,
+  useNotificationProvider,
+  RefineSnackbarProvider,
+  AuthPage,
+} from "@refinedev/mui";
+
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
 import { ThemeProvider } from "@mui/material/styles";
-import routerProvider, {NavigateToResource, CatchAllNavigate,UnsavedChangesNotifier,DocumentTitleHandler,} from "@refinedev/react-router";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router";
-import { useFormContext } from "react-hook-form";
-import GitHubIcon from "@mui/icons-material/GitHub";
-import GoogleIcon from "@mui/icons-material/Google";
+
+import routerProvider, {
+  NavigateToResource,
+  UnsavedChangesNotifier,
+  DocumentTitleHandler,
+} from "@refinedev/react-router";
+
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Outlet,
+  Navigate,
+} from "react-router";
+
 import { dataProvider } from "./providers/dataProvider";
-import { TransactionList, StudentList, VendorList, VendorTypesList, CalendarList, PromoWindowList, KPIList} from "../src/pages/posts";
-import { TransactionShow, StudentShow, VendorShow, VendorTypeShow, CalendarShow, PromoWindowShow, KPIShow } from "./pages/posts/show";
-import { CalendarEdit, PromoWindowEdit } from "./pages/posts/edit";
+
+import { ProfileList } from "./pages/Profile/ProfileList";
+
+import {
+  TransactionList,
+  StudentList,
+  VendorList,
+  VendorTypesList,
+} from "./pages/posts";
+
+import {
+  TransactionShow,
+  StudentShow,
+  VendorShow,
+  VendorTypeShow,
+} from "./pages/posts/show";
+
+import { StudentEdit } from "./pages/posts/edit";
+
 import StorageIcon from "@mui/icons-material/Storage";
-import { DashboardPage } from "./pages/dashboard";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import { customTheme } from "./providers/theme";
-import { Box, Typography } from "@mui/material";
-/**
- *  mock auth credentials to simulate authentication
- */
-//Auth Provider 
-//Setting default credential values 
-//Can replace the default values with generalised values from the database once they are created 
-const authCredentials = {
-  email: "demo@refine.dev",
-  password: "demodemo",
+
+import { DashboardPage } from "./pages/dashboard";
+
+import { createTheme } from "@mui/material";
+
+import { supabaseClient } from "./lib/supabaseClient";
+
+import Register from "./components/Register";
+
+import Pending from "./components/Pending";
+import Denied from "./components/Denied";
+
+
+/* =========================
+   THEME
+
+const customTheme = createTheme({
+  palette: {
+    primary: {
+      main: "#2B3F72",
+    },
+    secondary: {
+      main: "#D72C32",
+    },
+  },
+});
+
+
+/* =========================
+   ACCESS REDIRECT
+   Used when someone is not allowed into the app.
+   Sends pending / denied users to their status page
+   and everyone else to the login page.
+
+const AccessRedirect = () => {
+  const [target, setTarget] = useState<string | null>(null);
+
+  useEffect(() => {
+    const decide = async () => {
+      const {
+        data: { session },
+      } = await supabaseClient.auth.getSession();
+
+      if (!session) {
+        setTarget("/login");
+        return;
+      }
+
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("status")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profile?.status === "pending") {
+        setTarget("/pending");
+        return;
+      }
+
+      if (profile?.status === "denied") {
+        setTarget("/denied");
+        return;
+      }
+
+      setTarget("/login");
+    };
+
+    decide();
+  }, []);
+
+  return target ? <Navigate to={target} replace /> : null;
 };
 
 
+/* =========================
+   APP
+
 const App: React.FC = () => {
+
+  /* =========================
+     SUPABASE AUTH PROVIDER
+  ========================= */
+
   const authProvider: AuthProvider = {
-    login: async ({ providerName, email }) => {
-      //Login through Google option
-      if (providerName === "google") {
-        window.location.href = "https://accounts.google.com/o/oauth2/v2/auth";
+
+    /* LOGIN */
+
+    login: async ({ email, password }) => {
+
+      if (!email || !password) {
         return {
-          success: true,
+          success: false,
+          error: {
+            message: "Please enter your email and password.",
+            name: "Missing credentials",
+          },
         };
       }
-      //Log in with Github option 
-      if (providerName === "github") {
-        window.location.href = "https://github.com/login/oauth/authorize";
+
+      const { data, error } =
+        await supabaseClient.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+      if (error) {
         return {
-          success: true,
+          success: false,
+          error: {
+            message: error.message,
+            name: "Login failed",
+          },
         };
       }
-      //Log in with Email
-      if (email === authCredentials.email) {
-        localStorage.setItem("email", email); //Would need to replace localStorage with a real call to your database
+
+      const { data: profile, error: profileError } =
+        await supabaseClient
+          .from("profiles")
+          .select("status")
+          .eq("id", data.user.id)
+          .single();
+
+      if (profileError || !profile) {
+        await supabaseClient.auth.signOut();
+
+        return {
+          success: false,
+          error: {
+            message: "Your profile could not be found.",
+            name: "Profile not found",
+          },
+        };
+      }
+
+      // The Pending and Denied pages sign the user out themselves
+      // once they have arrived, so the redirect is not interrupted.
+
+      if (profile.status === "pending") {
         return {
           success: true,
-          redirectTo: "/",
+          redirectTo: "/pending",
+        };
+      }
+
+      if (profile.status === "denied") {
+        return {
+          success: true,
+          redirectTo: "/denied",
         };
       }
 
       return {
-        success: false,
-        error: {
-          message: "Login failed",
-          name: "Invalid email or password",
-        },
+        success: true,
+        redirectTo: "/",
       };
     },
-    //Option to register 
-    register: async (params) => {
-      if (params.email === authCredentials.email && params.password) {
-        localStorage.setItem("email", params.email);
+
+
+    /* REGISTER */
+
+    register: async ({
+      email,
+      password,
+      first_name,
+      last_name,
+    }) => {
+
+      if (!email || !password || !first_name || !last_name) {
         return {
-          success: true,
-          redirectTo: "/",
+          success: false,
+          error: {
+            message: "Please complete all required fields.",
+            name: "Missing information",
+          },
         };
       }
-      return {
-        success: false,
-        error: {
-          message: "Register failed",
-          name: "Invalid email or password",
-        },
-      };
-    },
-    //Update password option on login page 
-    updatePassword: async (params) => {
-      if (params.password === authCredentials.password) {
-        //we can update password here
+
+      const { error } =
+        await supabaseClient.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              first_name,
+              last_name,
+            },
+          },
+        });
+
+      if (error) {
         return {
-          success: true,
+          success: false,
+          error: {
+            message: error.message,
+            name: "Registration failed",
+          },
         };
       }
+
       return {
-        success: false,
-        error: {
-          message: "Update password failed",
-          name: "Invalid password",
-        },
+        success: true,
+        redirectTo: "/pending",
       };
     },
-    //Forgot password option on login page 
-    forgotPassword: async (params) => {
-      if (params.email === authCredentials.email) {
-        //we can send email with reset password link here
+
+
+    /* FORGOT PASSWORD */
+
+    forgotPassword: async ({ email }) => {
+
+      if (!email) {
         return {
-          success: true,
+          success: false,
+          error: {
+            message: "Please enter your email address.",
+            name: "Missing email",
+          },
         };
       }
+
+      const { error } =
+        await supabaseClient.auth.resetPasswordForEmail(
+          email,
+          {
+            redirectTo:
+              `${window.location.origin}/update-password`,
+          }
+        );
+
+      if (error) {
+        return {
+          success: false,
+          error: {
+            message: error.message,
+            name: "Password reset failed",
+          },
+        };
+      }
+
       return {
-        success: false,
-        error: {
-          message: "Forgot password failed",
-          name: "Invalid email",
-        },
+        success: true,
       };
     },
-    //logout option: clears storage and redirects to login page 
-    logout: async () => {
-      localStorage.removeItem("email");
+
+
+    /* UPDATE PASSWORD */
+
+    updatePassword: async ({ password }) => {
+
+      if (!password) {
+        return {
+          success: false,
+          error: {
+            message: "Please enter a new password.",
+            name: "Missing password",
+          },
+        };
+      }
+
+      const { error } =
+        await supabaseClient.auth.updateUser({
+          password,
+        });
+
+      if (error) {
+        return {
+          success: false,
+          error: {
+            message: error.message,
+            name: "Password update failed",
+          },
+        };
+      }
+
       return {
         success: true,
         redirectTo: "/login",
       };
     },
-    //runs when any data request fails and a 401 triggers a logout.
+
+
+    /* LOGOUT */
+
+    logout: async () => {
+
+      const { error } =
+        await supabaseClient.auth.signOut();
+
+      if (error) {
+        return {
+          success: false,
+          error: {
+            message: error.message,
+            name: "Logout failed",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        redirectTo: "/login",
+      };
+    },
+
+
+    /* CHECK AUTHENTICATION */
+
+    check: async () => {
+      const {
+        data: { session },
+      } = await supabaseClient.auth.getSession();
+
+      if (!session) {
+        return {
+          authenticated: false,
+          error: {
+            message: "You are not authenticated.",
+            name: "Not authenticated",
+          },
+          logout: true,
+          redirectTo: "/login",
+        };
+      }
+
+      const { data: profile, error } = await supabaseClient
+        .from("profiles")
+        .select("status")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error || !profile) {
+        await supabaseClient.auth.signOut();
+
+        return {
+          authenticated: false,
+          error: {
+            message: "Your profile could not be found.",
+            name: "Profile not found",
+          },
+          logout: true,
+          redirectTo: "/login",
+        };
+      }
+
+      // No `logout: true` for pending / denied, otherwise Refine
+      // logs the user out and sends them to /login instead.
+
+      if (profile.status === "pending") {
+        return {
+          authenticated: false,
+          error: {
+            message: "Your account is awaiting verification.",
+            name: "Account pending",
+          },
+          redirectTo: "/pending",
+        };
+      }
+
+      if (profile.status === "denied") {
+        return {
+          authenticated: false,
+          error: {
+            message: "Your account access has been denied.",
+            name: "Account denied",
+          },
+          redirectTo: "/denied",
+        };
+      }
+
+      return {
+        authenticated: true,
+      };
+    },
+
+
+    /* USER PERMISSIONS */
+
+    getPermissions: async () => {
+      const {
+        data: { user },
+      } = await supabaseClient.auth.getUser();
+
+      if (!user) return null;
+
+      const { data } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      return data?.role ?? null;
+    },
+
+
+    /* USER IDENTITY */
+
+    getIdentity: async () => {
+      const {
+        data: { user },
+      } = await supabaseClient.auth.getUser();
+
+      if (!user) return null;
+
+      const { data: p } = await supabaseClient
+        .from("profiles")
+        .select("first_name, last_name, role, vendor_id")
+        .eq("id", user.id)
+        .single();
+
+      return {
+        id: user.id,
+        name: p ? `${p.first_name} ${p.last_name}` : user.email,
+        email: user.email,
+        role: p?.role ?? null,
+        vendor_id: p?.vendor_id ?? null,
+      };
+    },
+
+
+    /* HANDLE AUTH ERRORS */
+
     onError: async (error) => {
+
       if (error.response?.status === 401) {
         return {
           logout: true,
         };
       }
 
-      return { error };
+      return {
+        error,
+      };
     },
-      check: async () => ({ authenticated: true }), // DEMO ONLY  
-    //called on navigation to decide whether the user is logged in
-    // check: async () =>
-    //   localStorage.getItem("email")
-    //     ? {
-    //         authenticated: true,
-    //       }
-    //     : {
-    //         authenticated: false,
-    //         error: {
-    //           message: "Check failed",
-    //           name: "Not authenticated",
-    //         },
-    //         logout: true,
-    //         redirectTo: "/login",
-    //       },
-    //Both getPermissions and getIdentity feed role checks and the avatar/name in the header
-    //Can replace these values with the columns that hold the required information 
-    getPermissions: async () => ["admin"],
-    getIdentity: async () => ({
-      id: 1,
-      name: "Kaitlyn Clouston",
-      avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSaKEl-u9RPdgXv1JO4sPnJCAo1Kcpvd8KdldReLnujxQ&s=10"
-        //"https://unsplash.com/photos/IWLOvomUmWU/download?force=true&w=640",
-    }),
   };
 
-  //Optional for the login page 
-  //If chosen to remove, delete the rememberMe prop as well 
-  const RememeberMe = () => {
-    const { register } = useFormContext();
 
-    return (
-      <FormControlLabel
-        sx={{
-          span: {
-            fontSize: "12px",
-            color: "text.secondary",
-          },
-        }}
-        color="secondary"
-        control={
-          <Checkbox size="small" id="rememberMe" {...register("rememberMe")} />
-        }
-        label="Remember me"
-      />
-    );
-  };
+  /* =========================
+     APPLICATION
+  ========================= */
 
-//Refine component 
-//Here you will edit the pages that appear in the navigation 
-//Must add the page content to the routes otherwise will throw an error 
   return (
     <BrowserRouter>
+
       <ThemeProvider theme={customTheme}>
+
         <CssBaseline />
-        <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
+
+        <GlobalStyles
+          styles={{
+            html: {
+              WebkitFontSmoothing: "auto",
+            },
+          }}
+        />
+
         <RefineSnackbarProvider>
+
           <Refine
             authProvider={authProvider}
             dataProvider={dataProvider}
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
+
             resources={[
-              { name: "dashboard", list: "/", meta: { label: "Business Dashboard", icon: <DashboardIcon /> } },
-              //Creating the grouping for the navigation: 
-              { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
-              { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
-              //Adding the relevant CRUD pages to the first grouping using: meta: {parent: "BoschCard-data"}
-              { name: "Transaction", list: "/transaction", show: "/transaction/show/:id", meta: {parent: "BoschCard-data"}},
-              { name: "Student", list: "/student", show: "/student/show/:id", meta: {parent: "BoschCard-data"}},
-              { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "BoschCard-data"}},
-              { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "BoschCard-data"}},
-              //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
-              { name: "Calendar", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", 
-                meta: {label: "Calendar", parent: "BoschBites-data", canDelete: true}},
-              { name: "Promo_Window", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id", 
-                meta: {label: "Promotion Window", parent: "BoschBites-data", canDelete: true}},
-              { name: "kpi_tx_base", list: "/kpi_tx_base", show: "/kpi_tx_base/show/:id", meta: {parent: "BoschBites-data"}},
+              {
+                name: "dashboard",
+                list: "/",
+                meta: {
+                  label: "Business Dashboard",
+                  icon: <DashboardIcon />,
+                },
+              },
+
+              {
+                name: "data-management",
+                meta: {
+                  label: "Data Management",
+                  icon: <StorageIcon />,
+                },
+              },
+
+              {
+                name: "Transaction",
+                list: "/transaction",
+                show: "/transaction/show/:id",
+                meta: {
+                  parent: "data-management",
+                },
+              },
+
+              {
+                name: "Student",
+                list: "/student",
+                show: "/student/show/:id",
+                edit: "student/edit/:id",
+                meta: {
+                  parent: "data-management",
+                },
+              },
+
+              {
+                name: "Vendor",
+                list: "/vendor",
+                show: "/vendor/show/:id",
+                meta: {
+                  parent: "data-management",
+                },
+              },
+
+              {
+                name: "profiles",
+                list: "/profiles",
+                meta: {
+                  label: "User Profiles",
+                },
+              },
+
+              {
+                name: "Vendor_Type",
+                list: "/vendor_type",
+                show: "/vendor_type/show/:id",
+                meta: {
+                  parent: "data-management",
+                },
+              },
             ]}
-          options={{
-  syncWithLocation: true,
-  warnWhenUnsavedChanges: true,
-  title: { text: "BoschBite Insights", icon: (
-      <image href= "/BoschBites-logo-cropped.png" width= "25" height="25"/> )},
-}}
+
+            options={{
+              syncWithLocation: true,
+              warnWhenUnsavedChanges: true,
+              title: {
+                text: "BoschBite Insights",
+              },
+            }}
           >
+
             <Routes>
+
+              {/* =========================
+                  PROTECTED APPLICATION
+              ========================= */}
+
               <Route
                 element={
                   <Authenticated
                     key="authenticated-routes"
-                    fallback={<CatchAllNavigate to="/login" />}
+                    fallback={<AccessRedirect />}
                   >
-                    {/* Editing the header of the app */}
-                    <ThemedLayout Title= {({ collapsed }) => (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                        <img src= "BoschBites-logo-cropped.png" alt="BoschBites logo" style={{ height: collapsed ? 50 : 63}} />
-                        {!collapsed && (
-                      <Typography fontWeight={500} fontSize={16} color="#382322">BoschBite Insights</Typography> )}
-                      </Box>
-                      )}
-                      >
-                      <Outlet />
-                    </ThemedLayout>
-                  </Authenticated>
-                }
-              >
-               <Route index element={<DashboardPage />} />
-       
-                {/* Example: 
-                <Route path="/posts"> 
-                  <Route index element={<PostList />} />
-                  <Route path="show/:id" element={<PostShow />} />
-                  <Route path="create" element={<PostCreate />} />
-                  <Route path="edit/:id" element={<PostEdit />} />
-                </Route>*/}
-               <Route path = "/transaction"> 
-                <Route index element={<TransactionList/>}/>
-                <Route path="show/:id" element={<TransactionShow />} />
-              </Route> 
-              
-              <Route path="/student">
-                <Route index element={<StudentList />} />
-                <Route path="show/:id" element={<StudentShow />} />
-              </Route>
-
-              <Route path="/vendor">
-                <Route index element={<VendorList />} />
-                <Route path="show/:id" element={<VendorShow />}/>
-              </Route>
-
-              <Route path="/vendor_type">
-                <Route index element={<VendorTypesList />} />
-                <Route path="show/:id" element={<VendorTypeShow />} />
-              </Route>
-
-              <Route path="/calendar">
-                <Route index element={<CalendarList />} />
-                <Route path="show/:id" element={<CalendarShow />} />
-                <Route path="edit/:id" element={<CalendarEdit />} />
-              </Route>
-
-              <Route path="/promo_window">
-                <Route index element={<PromoWindowList />} />
-                <Route path="show/:id" element={<PromoWindowShow />} />
-                <Route path="edit/:id" element={<PromoWindowEdit />} />
-              </Route>
-
-              <Route path="/kpi_tx_base">
-                <Route index element={<KPIList />} />
-                <Route path="show/:id" element={<KPIShow />} />
-              </Route>
-          </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
-
-              <Route
-                element={
-                  <Authenticated key="auth-pages" fallback={<Outlet />}>
-                    <NavigateToResource resource="dashboard" />
-                  </Authenticated>
-                }
-              >
-                <Route
-                  path="/login"
-                  element={
-                    <AuthPage type="login"
-                      rememberMe={<RememeberMe />}
-                      formProps={{ defaultValues: {...authCredentials,},
-                      }}
-                      providers={[
-                        { name: "google", label: "Sign in with Google",
-                          icon: ( <GoogleIcon style={{fontSize: 24,}}/>
-                          ),
-                        },
-                        { name: "github", label: "Sign in with GitHub",
-                          icon: ( <GitHubIcon style={{fontSize: 24,}}/>
-                          ),
-                        },
-                      ]}
-                    />
-                  }
-                />
-                <Route
-                  path="/register"
-                  element={
-                    <AuthPage type="register" providers={[
-                        { name: "google", label: "Sign in with Google",
-                          icon: ( <GoogleIcon style={{fontSize: 24,}}/>
-                          ),
-                        },
-                        { name: "github", label: "Sign in with GitHub",
-                          icon: ( <GitHubIcon style={{fontSize: 24,}}/>
-                          ),
-                        },
-                      ]}
-                    />
-                  }
-                />
-                <Route
-                  path="/forgot-password"
-                  element={<AuthPage type="forgotPassword" />}
-                />
-                <Route
-                  path="/update-password"
-                  element={<AuthPage type="updatePassword" />}
-                />
-              </Route>
-
-              <Route
-                element={
-                  <Authenticated key="catch-all">
                     <ThemedLayout>
                       <Outlet />
                     </ThemedLayout>
                   </Authenticated>
                 }
               >
-                <Route path="*" element={<ErrorComponent />} />
+
+                <Route
+                  index
+                  element={<DashboardPage />}
+                />
+
+                {/* TRANSACTIONS */}
+
+                <Route path="/transaction">
+
+                  <Route
+                    index
+                    element={<TransactionList />}
+                  />
+
+                  <Route
+                    path="show/:id"
+                    element={<TransactionShow />}
+                  />
+
+                </Route>
+
+
+                {/* STUDENTS */}
+
+                <Route path="/student">
+
+                  <Route
+                    index
+                    element={<StudentList />}
+                  />
+
+                  <Route
+                    path="show/:id"
+                    element={<StudentShow />}
+                  />
+
+                  <Route
+                    path="edit/:id"
+                    element={<StudentEdit />}
+                  />
+
+                </Route>
+
+
+                {/* VENDORS */}
+
+                <Route path="/vendor">
+
+                  <Route
+                    index
+                    element={<VendorList />}
+                  />
+
+                  <Route
+                    path="show/:id"
+                    element={<VendorShow />}
+                  />
+
+                </Route>
+
+
+                {/* VENDOR TYPES */}
+
+                <Route path="/vendor_type">
+
+                  <Route
+                    index
+                    element={<VendorTypesList />}
+                  />
+
+                  <Route
+                    path="show/:id"
+                    element={<VendorTypeShow />}
+                  />
+
+                </Route>
+
+                <Route path="/profiles" element={<ProfileList />} />
+
               </Route>
+
+
+              {/* =========================
+                  PUBLIC ACCOUNT STATUS PAGES
+              ========================= */}
+
+              <Route path="/pending" element={<Pending />} />
+
+              <Route path="/denied" element={<Denied />} />
+
+
+              {/* =========================
+                  AUTHENTICATION PAGES
+              ========================= */}
+
+              <Route
+                element={
+                  <Authenticated
+                    key="auth-pages"
+                    fallback={<Outlet />}
+                  >
+                    <NavigateToResource resource="dashboard" />
+                  </Authenticated>
+                }
+              >
+
+                {/* LOGIN */}
+
+                <Route
+                  path="/login"
+                  element={
+                    <AuthPage
+                      type="login"
+                      rememberMe={<></>}
+                    />
+                  }
+                />
+
+
+                {/* REGISTER */}
+
+                <Route path="/register" element={<Register />} />
+
+
+                {/* FORGOT PASSWORD */}
+
+                <Route
+                  path="/forgot-password"
+                  element={
+                    <AuthPage
+                      type="forgotPassword"
+                    />
+                  }
+                />
+
+
+                {/* UPDATE PASSWORD */}
+
+                <Route
+                  path="/update-password"
+                  element={
+                    <AuthPage
+                      type="updatePassword"
+                    />
+                  }
+                />
+
+              </Route>
+
+
+              {/* =========================
+                  CATCH ALL
+              ========================= */}
+
+              <Route
+                element={
+                  <Authenticated
+                    key="catch-all"
+                    fallback={<AccessRedirect />}
+                  >
+                    <ThemedLayout>
+                      <Outlet />
+                    </ThemedLayout>
+                  </Authenticated>
+                }
+              >
+
+                <Route
+                  path="*"
+                  element={<ErrorComponent />}
+                />
+
+              </Route>
+
             </Routes>
+
             <UnsavedChangesNotifier />
+
             <DocumentTitleHandler />
+
           </Refine>
+
         </RefineSnackbarProvider>
+
       </ThemeProvider>
+
     </BrowserRouter>
   );
 };
