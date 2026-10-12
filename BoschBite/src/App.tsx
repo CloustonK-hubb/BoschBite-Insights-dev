@@ -20,6 +20,7 @@ import { supabaseClient } from "./lib/supabaseClient";
 import Register from "./components/Register";
 import Pending from "./components/Pending";
 import Denied from "./components/Denied";
+import CalendarPage from "./pages/calendar";
 
 
 /* =========================
@@ -526,13 +527,9 @@ const App: React.FC = () => {
                 <Route path="show/:id" element={<VendorTypeShow />} />
               </Route>
 
-              {/* <Route path="/calendar">
-                <Route index element={<CalendarList />} />
-                <Route path="show/:id" element={<CalendarShow />} />
-                <Route path="edit/:id" element={<CalendarEdit />} />
-              </Route>
+              <Route path="/calendar" element={<CalendarPage />} />
 
-              <Route path="/promo_window">
+              {/* <Route path="/promo_window">
                 <Route index element={<PromoWindowList />} />
                 <Route path="show/:id" element={<PromoWindowShow />} />
                 <Route path="edit/:id" element={<PromoWindowEdit />} />
