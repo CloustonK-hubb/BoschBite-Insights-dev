@@ -24,7 +24,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { supabaseClient } from "./../../lib/supabaseClient";
+import { supabaseClient } from "./../../providers/supabaseClient";
 
 type Role = "boschbite_admin" | "vendor_admin" | "vendor_manager";
 
