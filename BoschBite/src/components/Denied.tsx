@@ -1,7 +1,7 @@
 import { Box, Button, Paper, Typography } from "@mui/material";
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
-import { supabaseClient } from "../lib/supabaseClient";
+import { supabaseClient } from "../providers/supabaseClient";
 
 function Denied() {
   const navigate = useNavigate();

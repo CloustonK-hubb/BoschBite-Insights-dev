@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabaseClient } from "../lib/supabaseClient";
+import { supabaseClient } from "../providers/supabaseClient";
 import { useNavigate } from "react-router";
 
 import {

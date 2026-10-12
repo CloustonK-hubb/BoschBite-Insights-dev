@@ -7,8 +7,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import routerProvider, {NavigateToResource, UnsavedChangesNotifier,DocumentTitleHandler,} from "@refinedev/react-router";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router";
 import { dataProvider } from "./providers/dataProvider";
-import { ProfileList } from "./pages/Profile/ProfileList";
-import { TransactionList, StudentList, VendorList, VendorTypesList} from "../src/pages/posts";
+import { TransactionList, StudentList, VendorList, VendorTypesList, ProfileList} from "../src/pages/posts";
 import { TransactionShow, StudentShow, VendorShow, VendorTypeShow } from "./pages/posts/show";
 import { StudentEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
@@ -16,19 +15,19 @@ import { DashboardPage } from "./pages/dashboard";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import { customTheme } from "./providers/theme";
 import { Box, Typography } from "@mui/material";
-import { supabaseClient } from "./lib/supabaseClient";
+import { supabaseClient } from "./providers/supabaseClient";
 import Register from "./components/Register";
 import Pending from "./components/Pending";
 import Denied from "./components/Denied";
 import CalendarPage from "./pages/calendar";
 
 
-/* =========================
+/* 
    ACCESS REDIRECT
    Used when someone is not allowed into the app.
    Sends pending / denied users to their status page
    and everyone else to the login page.
-========================= */
+ */
 
 const AccessRedirect = () => {
   const [target, setTarget] = useState<string | null>(null);
@@ -72,9 +71,9 @@ const AccessRedirect = () => {
 
 const App: React.FC = () => {
 
-  /* =========================
+  /* 
      SUPABASE AUTH PROVIDER
-  ========================= */
+   */
 
   //Auth Provider 
   const authProvider: AuthProvider = {
@@ -343,7 +342,7 @@ const App: React.FC = () => {
         };
       }
 
-      // No `logout: true` for pending / denied, otherwise Refine
+      // No 'logout: true' for pending / denied, otherwise Refine
       // logs the user out and sends them to /login instead.
 
       if (profile.status === "pending") {
@@ -543,9 +542,9 @@ const App: React.FC = () => {
               <Route path="/profiles" element={<ProfileList />} />
           </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
 
-              {/* =========================
+              {/* 
                   PUBLIC ACCOUNT STATUS PAGES
-              ========================= */}
+               */}
 
               <Route path="/pending" element={<Pending />} />
 
