@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabaseClient } from "../lib/supabaseClient";
+import { supabaseClient } from "../providers/supabaseClient";
 import { useNavigate } from "react-router";
 
 import {
@@ -45,6 +45,7 @@ function Register() {
       const { data, error } = await supabaseClient
         .from("Vendor")
         .select("vendor_id, name")
+        .eq("type_id", 1)
         .order("name");
 
       if (error) {
