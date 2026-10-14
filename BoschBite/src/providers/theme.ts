@@ -16,7 +16,15 @@ export const customTheme = createTheme({
           //Changing the colour of the title block
           "& .MuiPaper-root": {
             backgroundColor: "#f1e5d5"
-          }
+          }, 
+          "& .MuiListItemText-primary": {
+          color: "#382322",
+          fontWeight: 550,
+          },
+          //Navigation icons: match the text colour
+          "& .MuiListItemIcon-root": {
+          color: "#382322",
+          },
         },
       },
     },
@@ -29,7 +37,7 @@ export const customTheme = createTheme({
             backgroundColor: "rgba(253, 235, 222, 0.5)", // faded #fdebde
           },
           "&.Mui-selected, &.Mui-selected:hover": {
-            backgroundColor: "#fdebde",
+            backgroundColor: "#f1e5d5",
             color: "#382322",
           },
         },

@@ -7,12 +7,14 @@ import { ThemeProvider } from "@mui/material/styles";
 import routerProvider, {NavigateToResource, UnsavedChangesNotifier,DocumentTitleHandler,} from "@refinedev/react-router";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router";
 import { dataProvider } from "./providers/dataProvider";
-import { TransactionList, StudentList, VendorList, VendorTypesList, ProfileList} from "../src/pages/posts";
-import { TransactionShow, StudentShow, VendorShow, VendorTypeShow } from "./pages/posts/show";
-import { StudentEdit } from "./pages/posts/edit";
+import { TransactionList, StudentList, VendorList, VendorTypesList, CalendarList, PromoWindowList ,ProfileList} from "../src/pages/posts";
+import { TransactionShow, StudentShow, VendorShow, VendorTypeShow, CalendarShow, PromoWindowShow } from "./pages/posts/show";
+import { CalendarEdit, PromoWindowEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 import { DashboardPage } from "./pages/dashboard";
-import DashboardIcon from "@mui/icons-material/Dashboard";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import InsightsIcon from "@mui/icons-material/Insights"; 
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";  
 import { customTheme } from "./providers/theme";
 import { Box, Typography } from "@mui/material";
 import { supabaseClient } from "./providers/supabaseClient";
@@ -451,7 +453,8 @@ const App: React.FC = () => {
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
-              { name: "dashboard", list: "/", meta: { label: "Business Dashboard", icon: <DashboardIcon /> } },
+              { name: "dashboard", list: "/", meta: { label: "Business Dashboard", icon: <InsightsIcon/> } },
+              { name: "CalendarPage", list: "/CalendarPage", meta: { label: "Calendar", icon: <CalendarMonthIcon /> } },
               //Creating the grouping for the navigation: 
               { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
               { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
@@ -462,11 +465,10 @@ const App: React.FC = () => {
               { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "BoschCard-data"}},
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
               { name: "Calendar", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", 
-                meta: {label: "Calendar", parent: "BoschBites-data", canDelete: true}},
+                meta: {label: "Calendar events", parent: "BoschBites-data", canDelete: true}},
               { name: "Promo_Window", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id", 
                 meta: {label: "Promotion Window", parent: "BoschBites-data", canDelete: true}},
-              { name: "kpi_tx_base", list: "/kpi_tx_base", show: "/kpi_tx_base/show/:id", meta: {parent: "BoschBites-data"}},
-              { name: "profiles", list: "/profiles", meta: { label: "User Profiles" } },
+              { name: "profiles", list: "/profiles", meta: { label: "User Profiles", parent: "BoschBites-data" } },
             ]}
           options={{
   syncWithLocation: true,
@@ -496,7 +498,9 @@ const App: React.FC = () => {
                   </Authenticated>
                 }
               >
+                //Adding the main pages for the app:
                <Route index element={<DashboardPage />} />
+               <Route path="/CalendarPage" element={<CalendarPage />} />
        
                 {/* Example: 
                 <Route path="/posts"> 
@@ -513,7 +517,6 @@ const App: React.FC = () => {
               <Route path="/student">
                 <Route index element={<StudentList />} />
                 <Route path="show/:id" element={<StudentShow />} />
-                <Route path="edit/:id" element={<StudentEdit />} />
               </Route>
 
               <Route path="/vendor">
@@ -526,18 +529,18 @@ const App: React.FC = () => {
                 <Route path="show/:id" element={<VendorTypeShow />} />
               </Route>
 
-              <Route path="/calendar" element={<CalendarPage />} />
+              
 
-              {/* <Route path="/promo_window">
+              <Route path="/promo_window">
                 <Route index element={<PromoWindowList />} />
                 <Route path="show/:id" element={<PromoWindowShow />} />
                 <Route path="edit/:id" element={<PromoWindowEdit />} />
               </Route>
 
-              <Route path="/kpi_tx_base">
-                <Route index element={<KPIList />} />
-                <Route path="show/:id" element={<KPIShow />} />
-              </Route> */}
+              <Route path="/calendar">
+                <Route index element={<CalendarList />} />
+                <Route path="show/:id" element={<CalendarShow />} />
+              </Route> 
 
               <Route path="/profiles" element={<ProfileList />} />
           </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
