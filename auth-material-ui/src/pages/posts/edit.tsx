@@ -6,7 +6,6 @@ import Autocomplete from "@mui/material/Autocomplete";
 import { useForm } from "@refinedev/react-hook-form";
 import React from "react"
 import { Controller } from "react-hook-form";
-import type { IPost, ICategory, IStatus, Nullable } from "../../interfaces";
 import { MenuItem } from "@mui/material";
 
 {/* Example of an Edit object fro the Student Table 
