@@ -83,7 +83,6 @@ const App: React.FC = () => {
     /* LOGIN */
 
     login: async ({ email, password }) => {
-
       if (!email || !password) {
         return {
           success: false,
@@ -99,7 +98,6 @@ const App: React.FC = () => {
           email,
           password,
         });
-
       if (error) {
         return {
           success: false,
@@ -116,10 +114,8 @@ const App: React.FC = () => {
           .select("status")
           .eq("id", data.user.id)
           .single();
-
       if (profileError || !profile) {
         await supabaseClient.auth.signOut();
-
         return {
           success: false,
           error: {
@@ -145,7 +141,6 @@ const App: React.FC = () => {
           redirectTo: "/denied",
         };
       }
-
       return {
         success: true,
         redirectTo: "/",
@@ -156,14 +151,8 @@ const App: React.FC = () => {
     /* REGISTER */
 
     //Option to register 
-    register: async ({
-      email,
-      password,
-      first_name,
-      last_name,
-    }) => {
-
-      if (!email || !password || !first_name || !last_name) {
+    register: async ({ email, password,first_name, last_name,}) => {
+    if (!email || !password || !first_name || !last_name) {
         return {
           success: false,
           error: {
@@ -184,7 +173,6 @@ const App: React.FC = () => {
             },
           },
         });
-
       if (error) {
         return {
           success: false,
@@ -194,7 +182,6 @@ const App: React.FC = () => {
           },
         };
       }
-
       return {
         success: true,
         redirectTo: "/pending",
@@ -206,7 +193,6 @@ const App: React.FC = () => {
 
     //Forgot password option on login page 
     forgotPassword: async ({ email }) => {
-
       if (!email) {
         return {
           success: false,
@@ -225,7 +211,6 @@ const App: React.FC = () => {
               `${window.location.origin}/update-password`,
           }
         );
-
       if (error) {
         return {
           success: false,
@@ -235,7 +220,6 @@ const App: React.FC = () => {
           },
         };
       }
-
       return {
         success: true,
       };
@@ -246,7 +230,6 @@ const App: React.FC = () => {
 
     //Update password option on login page 
     updatePassword: async ({ password }) => {
-
       if (!password) {
         return {
           success: false,
@@ -261,7 +244,6 @@ const App: React.FC = () => {
         await supabaseClient.auth.updateUser({
           password,
         });
-
       if (error) {
         return {
           success: false,
@@ -271,7 +253,6 @@ const App: React.FC = () => {
           },
         };
       }
-
       return {
         success: true,
         redirectTo: "/login",
@@ -283,10 +264,8 @@ const App: React.FC = () => {
 
     //logout option: clears storage and redirects to login page 
     logout: async () => {
-
       const { error } =
         await supabaseClient.auth.signOut();
-
       if (error) {
         return {
           success: false,
@@ -296,7 +275,6 @@ const App: React.FC = () => {
           },
         };
       }
-
       return {
         success: true,
         redirectTo: "/login",
@@ -311,7 +289,6 @@ const App: React.FC = () => {
       const {
         data: { session },
       } = await supabaseClient.auth.getSession();
-
       if (!session) {
         return {
           authenticated: false,
@@ -329,10 +306,8 @@ const App: React.FC = () => {
         .select("status")
         .eq("id", session.user.id)
         .single();
-
       if (error || !profile) {
         await supabaseClient.auth.signOut();
-
         return {
           authenticated: false,
           error: {
@@ -368,7 +343,6 @@ const App: React.FC = () => {
           redirectTo: "/denied",
         };
       }
-
       return {
         authenticated: true,
       };
@@ -383,15 +357,12 @@ const App: React.FC = () => {
       const {
         data: { user },
       } = await supabaseClient.auth.getUser();
-
       if (!user) return null;
-
       const { data } = await supabaseClient
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single();
-
       return data?.role ?? null;
     },
 
@@ -402,15 +373,12 @@ const App: React.FC = () => {
       const {
         data: { user },
       } = await supabaseClient.auth.getUser();
-
       if (!user) return null;
-
       const { data: p } = await supabaseClient
         .from("profiles")
         .select("first_name, last_name, role, vendor_id")
         .eq("id", user.id)
         .single();
-
       return {
         id: user.id,
         name: p ? `${p.first_name} ${p.last_name}` : user.email,
@@ -425,13 +393,11 @@ const App: React.FC = () => {
 
     //runs when any data request fails and a 401 triggers a logout.
     onError: async (error) => {
-
       if (error.response?.status === 401) {
         return {
           logout: true,
         };
       }
-
       return {
         error,
       };
@@ -453,6 +419,7 @@ const App: React.FC = () => {
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
+              //Adding the main pages at the top of the navigation
               { name: "dashboard", list: "/", meta: { label: "Business Dashboard", icon: <InsightsIcon/> } },
               { name: "CalendarPage", list: "/CalendarPage", meta: { label: "Calendar", icon: <CalendarMonthIcon /> } },
               //Creating the grouping for the navigation: 
