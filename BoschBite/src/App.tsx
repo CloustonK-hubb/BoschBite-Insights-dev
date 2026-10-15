@@ -22,6 +22,7 @@ import Register from "./components/Register";
 import Pending from "./components/Pending";
 import Denied from "./components/Denied";
 import CalendarPage from "./pages/calendar";
+import { LandingPage } from "./pages/landingPage";
 
 
 /* 
@@ -465,7 +466,8 @@ const App: React.FC = () => {
                   </Authenticated>
                 }
               >
-                //Adding the main pages for the app:
+
+                {/*Adding the main pages for the app:*/}
                <Route index element={<DashboardPage />} />
                <Route path="/CalendarPage" element={<CalendarPage />} />
        
@@ -496,8 +498,6 @@ const App: React.FC = () => {
                 <Route path="show/:id" element={<VendorTypeShow />} />
               </Route>
 
-              
-
               <Route path="/promo_window">
                 <Route index element={<PromoWindowList />} />
                 <Route path="show/:id" element={<PromoWindowShow />} />
@@ -520,6 +520,9 @@ const App: React.FC = () => {
 
               <Route path="/denied" element={<Denied />} />
 
+              {/* inserting the landing page route*/}
+              <Route path="/landingPage" element={<LandingPage />} />
+
               <Route
                 element={
                   <Authenticated key="auth-pages" fallback={<Outlet />}>
@@ -532,6 +535,12 @@ const App: React.FC = () => {
                   element={
                     <AuthPage type="login"
                       rememberMe={<></>}
+                      contentProps={{
+                      sx: {
+                         "& h1": { color: "text.primary" },          // the heading
+                          "& .MuiLink-root": { color: "text.primary" }, // the links
+                          },
+                        }}
                     />
                   }
                 />
