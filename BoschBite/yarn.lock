@@ -929,7 +929,7 @@
 
 "@refinedev/cli@^2.16.52":
   version "2.16.52"
-  resolved "https://registry.npmjs.org/@refinedev/cli/-/cli-2.16.52.tgz"
+  resolved "https://registry.yarnpkg.com/@refinedev/cli/-/cli-2.16.52.tgz#bb217f1844dace2f61fb34ab58e824e9680fe922"
   integrity sha512-rr8QvL5ngpwqoD89unr1walLxGRHwQRC+bs9DYfPXiQM5oS8GNqo5GSQr70m1yZZssD1cNrIPvCuO67pkJxiYg==
   dependencies:
     "@npmcli/package-json" "^5.2.0"

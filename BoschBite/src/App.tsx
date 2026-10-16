@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Refine,type AuthProvider,Authenticated,} from "@refinedev/core";
-import {ThemedLayout, ErrorComponent, RefineThemes, useNotificationProvider, RefineSnackbarProvider,AuthPage,} from "@refinedev/mui";
+import {ThemedLayout, ErrorComponent, RefineThemes, useNotificationProvider, RefineSnackbarProvider,AuthPage, ThemedSider} from "@refinedev/mui";
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import { ThemeProvider } from "@mui/material/styles";
@@ -22,6 +22,7 @@ import Register from "./components/Register";
 import Pending from "./components/Pending";
 import Denied from "./components/Denied";
 import CalendarPage from "./pages/calendar";
+import { LandingPage } from "./pages/landingPage";
 
 
 /* 
@@ -41,7 +42,7 @@ const AccessRedirect = () => {
       } = await supabaseClient.auth.getSession();
 
       if (!session) {
-        setTarget("/login");
+        setTarget("/");
         return;
       }
 
@@ -143,7 +144,7 @@ const App: React.FC = () => {
       }
       return {
         success: true,
-        redirectTo: "/",
+        redirectTo: "/dashboard",
       };
     },
 
@@ -277,7 +278,7 @@ const App: React.FC = () => {
       }
       return {
         success: true,
-        redirectTo: "/login",
+        redirectTo: "/",
       };
     },
 
@@ -420,8 +421,9 @@ const App: React.FC = () => {
             notificationProvider={useNotificationProvider}
             resources={[
               //Adding the main pages at the top of the navigation
-              { name: "dashboard", list: "/", meta: { label: "Business Dashboard", icon: <InsightsIcon/> } },
+              { name: "dashboard", list: "/dashboard", meta: { label: "Business Dashboard", icon: <InsightsIcon/> } },
               { name: "CalendarPage", list: "/CalendarPage", meta: { label: "Calendar", icon: <CalendarMonthIcon /> } },
+              { name: "Leaderboard", list: "/leaderboard", meta: {label: "Leaderboard", icon: <LeaderboardIcon/>} },
               //Creating the grouping for the navigation: 
               { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
               { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
@@ -438,11 +440,12 @@ const App: React.FC = () => {
               { name: "profiles", list: "/profiles", meta: { label: "User Profiles", parent: "BoschBites-data" } },
             ]}
           options={{
-  syncWithLocation: true,
-  warnWhenUnsavedChanges: true,
-  title: { text: "BoschBite Insights", icon: (
-      <image href= "/BoschBites-logo-cropped.png" width= "25" height="25"/> )},
-}}
+        syncWithLocation: true,
+        warnWhenUnsavedChanges: true,
+        /*Editing the title and the image of the app */
+        title: { text: "BoschBite Insights", icon: (
+        <image href= "/BoschBites-logo-cropped.png" width= "25" height="25"/> )},
+          }}
           >
             <Routes>
               <Route
@@ -459,15 +462,41 @@ const App: React.FC = () => {
                       <Typography fontWeight={500} fontSize={16} color="#382322">BoschBite Insights</Typography> )}
                       </Box>
                       )}
+                      /* Removing the empty Dashboard icon from the side navigation */
+                      Sider={(props) => (
+                       <ThemedSider
+                          {...props}
+                          render={({ items, logout }) => (
+                            <>
+                              <Box sx={{ pb: 10}}> {items} </Box>
+                              {/* Editing the logout button in theh side navigation*/}
+                              <Box sx={{
+                                    position: "fixed",
+                                    bottom: 0,
+                                    left: 0,
+                                    width: "12.5%",
+                                    borderTop: "1px solid",
+                                    borderColor: "divider",
+                                   "& .MuiListItemButton-root": {
+                                      bgcolor: "#f1e5d5",
+                                    },
+                                  }}
+                                >  {logout} </Box>
+                            </>
+                          )}
+                        />
+                        )}
                       >
                       <Outlet />
                     </ThemedLayout>
                   </Authenticated>
                 }
               >
-                //Adding the main pages for the app:
-               <Route index element={<DashboardPage />} />
-               <Route path="/CalendarPage" element={<CalendarPage />} />
+
+                {/*Adding the main pages for the app:*/}
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/CalendarPage" element={<CalendarPage />} />
+              <Route path="/leaderboard" element={<div> <b>Leaderboard coming soon!</b></div> } />
        
                 {/* Example: 
                 <Route path="/posts"> 
@@ -496,8 +525,6 @@ const App: React.FC = () => {
                 <Route path="show/:id" element={<VendorTypeShow />} />
               </Route>
 
-              
-
               <Route path="/promo_window">
                 <Route index element={<PromoWindowList />} />
                 <Route path="show/:id" element={<PromoWindowShow />} />
@@ -507,6 +534,7 @@ const App: React.FC = () => {
               <Route path="/calendar">
                 <Route index element={<CalendarList />} />
                 <Route path="show/:id" element={<CalendarShow />} />
+                <Route path="edit/:id" element={<CalendarEdit/> } />
               </Route> 
 
               <Route path="/profiles" element={<ProfileList />} />
@@ -520,6 +548,9 @@ const App: React.FC = () => {
 
               <Route path="/denied" element={<Denied />} />
 
+              {/* inserting the landing page route*/}
+              <Route path="/" element={<LandingPage />} />
+
               <Route
                 element={
                   <Authenticated key="auth-pages" fallback={<Outlet />}>
@@ -532,6 +563,12 @@ const App: React.FC = () => {
                   element={
                     <AuthPage type="login"
                       rememberMe={<></>}
+                      contentProps={{
+                      sx: {
+                         "& h1": { color: "text.primary" },          // the heading
+                          "& .MuiLink-root": { color: "text.primary" }, // the links
+                          },
+                        }}
                     />
                   }
                 />
@@ -562,7 +599,12 @@ const App: React.FC = () => {
               </Route>
             </Routes>
             <UnsavedChangesNotifier />
-            <DocumentTitleHandler />
+            {/* Changing the tab names to include the BoschBite name*/}
+            <DocumentTitleHandler handler={({ resource }) =>
+                resource?.meta?.label
+                ? `${resource.meta.label} | BoschBite`
+                    : "BoschBite Insights"
+              }/>
           </Refine>
         </RefineSnackbarProvider>
       </ThemeProvider>
