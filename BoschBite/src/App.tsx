@@ -442,6 +442,7 @@ const App: React.FC = () => {
           options={{
         syncWithLocation: true,
         warnWhenUnsavedChanges: true,
+        /*Editing the title and the image of the app */
         title: { text: "BoschBite Insights", icon: (
         <image href= "/BoschBites-logo-cropped.png" width= "25" height="25"/> )},
           }}
@@ -461,13 +462,26 @@ const App: React.FC = () => {
                       <Typography fontWeight={500} fontSize={16} color="#382322">BoschBite Insights</Typography> )}
                       </Box>
                       )}
+                      /* Removing the empty Dashboard icon from the side navigation */
                       Sider={(props) => (
                        <ThemedSider
                           {...props}
                           render={({ items, logout }) => (
                             <>
-                              {items}
-                              {logout}
+                              <Box sx={{ pb: 10}}> {items} </Box>
+                              {/* Editing the logout button in theh side navigation*/}
+                              <Box sx={{
+                                    position: "fixed",
+                                    bottom: 0,
+                                    left: 0,
+                                    width: "12.5%",
+                                    borderTop: "1px solid",
+                                    borderColor: "divider",
+                                   "& .MuiListItemButton-root": {
+                                      bgcolor: "#f1e5d5",
+                                    },
+                                  }}
+                                >  {logout} </Box>
                             </>
                           )}
                         />
@@ -520,6 +534,7 @@ const App: React.FC = () => {
               <Route path="/calendar">
                 <Route index element={<CalendarList />} />
                 <Route path="show/:id" element={<CalendarShow />} />
+                <Route path="edit/:id" element={<CalendarEdit/> } />
               </Route> 
 
               <Route path="/profiles" element={<ProfileList />} />
@@ -584,7 +599,12 @@ const App: React.FC = () => {
               </Route>
             </Routes>
             <UnsavedChangesNotifier />
-            <DocumentTitleHandler />
+            {/* Changing the tab names to include the BoschBite name*/}
+            <DocumentTitleHandler handler={({ resource }) =>
+                resource?.meta?.label
+                ? `${resource.meta.label} | BoschBite`
+                    : "BoschBite Insights"
+              }/>
           </Refine>
         </RefineSnackbarProvider>
       </ThemeProvider>

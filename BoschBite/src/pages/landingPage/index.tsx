@@ -24,7 +24,7 @@ export const LandingPage = () => {
         <Box sx={{ minHeight: "100vh", p: 4, bgcolor: cream, fontFamily: font }}>
       {/* 1. Logo */}
       <Box>
-        <img src="/BoschBites-logo-cropped.png" alt="BoschBite Insights logo" height={80} />
+        <img src="/BoschBites-logo-cropped.png" alt="BoschBite Insights logo" height={100} />
       </Box>
 
       {/* Centred content */}

@@ -7,15 +7,19 @@ export const customTheme = createTheme({
     text: { primary: "#382322" },
   },
   components: {
-    //Stykes the side bar navigation as a whole inclusing the panel, the background colour and its boarder 
+    //Styles the side bar navigation as a whole including the panel, the background colour and its boarder 
      MuiDrawer: {
       styleOverrides: {
         paper: {
           backgroundColor: "#b1c8ea",
           borderRight: "none",
-          //Changing the colour of the title block
+          //Changing the colour and shape (pill shaped) of the title block
           "& .MuiPaper-root": {
-            backgroundColor: "#f1e5d5"
+            backgroundColor: "#f1e5d5",
+            borderRadius: 24,
+            margin: "2px 2px 2px",
+            width: "auto",
+            boxShadow: "none",
           }, 
           "& .MuiListItemText-primary": {
           color: "#382322",
@@ -33,6 +37,10 @@ export const customTheme = createTheme({
     MuiListItemButton: {
       styleOverrides: {
         root: {
+          borderRadius: 999,     // fully rounded ends
+          margin: "4px 12px",    // space above/below, and in from the sides
+          width: "auto",         // shrink to fit inside the margins
+          paddingLeft: 16,       // keeps icons nicely spaced from the rounded edge
           "&:hover": {
             backgroundColor: "rgba(253, 235, 222, 0.5)", // faded #fdebde
           },
