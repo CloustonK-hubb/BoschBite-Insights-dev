@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Refine,type AuthProvider,Authenticated,} from "@refinedev/core";
-import {ThemedLayout, ErrorComponent, RefineThemes, useNotificationProvider, RefineSnackbarProvider,AuthPage,} from "@refinedev/mui";
+import {ThemedLayout, ErrorComponent, RefineThemes, useNotificationProvider, RefineSnackbarProvider,AuthPage, ThemedSider} from "@refinedev/mui";
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import { ThemeProvider } from "@mui/material/styles";
@@ -42,7 +42,7 @@ const AccessRedirect = () => {
       } = await supabaseClient.auth.getSession();
 
       if (!session) {
-        setTarget("/login");
+        setTarget("/");
         return;
       }
 
@@ -144,7 +144,7 @@ const App: React.FC = () => {
       }
       return {
         success: true,
-        redirectTo: "/",
+        redirectTo: "/dashboard",
       };
     },
 
@@ -278,7 +278,7 @@ const App: React.FC = () => {
       }
       return {
         success: true,
-        redirectTo: "/login",
+        redirectTo: "/",
       };
     },
 
@@ -421,8 +421,9 @@ const App: React.FC = () => {
             notificationProvider={useNotificationProvider}
             resources={[
               //Adding the main pages at the top of the navigation
-              { name: "dashboard", list: "/", meta: { label: "Business Dashboard", icon: <InsightsIcon/> } },
+              { name: "dashboard", list: "/dashboard", meta: { label: "Business Dashboard", icon: <InsightsIcon/> } },
               { name: "CalendarPage", list: "/CalendarPage", meta: { label: "Calendar", icon: <CalendarMonthIcon /> } },
+              { name: "Leaderboard", list: "/leaderboard", meta: {label: "Leaderboard", icon: <LeaderboardIcon/>} },
               //Creating the grouping for the navigation: 
               { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
               { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
@@ -439,11 +440,11 @@ const App: React.FC = () => {
               { name: "profiles", list: "/profiles", meta: { label: "User Profiles", parent: "BoschBites-data" } },
             ]}
           options={{
-  syncWithLocation: true,
-  warnWhenUnsavedChanges: true,
-  title: { text: "BoschBite Insights", icon: (
-      <image href= "/BoschBites-logo-cropped.png" width= "25" height="25"/> )},
-}}
+        syncWithLocation: true,
+        warnWhenUnsavedChanges: true,
+        title: { text: "BoschBite Insights", icon: (
+        <image href= "/BoschBites-logo-cropped.png" width= "25" height="25"/> )},
+          }}
           >
             <Routes>
               <Route
@@ -460,6 +461,17 @@ const App: React.FC = () => {
                       <Typography fontWeight={500} fontSize={16} color="#382322">BoschBite Insights</Typography> )}
                       </Box>
                       )}
+                      Sider={(props) => (
+                       <ThemedSider
+                          {...props}
+                          render={({ items, logout }) => (
+                            <>
+                              {items}
+                              {logout}
+                            </>
+                          )}
+                        />
+                        )}
                       >
                       <Outlet />
                     </ThemedLayout>
@@ -468,8 +480,9 @@ const App: React.FC = () => {
               >
 
                 {/*Adding the main pages for the app:*/}
-               <Route index element={<DashboardPage />} />
-               <Route path="/CalendarPage" element={<CalendarPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/CalendarPage" element={<CalendarPage />} />
+              <Route path="/leaderboard" element={<div> <b>Leaderboard coming soon!</b></div> } />
        
                 {/* Example: 
                 <Route path="/posts"> 
@@ -521,7 +534,7 @@ const App: React.FC = () => {
               <Route path="/denied" element={<Denied />} />
 
               {/* inserting the landing page route*/}
-              <Route path="/landingPage" element={<LandingPage />} />
+              <Route path="/" element={<LandingPage />} />
 
               <Route
                 element={

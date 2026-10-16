@@ -1,5 +1,5 @@
 import { Box, Typography, Button, Chip } from "@mui/material";
-import { useList } from "@refinedev/core";
+import { useList, useGo } from "@refinedev/core";
 
 const cream = "#f1e5d5"
 const font = "'Outfit', sans-serif";
@@ -7,17 +7,18 @@ const cardColours = ["primary.main", "text.primary", "secondary.main"]; // blue,
 const Default_Logo_URL = "https://llvvjvvkwbjnnvmzpdok.supabase.co/storage/v1/object/public/vendor-logos/defaultAvatar.webp"
 
 export const LandingPage = () => {
+
+  //Constant variable required
   const { result, query } = useList({
     resource: "Vendor_logo",
     pagination: { mode: "off" },
-//Filter which excludes any default avatars from the carousel
-      filters: [
-    { field: "logo_url", operator: "ne", value: Default_Logo_URL},
-      ],
-    });
 
-    const logos = result?.data ?? [];
+    });
+    const logos = (result?.data ?? []).filter(
+      (logo) => !logo.logo_url?.includes("defaultAvatar")
+    ); //Filter to exclude any default avatar images from showing up in the carousel of brands 
     const isLoading = query.isLoading;  
+    const go = useGo();
 
     return (
         <Box sx={{ minHeight: "100vh", p: 4, bgcolor: cream, fontFamily: font }}>
@@ -33,8 +34,8 @@ export const LandingPage = () => {
         {/* 2. Pill */}
         <Chip label="JOIN YOUR FELLOW HAPPY EATERY BRANDS" 
           sx={{
-          bgcolor: "primary.main",
-          color: "text.primary",
+          bgcolor: "text.primary",
+          color: "secondary.main",
           border: "1px solid",
           borderColor: "text.primary",
           fontFamily: font,
@@ -102,7 +103,7 @@ export const LandingPage = () => {
               </Box>
 
         {/* 6. Sign up Button */}
-        <Button variant="contained" color="primary"
+        <Button variant="contained" color="primary" onClick={() => go({ to: "/login" })}
           sx={{
           borderRadius: 999,
           border: "1px solid",
