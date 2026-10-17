@@ -15,6 +15,7 @@ import { DashboardPage } from "./pages/dashboard";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import InsightsIcon from "@mui/icons-material/Insights"; 
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";  
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { customTheme } from "./providers/theme";
 import { Box, Typography } from "@mui/material";
 import { supabaseClient } from "./providers/supabaseClient";
@@ -23,6 +24,9 @@ import Pending from "./components/Pending";
 import Denied from "./components/Denied";
 import CalendarPage from "./pages/calendar";
 import { LandingPage } from "./pages/landingPage";
+import { MyProfile } from "./pages/Profile";
+import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
+import { SiderContent } from "./components/SideContents";
 
 
 /* 
@@ -377,7 +381,7 @@ const App: React.FC = () => {
       if (!user) return null;
       const { data: p } = await supabaseClient
         .from("profiles")
-        .select("first_name, last_name, role, vendor_id")
+        .select("first_name, last_name, role, vendor_id, avatar_path")
         .eq("id", user.id)
         .single();
       return {
@@ -386,6 +390,9 @@ const App: React.FC = () => {
         email: user.email,
         role: p?.role ?? null,
         vendor_id: p?.vendor_id ?? null,
+        avatar: p?.avatar_path
+          ? supabaseClient.storage.from("avatars").getPublicUrl(p.avatar_path).data.publicUrl
+          : undefined,
       };
     },
 
@@ -424,6 +431,7 @@ const App: React.FC = () => {
               { name: "dashboard", list: "/dashboard", meta: { label: "Business Dashboard", icon: <InsightsIcon/> } },
               { name: "CalendarPage", list: "/CalendarPage", meta: { label: "Calendar", icon: <CalendarMonthIcon /> } },
               { name: "Leaderboard", list: "/leaderboard", meta: {label: "Leaderboard", icon: <LeaderboardIcon/>} },
+              { name: "my-profile", list: "/my-profile", meta: { label: "My Profile", icon: <AccountCircleIcon /> } },
               //Creating the grouping for the navigation: 
               { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
               { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
@@ -437,7 +445,7 @@ const App: React.FC = () => {
                 meta: {label: "Calendar events", parent: "BoschBites-data", canDelete: true}},
               { name: "Promo_Window", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id", 
                 meta: {label: "Promotion Window", parent: "BoschBites-data", canDelete: true}},
-              { name: "profiles", list: "/profiles", meta: { label: "User Profiles", parent: "BoschBites-data" } },
+              { name: "profiles", list: "/profiles", meta: { label: "User profiles", icon: <PersonAddAltIcon /> } },
             ]}
           options={{
         syncWithLocation: true,
@@ -462,30 +470,13 @@ const App: React.FC = () => {
                       <Typography fontWeight={500} fontSize={16} color="#382322">BoschBite Insights</Typography> )}
                       </Box>
                       )}
-                      /* Removing the empty Dashboard icon from the side navigation */
+                      /* Editing the side navigation: profile block, sections and logout button */
                       Sider={(props) => (
-                       <ThemedSider
+                        <ThemedSider
                           {...props}
-                          render={({ items, logout }) => (
-                            <>
-                              <Box sx={{ pb: 10}}> {items} </Box>
-                              {/* Editing the logout button in theh side navigation*/}
-                              <Box sx={{
-                                    position: "fixed",
-                                    bottom: 0,
-                                    left: 0,
-                                    width: "12.5%",
-                                    borderTop: "1px solid",
-                                    borderColor: "divider",
-                                   "& .MuiListItemButton-root": {
-                                      bgcolor: "#f1e5d5",
-                                    },
-                                  }}
-                                >  {logout} </Box>
-                            </>
-                          )}
+                          render={({ collapsed }) => <SiderContent collapsed={collapsed} />}
                         />
-                        )}
+                      )}
                       >
                       <Outlet />
                     </ThemedLayout>
@@ -497,6 +488,7 @@ const App: React.FC = () => {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/CalendarPage" element={<CalendarPage />} />
               <Route path="/leaderboard" element={<div> <b>Leaderboard coming soon!</b></div> } />
+              <Route path="/my-profile" element={<MyProfile />} />
        
                 {/* Example: 
                 <Route path="/posts"> 
