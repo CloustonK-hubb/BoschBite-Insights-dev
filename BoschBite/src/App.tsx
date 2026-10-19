@@ -381,25 +381,31 @@ const App: React.FC = () => {
       if (!user) return null;
       const { data: p } = await supabaseClient
         .from("profiles")
-        .select("first_name, last_name, role, vendor_id, avatar_path")
+        .select("first_name, last_name, role, vendor_id")
         .eq("id", user.id)
         .single();
+
+      //Everyone shares their vendor's logo as their picture
+      const { data: logo } = p?.vendor_id
+        ? await supabaseClient
+            .from("Vendor_logo")
+            .select("logo_url")
+            .eq("vendor_id", p.vendor_id)
+            .maybeSingle()
+        : { data: null };
+
       return {
         id: user.id,
         name: p ? `${p.first_name} ${p.last_name}` : user.email,
         email: user.email,
         role: p?.role ?? null,
         vendor_id: p?.vendor_id ?? null,
-        avatar: p?.avatar_path
-          ? supabaseClient.storage.from("avatars").getPublicUrl(p.avatar_path).data.publicUrl
-          : undefined,
+        avatar: logo?.logo_url?.trim() ?? undefined,
       };
     },
 
 
     /* HANDLE AUTH ERRORS */
-
-    //runs when any data request fails and a 401 triggers a logout.
     onError: async (error) => {
       if (error.response?.status === 401) {
         return {
@@ -413,7 +419,7 @@ const App: React.FC = () => {
   };
 
 //Refine component 
-//Here you will edit the pages that appear in the navigation 
+//Editing the pages that appear in the navigation 
 //Must add the page content to the routes otherwise will throw an error 
   return (
     <BrowserRouter>

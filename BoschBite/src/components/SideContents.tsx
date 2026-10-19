@@ -10,7 +10,6 @@ import { supabaseClient } from "../providers/supabaseClient";
 
 /* 
    SETTINGS
-   Easy to change colours, sections and labels
  */
 
 //Colour for the avatar and the selected menu item
@@ -24,7 +23,10 @@ const INSIGHTS = ["dashboard", "Leaderboard", "CalendarPage"];
 const NOT_IN_MENU = ["my-profile"];
 
 //Heading for the lower section
-const ADMIN_LABEL = "ADMIN";
+const ADMIN_LABEL = "ADMIN TOOLS";
+
+//Height of the logo header above the menu, used to pin the logout button to the bottom
+const HEADER_HEIGHT = 100;
 
 //Text shown on the role chip under the name
 const ROLE_CHIP: Record<string, string> = {
@@ -213,87 +215,94 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
 
   /* LAYOUT */
 
+    /* LAYOUT */
+
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "100%",
-        overflowY: "auto",
+        height: `calc(100vh - ${HEADER_HEIGHT}px)`,
       }}
     >
-      {/* Profile block at the top, click it to open My Profile */}
-      <Box
-        component={Link}
-        to="/my-profile"
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-          textDecoration: "none",
-          color: TEXT,
-          px: 2,
-          py: 2,
-        }}
-      >
-        <Avatar
-          src={me?.avatar}
+      {/* Scrolling part: profile block and menu sections */}
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+        {/* Profile block at the top, click it to open My Profile */}
+        <Box
+          component={Link}
+          to="/my-profile"
           sx={{
-            width: collapsed ? 40 : 84,
-            height: collapsed ? 40 : 84,
-            bgcolor: ACCENT,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            textDecoration: "none",
             color: TEXT,
-            fontWeight: 700,
-            fontSize: collapsed ? 16 : 28,
+            px: 2,
+            py: 2,
           }}
         >
-          {initials}
-        </Avatar>
+          <Avatar
+            src={me?.avatar}
+            imgProps={{ style: { objectFit: "contain", background: "#fff" } }}
+            sx={{
+              width: collapsed ? 40 : 84,
+              height: collapsed ? 40 : 84,
+              bgcolor: ACCENT,
+              color: TEXT,
+              fontWeight: 700,
+              fontSize: collapsed ? 16 : 28,
+            }}
+          >
+            {initials}
+          </Avatar>
 
-        {!collapsed && (
-          <>
-            <Typography sx={{ fontWeight: 700, mt: 1.5 }}>
-              {me?.name ?? ""}
-            </Typography>
+          {!collapsed && (
+            <>
+              <Typography sx={{ fontWeight: 700, mt: 1.5 }}>
+                {me?.name ?? ""}
+              </Typography>
 
-            {me?.role && (
-              <Chip
-                label={ROLE_CHIP[me.role] ?? me.role}
-                size="small"
-                sx={{ mt: 0.75, bgcolor: "#fff", fontWeight: 700 }}
-              />
-            )}
+              {me?.role && (
+                <Chip
+                  label={ROLE_CHIP[me.role] ?? me.role}
+                  size="small"
+                  sx={{ mt: 0.75, bgcolor: "#fff", fontWeight: 700 }}
+                />
+              )}
 
-            <Typography
-              variant="caption"
-              sx={{ mt: 0.75, color: "text.secondary" }}
-            >
-              {vendorName ?? "BoschBite Insights"}
-            </Typography>
-          </>
-        )}
+              <Typography
+                variant="caption"
+                sx={{ mt: 0.75, color: "text.secondary" }}
+              >
+                {vendorName ?? "BoschBite Insights"}
+              </Typography>
+            </>
+          )}
+        </Box>
+
+        <Divider sx={{ mx: 2 }} />
+
+        {/* The two menu sections */}
+        {section("INSIGHTS", insightsItems)}
+        {section(ADMIN_LABEL, adminItems)}
       </Box>
 
-      <Divider sx={{ mx: 2 }} />
-
-      {/* The two menu sections */}
-      {section("INSIGHTS", insightsItems)}
-      {section(ADMIN_LABEL, adminItems)}
-
-      {/* Log out button pinned to the bottom of the side navigation */}
-      <Box sx={{ mt: "auto", p: 2 }}>
-        <Button
+      {/* Log out button stays at the bottom of the side navigation */}
+      <Box sx={{ flexShrink: 0, p: 2, borderTop: "1px solid", borderColor: "divider" }}>
+                       <Button
           fullWidth
-          variant="outlined"
+          variant="contained"
+          disableElevation
           onClick={() => logout()}
           startIcon={collapsed ? undefined : <LogoutIcon />}
           sx={{
             borderRadius: 999,
-            color: TEXT,
-            borderColor: TEXT,
+            bgcolor: "#f1e5d5",
+            color: "#382322",
             fontWeight: 700,
             minWidth: 0,
+            "&:hover": { bgcolor: "#e6d5bd" },
           }}
         >
           {collapsed ? <LogoutIcon /> : "Log out"}
