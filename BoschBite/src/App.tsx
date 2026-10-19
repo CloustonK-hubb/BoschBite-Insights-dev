@@ -419,7 +419,7 @@ const App: React.FC = () => {
   };
 
 //Refine component 
-//Editing the pages that appear in the navigation 
+//Edit the pages that appear in the navigation 
 //Must add the page content to the routes otherwise will throw an error 
   return (
     <BrowserRouter>

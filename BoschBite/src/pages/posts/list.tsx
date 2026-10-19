@@ -4,30 +4,13 @@ import React from "react";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import type { ICategory, IPost } from "../../interfaces";
 import { ShowButton } from "@refinedev/mui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGetIdentity } from "@refinedev/core";
 import { Navigate } from "react-router";
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  MenuItem,
-  Paper,
-  Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
+import { Alert, Avatar, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, InputAdornment, MenuItem, Select, Skeleton, TextField, Tooltip, Typography } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import { supabaseClient } from "../../providers/supabaseClient";
 
 //List object for a transaction 
@@ -196,7 +179,22 @@ export const PromoWindowList: React.FC = () => {
 
 
 // List object for Profiles 
+
+/* 
+   SETTINGS
+ */
+
+const BROWN = "#382322";
+const CREAM = "#f1e5d5";
+const ACCENT = "#F8E8A8";
+const RED = "#D72C32";
+const GREEN = "#2E7D5B";
+
+//Column widths for each row (on a phone the columns stack)
+const ROW_GRID = { xs: "1fr", md: "2.4fr 1.4fr 1.4fr 1fr 1.7fr" };
+
 type Role = "boschbite_admin" | "vendor_admin" | "vendor_manager";
+type Status = "pending" | "verified" | "denied";
 
 type Profile = {
   id: string;
@@ -205,8 +203,7 @@ type Profile = {
   email: string;
   role: Role;
   vendor_id: number | null;
-  Vendor: { name: string } | null;
-  status: "pending" | "verified" | "denied";
+  status: Status;
   created_at: string;
 };
 
@@ -225,160 +222,172 @@ const ROLE_LABELS: Record<Role, string> = {
 const VENDOR_ROLES: Role[] = ["vendor_admin", "vendor_manager"];
 const ALL_ROLES: Role[] = ["boschbite_admin", ...VENDOR_ROLES];
 
-const roleLabel = (role: string) => ROLE_LABELS[role as Role] ?? role;
+const TABS: { key: Status; label: string }[] = [
+  { key: "pending", label: "Pending" },
+  { key: "verified", label: "Verified" },
+  { key: "denied", label: "Denied" },
+];
+
+const EMPTY_TEXT: Record<Status, string> = {
+  pending: "No one is waiting for approval.",
+  verified: "No verified people yet.",
+  denied: "No denied sign-ups.",
+};
+
 
 /* 
-   TABLE (defined outside the page
-   component so it is not remounted
-   on every render)
+   ONE PERSON
  */
 
-type ProfileTableProps = {
-  profiles: Profile[];
+type PersonRowProps = {
+  p: Profile;
   me: Identity;
   isBosch: boolean;
-  showVerifyDeny?: boolean;
+  vendorName: string;
+  logo?: string;
   onStatus: (profile: Profile, status: "verified" | "denied") => void;
   onRole: (profile: Profile, role: Role) => void;
   onRemove: (profile: Profile) => void;
 };
 
-const ProfileTable = ({
-  profiles,
-  me,
-  isBosch,
-  showVerifyDeny = false,
-  onStatus,
-  onRole,
-  onRemove,
-}: ProfileTableProps) => {
+const PersonRow = ({ p, me, isBosch, vendorName, logo, onStatus, onRole, onRemove }: PersonRowProps) => {
+  const isMe = p.id === me.id;
   const roleOptions = isBosch ? ALL_ROLES : VENDOR_ROLES;
 
-  // Can this viewer change the role of / remove this row?
-  const canManage = (p: Profile) => {
-    if (p.id === me.id) return false; // never yourself
-    if (isBosch) return true;
-    return VENDOR_ROLES.includes(p.role); // vendor admin: vendor roles only
-  };
+  //Nobody can change their own role or remove themselves
+  const manage = !isMe && (isBosch || VENDOR_ROLES.includes(p.role));
+
+  const initials = `${p.first_name?.[0] ?? ""}${p.last_name?.[0] ?? ""}`.toUpperCase();
 
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Email</TableCell>
-            <TableCell>Role</TableCell>
-            <TableCell>Vendor Name</TableCell>
-            <TableCell>Created</TableCell>
-            <TableCell>Actions</TableCell>
-          </TableRow>
-        </TableHead>
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: ROW_GRID,
+        gap: { xs: 1.5, md: 2 },
+        alignItems: "center",
+        bgcolor: "#fff",
+        borderRadius: 3,
+        px: 2.5,
+        py: 2,
+        boxShadow: "0 1px 3px rgba(56, 35, 34, 0.06), 0 6px 18px rgba(56, 35, 34, 0.04)",
+        transition: "box-shadow 0.2s ease, transform 0.2s ease",
+        "&:hover": {
+          boxShadow: "0 2px 6px rgba(56, 35, 34, 0.08), 0 10px 26px rgba(56, 35, 34, 0.08)",
+        },
+      }}
+    >
+      {/* Picture, name and email */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}>
+        <Avatar
+          src={logo}
+          imgProps={{ style: { objectFit: "contain", background: "#fff" } }}
+          sx={{ width: 44, height: 44, bgcolor: ACCENT, color: BROWN, fontWeight: 700, fontSize: 16, border: logo ? "1px solid #eee" : "none" }}
+        >
+          {initials}
+        </Avatar>
 
-        <TableBody>
-          {profiles.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} align="center">
-                No profiles in this section.
-              </TableCell>
-            </TableRow>
-          ) : (
-            profiles.map((p) => {
-              const manage = canManage(p);
+        <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography noWrap sx={{ fontWeight: 700, color: BROWN }}>
+              {p.first_name} {p.last_name}
+            </Typography>
+            {isMe && <Chip label="You" size="small" sx={{ height: 20, fontSize: 11, fontWeight: 700, bgcolor: CREAM, color: BROWN }} />}
+          </Box>
+          <Typography noWrap variant="body2" sx={{ color: "text.secondary" }}>
+            {p.email}
+          </Typography>
+        </Box>
+      </Box>
 
-              return (
-                <TableRow key={p.id}>
-                  <TableCell>
-                    {p.first_name} {p.last_name}
-                  </TableCell>
+      {/* Role */}
+      <Box>
+        {manage ? (
+          <Select
+            variant="standard"
+            disableUnderline
+            value={p.role}
+            onChange={(e) => onRole(p, e.target.value as Role)}
+            sx={{
+              bgcolor: CREAM,
+              color: BROWN,
+              borderRadius: 999,
+              pl: 1.75,
+              fontSize: 13,
+              fontWeight: 700,
+              "& .MuiSelect-select": { py: 0.5, "&:focus": { bgcolor: "transparent" } },
+            }}
+          >
+            {roleOptions.map((r) => (
+              <MenuItem key={r} value={r}>
+                {ROLE_LABELS[r]}
+              </MenuItem>
+            ))}
+          </Select>
+        ) : (
+          <Typography sx={{ fontSize: 13, fontWeight: 700, color: BROWN }}>{ROLE_LABELS[p.role]}</Typography>
+        )}
+      </Box>
 
-                  <TableCell>{p.email}</TableCell>
+      {/* Vendor */}
+      <Typography noWrap sx={{ fontSize: 14, color: BROWN }}>
+        {vendorName}
+      </Typography>
 
-                  <TableCell>
-                    {manage ? (
-                      <Select
-                        size="small"
-                        value={p.role}
-                        onChange={(e) => onRole(p, e.target.value as Role)}
-                        sx={{ minWidth: 160 }}
-                      >
-                        {roleOptions.map((r) => (
-                          <MenuItem key={r} value={r}>
-                            {ROLE_LABELS[r]}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    ) : (
-                      roleLabel(p.role)
-                    )}
-                  </TableCell>
+      {/* Joined */}
+      <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
+        {new Date(p.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}
+      </Typography>
 
-                  <TableCell>{p.Vendor?.name ?? "—"}</TableCell>
+      {/* Actions */}
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "flex-end" }, gap: 1 }}>
+        {isBosch && p.status === "pending" && (
+          <>
+            <Button
+              size="small"
+              disableElevation
+              variant="contained"
+              onClick={() => onStatus(p, "verified")}
+              sx={{ borderRadius: 999, px: 2, fontWeight: 700, bgcolor: GREEN, "&:hover": { bgcolor: "#256a4b" } }}
+            >
+              Verify
+            </Button>
+            <Button
+              size="small"
+              onClick={() => onStatus(p, "denied")}
+              sx={{ borderRadius: 999, px: 1.5, fontWeight: 700, color: RED }}
+            >
+              Deny
+            </Button>
+          </>
+        )}
 
-                  <TableCell>
-                    {new Date(p.created_at).toLocaleDateString()}
-                  </TableCell>
+        {isBosch && p.status === "denied" && (
+          <Button
+            size="small"
+            onClick={() => onStatus(p, "verified")}
+            sx={{ borderRadius: 999, px: 1.5, fontWeight: 700, color: GREEN }}
+          >
+            Reinstate
+          </Button>
+        )}
 
-                  <TableCell>
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      {isBosch && showVerifyDeny && (
-                        <>
-                          <Button
-                            variant="contained"
-                            color="success"
-                            size="small"
-                            onClick={() => onStatus(p, "verified")}
-                          >
-                            Verify
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            color="error"
-                            size="small"
-                            onClick={() => onStatus(p, "denied")}
-                          >
-                            Deny
-                          </Button>
-                        </>
-                      )}
+        {!isBosch && p.status === "pending" && (
+          <Chip label="Awaiting BoschBite" size="small" sx={{ bgcolor: ACCENT, color: BROWN, fontWeight: 700 }} />
+        )}
 
-                      {isBosch && p.status === "denied" && (
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => onStatus(p, "verified")}
-                        >
-                          Verify
-                        </Button>
-                      )}
-
-                      {manage && (
-                        <Button
-                          variant="text"
-                          color="error"
-                          size="small"
-                          onClick={() => onRemove(p)}
-                        >
-                          Remove
-                        </Button>
-                      )}
-
-                      {!isBosch && showVerifyDeny && (
-                        <Typography variant="body2" color="text.secondary">
-                          Awaiting BoschBite approval
-                        </Typography>
-                      )}
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
+        {manage && (
+          <Tooltip title="Remove">
+            <IconButton size="small" onClick={() => onRemove(p)} sx={{ color: "text.secondary", "&:hover": { color: RED, bgcolor: "rgba(215, 44, 50, 0.08)" } }}>
+              <DeleteOutlineIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Box>
+    </Box>
   );
 };
+
 
 /* 
    PAGE
@@ -388,9 +397,16 @@ export const ProfileList = () => {
   const { data: me, isLoading: identityLoading } = useGetIdentity<Identity>();
 
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [vendorNames, setVendorNames] = useState<Record<number, string>>({});
+  const [vendorLogos, setVendorLogos] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toRemove, setToRemove] = useState<Profile | null>(null);
+  const [tab, setTab] = useState<Status>("pending");
+  const [search, setSearch] = useState("");
+
+  //Used to pick the starting tab only once
+  const startTabChosen = useRef(false);
 
   const isBosch = me?.role === "boschbite_admin";
   const isVendorAdmin = me?.role === "vendor_admin";
@@ -401,27 +417,40 @@ export const ProfileList = () => {
 
     setLoading(true);
 
-    let query = supabaseClient
+    let profilesQuery = supabaseClient
       .from("profiles")
-      .select(
-        "id, first_name, last_name, email, role, vendor_id, status, created_at, Vendor(name)",
-      )
+      .select("id, first_name, last_name, email, role, vendor_id, status, created_at")
       .order("created_at", { ascending: true });
 
-    // RLS enforces this too; filtering here keeps the UI consistent.
+    //The database enforces this too, filtering here keeps the screen consistent
     if (isVendorAdmin) {
-      query = query.eq("vendor_id", me.vendor_id);
+      profilesQuery = profilesQuery.eq("vendor_id", me.vendor_id);
     }
 
-    const { data, error } = await query;
+    const [profilesResult, vendorsResult, logosResult] = await Promise.all([
+      profilesQuery,
+      supabaseClient.from("Vendor").select("vendor_id, name"),
+      supabaseClient.from("Vendor_logo").select("vendor_id, logo_url"),
+    ]);
 
-    if (error) {
-      setErrorMessage(`Could not load profiles: ${error.message}`);
+    if (profilesResult.error) {
+      setErrorMessage(`Could not load profiles: ${profilesResult.error.message}`);
       setLoading(false);
       return;
     }
 
-    setProfiles((data ?? []) as unknown as Profile[]);
+    const list = (profilesResult.data ?? []) as unknown as Profile[];
+
+    setProfiles(list);
+    setVendorNames(Object.fromEntries((vendorsResult.data ?? []).map((v: any) => [v.vendor_id, v.name])));
+    setVendorLogos(Object.fromEntries((logosResult.data ?? []).map((l: any) => [l.vendor_id, String(l.logo_url).trim()])));
+
+    //Opens on Pending, or on Verified when nobody is waiting
+    if (!startTabChosen.current) {
+      startTabChosen.current = true;
+      if (!list.some((p) => p.status === "pending")) setTab("verified");
+    }
+
     setLoading(false);
   }, [me, allowed, isVendorAdmin]);
 
@@ -429,12 +458,9 @@ export const ProfileList = () => {
     fetchProfiles();
   }, [fetchProfiles]);
 
-  /* ---------- actions ---------- */
+  /* ACTIONS */
 
-  const updateStatus = async (
-    profile: Profile,
-    status: "verified" | "denied",
-  ) => {
+  const updateStatus = async (profile: Profile, status: "verified" | "denied") => {
     setErrorMessage(null);
 
     const { data, error } = await supabaseClient
@@ -443,11 +469,9 @@ export const ProfileList = () => {
       .eq("id", profile.id)
       .select("id");
 
-    // RLS can block a write without an error: zero rows come back.
+    //The database can block a change without an error, in that case no rows come back
     if (error || !data || data.length === 0) {
-      setErrorMessage(
-        error?.message ?? "You are not allowed to change this profile.",
-      );
+      setErrorMessage(error?.message ?? "You are not allowed to change this profile.");
       return;
     }
 
@@ -465,9 +489,7 @@ export const ProfileList = () => {
       .select("id");
 
     if (error || !data || data.length === 0) {
-      setErrorMessage(
-        error?.message ?? "You are not allowed to change this role.",
-      );
+      setErrorMessage(error?.message ?? "You are not allowed to change this role.");
       return;
     }
 
@@ -487,87 +509,180 @@ export const ProfileList = () => {
     setToRemove(null);
 
     if (error || !data || data.length === 0) {
-      setErrorMessage(
-        error?.message ?? "You are not allowed to remove this profile.",
-      );
+      setErrorMessage(error?.message ?? "You are not allowed to remove this profile.");
       return;
     }
 
     await fetchProfiles();
   };
 
-  /*  guards (after all hooks)  */
+  /* WHAT IS SHOWN */
 
+  const counts = useMemo(
+    () => ({
+      pending: profiles.filter((p) => p.status === "pending").length,
+      verified: profiles.filter((p) => p.status === "verified").length,
+      denied: profiles.filter((p) => p.status === "denied").length,
+    }),
+    [profiles],
+  );
+
+  const visible = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    return profiles.filter((p) => {
+      if (p.status !== tab) return false;
+      if (!term) return true;
+
+      const vendor = p.vendor_id !== null ? (vendorNames[p.vendor_id] ?? "") : "";
+      return `${p.first_name} ${p.last_name} ${p.email} ${vendor}`.toLowerCase().includes(term);
+    });
+  }, [profiles, tab, search, vendorNames]);
+
+  //Checks after all hooks
   if (identityLoading || !me) return null;
 
   if (!allowed) return <Navigate to="/" replace />;
 
-  const pending = profiles.filter((p) => p.status === "pending");
-  const verified = profiles.filter((p) => p.status === "verified");
-  const denied = profiles.filter((p) => p.status === "denied");
+  return (
+    <Box sx={{ maxWidth: 1100, mx: "auto", py: 1 }}>
+      {/* Title and search */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 2, mb: 3 }}>
+        <Box>
+          <Typography sx={{ fontSize: 30, fontWeight: 800, color: BROWN, lineHeight: 1.1 }}>People</Typography>
+          <Typography sx={{ color: "text.secondary", mt: 0.5 }}>
+            {isBosch ? "Approve new sign-ups and manage who has access." : "Manage the people in your company."}
+          </Typography>
+        </Box>
 
-  const section = (
-    title: string,
-    list: Profile[],
-    color: "warning" | "success" | "error",
-    showVerifyDeny = false,
-    isLast = false,
-  ) => (
-    <Box sx={{ mb: isLast ? 0 : 5 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-        <Typography variant="h5">{title}</Typography>
-        <Chip label={list.length} color={color} size="small" />
+        <TextField
+          size="small"
+          placeholder="Search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            width: { xs: "100%", sm: 280 },
+            "& .MuiOutlinedInput-root": {
+              bgcolor: "#fff",
+              borderRadius: 999,
+              "& fieldset": { border: "none" },
+              boxShadow: "0 1px 3px rgba(56, 35, 34, 0.08)",
+            },
+          }}
+        />
       </Box>
 
-      <ProfileTable
-        profiles={list}
-        me={me}
-        isBosch={isBosch}
-        showVerifyDeny={showVerifyDeny}
-        onStatus={updateStatus}
-        onRole={updateRole}
-        onRemove={setToRemove}
-      />
-    </Box>
-  );
-
-  return (
-    <List title="Profile Management">
       {errorMessage && (
-        <Alert
-          severity="error"
-          onClose={() => setErrorMessage(null)}
-          sx={{ mb: 3 }}
-        >
+        <Alert severity="error" onClose={() => setErrorMessage(null)} sx={{ mb: 3, borderRadius: 3 }}>
           {errorMessage}
         </Alert>
       )}
 
-      {loading ? (
-        <Typography>Loading profiles…</Typography>
-      ) : (
-        <>
-          {section("Pending", pending, "warning", true)}
-          {section("Verified", verified, "success")}
-          {section("Denied", denied, "error", false, true)}
-        </>
-      )}
+      {/* Tabs */}
+      <Box sx={{ display: "inline-flex", gap: 0.5, p: 0.5, mb: 3, bgcolor: CREAM, borderRadius: 999 }}>
+        {TABS.map((t) => {
+          const selected = tab === t.key;
 
-      <Dialog open={!!toRemove} onClose={() => setToRemove(null)}>
-        <DialogTitle>Remove profile?</DialogTitle>
+          return (
+            <Button
+              key={t.key}
+              disableElevation
+              onClick={() => setTab(t.key)}
+              sx={{
+                borderRadius: 999,
+                px: 2.5,
+                py: 0.75,
+                fontWeight: 700,
+                textTransform: "none",
+                bgcolor: selected ? BROWN : "transparent",
+                color: selected ? CREAM : BROWN,
+                "&:hover": { bgcolor: selected ? BROWN : "rgba(56, 35, 34, 0.08)" },
+              }}
+            >
+              {t.label}
+              <Box
+                component="span"
+                sx={{
+                  ml: 1,
+                  px: 1,
+                  minWidth: 22,
+                  borderRadius: 999,
+                  fontSize: 12,
+                  lineHeight: "20px",
+                  bgcolor: selected ? "rgba(241, 229, 213, 0.2)" : "rgba(56, 35, 34, 0.08)",
+                }}
+              >
+                {counts[t.key]}
+              </Box>
+            </Button>
+          );
+        })}
+      </Box>
+
+      {/* Column labels (hidden on phones) */}
+      <Box sx={{ display: { xs: "none", md: "grid" }, gridTemplateColumns: ROW_GRID, gap: 2, px: 2.5, pb: 1 }}>
+        {["Person", "Role", "Vendor", "Joined", ""].map((label, i) => (
+          <Typography key={i} sx={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "text.secondary" }}>
+            {label}
+          </Typography>
+        ))}
+      </Box>
+
+      {/* The list */}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        {loading ? (
+          [0, 1, 2].map((i) => <Skeleton key={i} variant="rounded" height={76} sx={{ borderRadius: 3 }} />)
+        ) : visible.length === 0 ? (
+          <Box sx={{ textAlign: "center", py: 8, color: "text.secondary" }}>
+            <PeopleOutlineIcon sx={{ fontSize: 44, opacity: 0.4 }} />
+            <Typography sx={{ mt: 1 }}>{search ? "No one matches your search." : EMPTY_TEXT[tab]}</Typography>
+          </Box>
+        ) : (
+          visible.map((p) => (
+            <PersonRow
+              key={p.id}
+              p={p}
+              me={me}
+              isBosch={isBosch}
+              vendorName={p.vendor_id !== null ? (vendorNames[p.vendor_id] ?? "—") : "—"}
+              logo={p.vendor_id !== null ? vendorLogos[p.vendor_id] : undefined}
+              onStatus={updateStatus}
+              onRole={updateRole}
+              onRemove={setToRemove}
+            />
+          ))
+        )}
+      </Box>
+
+      {/* Remove confirmation */}
+      <Dialog open={!!toRemove} onClose={() => setToRemove(null)} PaperProps={{ sx: { borderRadius: 4, p: 1 } }}>
+        <DialogTitle sx={{ fontWeight: 800, color: BROWN }}>Remove this person?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {toRemove?.first_name} {toRemove?.last_name} ({toRemove?.email})
-            will lose access to BoschBite Insights.
+            {toRemove?.first_name} {toRemove?.last_name} ({toRemove?.email}) will lose access to BoschBite Insights.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setToRemove(null)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={confirmRemove}>
-            Remove profile
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setToRemove(null)} sx={{ borderRadius: 999, color: BROWN, fontWeight: 700 }}>
+            Cancel
+          </Button>
+          <Button
+            disableElevation
+            variant="contained"
+            onClick={confirmRemove}
+            sx={{ borderRadius: 999, fontWeight: 700, bgcolor: RED, "&:hover": { bgcolor: "#b8242a" } }}
+          >
+            Remove
           </Button>
         </DialogActions>
       </Dialog>
-    </List>
+    </Box>
   );
 };

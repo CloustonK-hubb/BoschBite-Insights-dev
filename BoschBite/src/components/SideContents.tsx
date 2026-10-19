@@ -129,8 +129,8 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
       <ListItemText
         primary={label}
         primaryTypographyProps={{
-          fontSize: 14,
-          fontWeight: hasChildren ? 700 : 500,
+          fontSize: 13,
+          fontWeight: hasChildren ? 600 : 400,
         }}
       />
     );
