@@ -1,20 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGetIdentity, useInvalidateAuthStore } from "@refinedev/core";
 import { List } from "@refinedev/mui";
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
-
+import { Alert, Avatar, Box, Button, Card, CardContent, Chip, Stack, TextField, Typography } from "@mui/material";
 import { supabaseClient } from "../providers/supabaseClient";
+
+
+/* 
+   SETTINGS
+ */
+
+//Storage bucket that holds the uploaded logos
+const BUCKET = "vendor-logos";
+
+//Largest file allowed (2 MB)
+const MAX_BYTES = 2 * 1024 * 1024;
 
 type Role = "boschbite_admin" | "vendor_admin" | "vendor_manager";
 
@@ -31,12 +30,10 @@ type OwnProfile = {
   email: string;
   role: Role;
   vendor_id: number | null;
-  avatar_path: string | null;
 };
 
 type VendorDetails = {
   vendor_id: number;
-  logo_path: string | null;
   contact_email: string | null;
   contact_phone: string | null;
   description: string | null;
@@ -50,13 +47,7 @@ const ROLE_LABELS: Record<Role, string> = {
   vendor_manager: "Vendor Manager",
 };
 
-const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
-
-const publicUrl = (bucket: string, path: string | null | undefined) =>
-  path
-    ? supabaseClient.storage.from(bucket).getPublicUrl(path).data.publicUrl
-    : undefined;
-
+//Only JPEG files up to 2 MB are accepted
 const checkJpeg = (file: File): string | null => {
   if (file.type !== "image/jpeg") {
     return "Please choose a JPEG image (.jpg or .jpeg).";
@@ -67,31 +58,37 @@ const checkJpeg = (file: File): string | null => {
   return null;
 };
 
-/* =========================
-   IMAGE PICKER
-   Shows the blank MUI avatar until something is uploaded.
-========================= */
+//Works out the file path inside our bucket from a saved logo link
+const pathFromUrl = (url: string | null): string | null => {
+  if (!url) return null;
+  const marker = `/${BUCKET}/`;
+  const i = url.indexOf(marker);
+  return i === -1 ? null : url.slice(i + marker.length).split("?")[0];
+};
 
-type ImagePickerProps = {
+
+/* 
+   LOGO PICKER
+   Shows a blank avatar until a logo is uploaded.
+ */
+
+type LogoPickerProps = {
   src?: string;
-  label: string;
   busy: boolean;
-  variant?: "circular" | "rounded";
   onPick: (file: File) => void;
 };
 
-const ImagePicker = ({
-  src,
-  label,
-  busy,
-  variant = "circular",
-  onPick,
-}: ImagePickerProps) => {
+const LogoPicker = ({ src, busy, onPick }: LogoPickerProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
     <Stack direction="row" spacing={2} alignItems="center">
-      <Avatar src={src} variant={variant} sx={{ width: 96, height: 96 }} />
+      <Avatar
+        src={src}
+        variant="rounded"
+        imgProps={{ style: { objectFit: "contain" } }}
+        sx={{ width: 96, height: 96 }}
+      />
 
       <Box>
         <Button
@@ -100,7 +97,7 @@ const ImagePicker = ({
           disabled={busy}
           onClick={() => inputRef.current?.click()}
         >
-          {busy ? "Uploading…" : label}
+          {busy ? "Uploading…" : "Upload company logo"}
         </Button>
 
         <Typography
@@ -119,7 +116,8 @@ const ImagePicker = ({
           hidden
           onChange={(e) => {
             const file = e.target.files?.[0];
-            e.target.value = ""; // allow picking the same file again
+            //Lets the same file be picked again
+            e.target.value = "";
             if (file) onPick(file);
           }}
         />
@@ -128,9 +126,10 @@ const ImagePicker = ({
   );
 };
 
-/* =========================
+
+/* 
    PAGE
-========================= */
+ */
 
 export const MyProfile = () => {
   const { data: me } = useGetIdentity<Identity>();
@@ -139,7 +138,7 @@ export const MyProfile = () => {
 
   const [profile, setProfile] = useState<OwnProfile | null>(null);
   const [vendorName, setVendorName] = useState<string | null>(null);
-  const [details, setDetails] = useState<VendorDetails | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -148,9 +147,7 @@ export const MyProfile = () => {
   const [description, setDescription] = useState("");
 
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<
-    "avatar" | "logo" | "personal" | "vendor" | null
-  >(null);
+  const [busy, setBusy] = useState<"logo" | "personal" | "vendor" | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
 
   const load = useCallback(async () => {
@@ -160,7 +157,7 @@ export const MyProfile = () => {
 
     const { data: p, error } = await supabaseClient
       .from("profiles")
-      .select("id, first_name, last_name, email, role, vendor_id, avatar_path")
+      .select("id, first_name, last_name, email, role, vendor_id")
       .eq("id", myId)
       .single();
 
@@ -178,7 +175,7 @@ export const MyProfile = () => {
     setLastName(p.last_name ?? "");
 
     if (p.vendor_id !== null) {
-      const [vendorResult, detailsResult] = await Promise.all([
+      const [vendorResult, detailsResult, logoResult] = await Promise.all([
         supabaseClient
           .from("Vendor")
           .select("name")
@@ -186,7 +183,12 @@ export const MyProfile = () => {
           .maybeSingle(),
         supabaseClient
           .from("vendor_details")
-          .select("vendor_id, logo_path, contact_email, contact_phone, description")
+          .select("vendor_id, contact_email, contact_phone, description")
+          .eq("vendor_id", p.vendor_id)
+          .maybeSingle(),
+        supabaseClient
+          .from("Vendor_logo")
+          .select("logo_url")
           .eq("vendor_id", p.vendor_id)
           .maybeSingle(),
       ]);
@@ -194,7 +196,7 @@ export const MyProfile = () => {
       const d = detailsResult.data as VendorDetails | null;
 
       setVendorName(vendorResult.data?.name ?? null);
-      setDetails(d);
+      setLogoUrl(logoResult.data?.logo_url?.trim() ?? null);
       setContactEmail(d?.contact_email ?? "");
       setContactPhone(d?.contact_phone ?? "");
       setDescription(d?.description ?? "");
@@ -207,43 +209,11 @@ export const MyProfile = () => {
     load();
   }, [load]);
 
-  /* ---------- helpers ---------- */
+  /* ACTIONS */
 
-  // Uploads the new file, saves its path, then deletes the old file.
-  // `save` returns an error message, or null when the database update worked.
-  const uploadReplacing = async (
-    bucket: string,
-    folder: string,
-    oldPath: string | null,
-    file: File,
-    save: (newPath: string) => Promise<string | null>,
-  ): Promise<string | null> => {
-    const newPath = `${folder}/${Date.now()}.jpg`;
-
-    const { error: uploadError } = await supabaseClient.storage
-      .from(bucket)
-      .upload(newPath, file, { contentType: "image/jpeg" });
-
-    if (uploadError) return `Upload failed: ${uploadError.message}`;
-
-    const saveError = await save(newPath);
-
-    if (saveError) {
-      await supabaseClient.storage.from(bucket).remove([newPath]);
-      return saveError;
-    }
-
-    if (oldPath) {
-      await supabaseClient.storage.from(bucket).remove([oldPath]);
-    }
-
-    return null;
-  };
-
-  /* ---------- actions ---------- */
-
-  const uploadAvatar = async (file: File) => {
-    if (!profile) return;
+  //Uploads the new logo, saves its link, then deletes the old file
+  const uploadLogo = async (file: File) => {
+    if (!profile || profile.vendor_id === null) return;
 
     const problem = checkJpeg(file);
     if (problem) {
@@ -251,38 +221,47 @@ export const MyProfile = () => {
       return;
     }
 
-    setBusy("avatar");
+    setBusy("logo");
     setMessage(null);
 
-    const errorText = await uploadReplacing(
-      "avatars",
-      profile.id,
-      profile.avatar_path,
-      file,
-      async (newPath) => {
-        const { data, error } = await supabaseClient
-          .from("profiles")
-          .update({ avatar_path: newPath })
-          .eq("id", profile.id)
-          .select("id");
+    const vendorId = profile.vendor_id;
+    const newPath = `${vendorId}/${Date.now()}.jpg`;
+    const oldPath = pathFromUrl(logoUrl);
 
-        if (error || !data || data.length === 0) {
-          return error?.message ?? "Could not save your photo.";
-        }
-        return null;
-      },
-    );
+    const { error: uploadError } = await supabaseClient.storage
+      .from(BUCKET)
+      .upload(newPath, file, { contentType: "image/jpeg" });
 
-    setBusy(null);
-
-    if (errorText) {
-      setMessage({ type: "error", text: errorText });
+    if (uploadError) {
+      setBusy(null);
+      setMessage({ type: "error", text: `Upload failed: ${uploadError.message}` });
       return;
     }
 
-    setMessage({ type: "success", text: "Your photo was updated." });
+    const newUrl = supabaseClient.storage.from(BUCKET).getPublicUrl(newPath).data.publicUrl;
+
+    //Creates the vendor's row if it does not exist yet, otherwise updates it
+    const { error: saveError } = await supabaseClient
+      .from("Vendor_logo")
+      .upsert({ vendor_id: vendorId, logo_url: newUrl }, { onConflict: "vendor_id" });
+
+    if (saveError) {
+      await supabaseClient.storage.from(BUCKET).remove([newPath]);
+      setBusy(null);
+      setMessage({ type: "error", text: saveError.message });
+      return;
+    }
+
+    //Only removes files this page uploaded (kept in the vendor's own folder), never the team's original logos
+    if (oldPath && oldPath.startsWith(`${vendorId}/`)) {
+      await supabaseClient.storage.from(BUCKET).remove([oldPath]);
+    }
+
+    setBusy(null);
+    setMessage({ type: "success", text: "The company logo was updated." });
     await load();
-    invalidateAuthStore(); // refreshes the header avatar
+    //Refreshes the picture in the side navigation
+    invalidateAuthStore();
   };
 
   const savePersonal = async () => {
@@ -317,53 +296,8 @@ export const MyProfile = () => {
 
     setMessage({ type: "success", text: "Your details were saved." });
     await load();
-    invalidateAuthStore(); // refreshes the header name
-  };
-
-  const uploadLogo = async (file: File) => {
-    if (!profile || profile.vendor_id === null) return;
-
-    const problem = checkJpeg(file);
-    if (problem) {
-      setMessage({ type: "error", text: problem });
-      return;
-    }
-
-    setBusy("logo");
-    setMessage(null);
-
-    const vendorId = profile.vendor_id;
-
-    const errorText = await uploadReplacing(
-      "vendor-logos",
-      String(vendorId),
-      details?.logo_path ?? null,
-      file,
-      async (newPath) => {
-        const { error } = await supabaseClient
-          .from("vendor_details")
-          .upsert(
-            {
-              vendor_id: vendorId,
-              logo_path: newPath,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "vendor_id" },
-          );
-
-        return error ? error.message : null;
-      },
-    );
-
-    setBusy(null);
-
-    if (errorText) {
-      setMessage({ type: "error", text: errorText });
-      return;
-    }
-
-    setMessage({ type: "success", text: "The company logo was updated." });
-    await load();
+    //Refreshes the name in the side navigation
+    invalidateAuthStore();
   };
 
   const saveVendor = async () => {
@@ -404,7 +338,7 @@ export const MyProfile = () => {
     await load();
   };
 
-  /* ---------- render ---------- */
+  /* PAGE LAYOUT */
 
   if (!me || loading) {
     return (
@@ -425,6 +359,8 @@ export const MyProfile = () => {
   const canManageVendor =
     profile.role === "vendor_admin" && profile.vendor_id !== null;
 
+  const initials = `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
+
   return (
     <List title="My Profile">
       <Stack spacing={4} sx={{ maxWidth: 720 }}>
@@ -434,24 +370,27 @@ export const MyProfile = () => {
           </Alert>
         )}
 
-        {/* PERSONAL */}
-
+        {/* Personal information */}
         <Card variant="outlined">
           <CardContent>
             <Stack spacing={3}>
-              <Box
-                sx={{ display: "flex", alignItems: "center", gap: 2 }}
-              >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Typography variant="h5">Personal information</Typography>
                 <Chip label={ROLE_LABELS[profile.role]} size="small" />
               </Box>
 
-              <ImagePicker
-                src={publicUrl("avatars", profile.avatar_path)}
-                label="Upload photo"
-                busy={busy === "avatar"}
-                onPick={uploadAvatar}
-              />
+              {/* Company logo shown here but not edited here */}
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar
+                  src={logoUrl ?? undefined}
+                  imgProps={{ style: { objectFit: "contain" } }}
+                  sx={{ width: 72, height: 72 }}
+                >
+                  {initials}
+                </Avatar>
+
+                {profile.vendor_id !== null}
+              </Stack>
 
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <TextField
@@ -491,28 +430,24 @@ export const MyProfile = () => {
           </CardContent>
         </Card>
 
-        {/* VENDOR */}
-
+        {/* Vendor information */}
         {profile.vendor_id !== null && (
           <Card variant="outlined">
             <CardContent>
               <Stack spacing={3}>
-                <Typography variant="h5">
-                  {vendorName ?? "Your vendor"}
-                </Typography>
+                <Typography variant="h5">{vendorName ?? "Your vendor"}</Typography>
 
                 {canManageVendor ? (
-                  <ImagePicker
-                    src={publicUrl("vendor-logos", details?.logo_path)}
-                    label="Upload company logo"
-                    variant="rounded"
+                  <LogoPicker
+                    src={logoUrl ?? undefined}
                     busy={busy === "logo"}
                     onPick={uploadLogo}
                   />
                 ) : (
                   <Avatar
-                    src={publicUrl("vendor-logos", details?.logo_path)}
+                    src={logoUrl ?? undefined}
                     variant="rounded"
+                    imgProps={{ style: { objectFit: "contain" } }}
                     sx={{ width: 96, height: 96 }}
                   />
                 )}
