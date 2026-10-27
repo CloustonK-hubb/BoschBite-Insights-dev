@@ -1,62 +1,85 @@
 import { Box, Button, Paper, Typography } from "@mui/material";
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
+import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import { supabaseClient } from "../providers/supabaseClient";
+
+
+/* 
+   SETTINGS
+   Same colours as the login page
+ */
+
+const BROWN = "#382322";
+const CREAM = "#f1e5d5";
+const ORANGE = "#E8832A";
 
 function Pending() {
   const navigate = useNavigate();
 
+  //Signs the person out once they arrive, so a pending account never keeps a live session
   useEffect(() => {
     supabaseClient.auth.signOut({ scope: "local" });
   }, []);
 
   return (
+    /* Soft beige background with a gentle glow behind the card */
     <Box
       sx={{
         minHeight: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#f5f5f5",
-        padding: 2,
+        px: 2,
+        py: 5,
+        background: "radial-gradient(circle at 50% 35%, #fbf4e9 0%, #f1e5d5 55%, #e8d8c0 100%)",
       }}
     >
+      {/* Raised rounded card */}
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
-          maxWidth: 500,
           width: "100%",
-          padding: 5,
+          maxWidth: 480,
+          borderRadius: 5,
+          border: "1px solid rgba(56, 35, 34, 0.06)",
+          boxShadow: "0 20px 50px rgba(56, 35, 34, 0.12), 0 2px 6px rgba(56, 35, 34, 0.06)",
+          padding: { xs: "36px 24px", sm: "48px 40px" },
           textAlign: "center",
         }}
       >
-        <Typography variant="h4" gutterBottom>
-          Account Pending
+        {/* Orange hourglass icon */}
+        <HourglassTopIcon sx={{ fontSize: 64, color: ORANGE, mb: 2 }} />
+
+        <Typography component="h1" sx={{ color: BROWN, fontSize: 26, fontWeight: 800, lineHeight: 1.25 }}>
+          Your account is pending
         </Typography>
 
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          sx={{ mb: 3 }}
-        >
-          Your BoschBite Insights account has been created
-          successfully, but it is still awaiting verification.
+        <Typography sx={{ color: "text.secondary", mt: 1.5, mb: 1.5 }}>
+          Your BoschBite Insights account has been created successfully, but it is still awaiting verification.
         </Typography>
 
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ mb: 4 }}
-        >
-          A BoschBite Admin will review your account and grant
-          access once it has been verified.
+        <Typography variant="body2" sx={{ color: "text.secondary", mb: 4 }}>
+          A BoschBite Admin will review your account and grant access once it has been verified.
         </Typography>
 
+        {/* Brown button, same as the login page */}
         <Button
+          fullWidth
           variant="contained"
           onClick={() => navigate("/login")}
+          sx={{
+            borderRadius: 999,
+            py: 1.25,
+            fontWeight: 700,
+            letterSpacing: 0.5,
+            backgroundColor: BROWN,
+            color: CREAM,
+            boxShadow: "none",
+            "&:hover": { backgroundColor: "#4d3130", boxShadow: "0 6px 16px rgba(56, 35, 34, 0.25)" },
+          }}
         >
-          Back to Login
+          Back to login
         </Button>
       </Paper>
     </Box>
