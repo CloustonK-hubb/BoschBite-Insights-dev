@@ -76,6 +76,27 @@ const AccessRedirect = () => {
 };
 
 
+/* 
+   WORDING
+   Replaces the text Refine shows on its built-in pages
+ */
+
+const customWording: Record<string, string> = {
+  "pages.login.title": "Sign into your BoschBite Account",
+};
+
+const i18nProvider = {
+  translate: (key: string, options?: any, defaultMessage?: string) => {
+    if (customWording[key]) return customWording[key];
+    const text = typeof options === "string" ? options : (defaultMessage ?? key);
+    //Fills in placeholders such as {{resource}}
+    return text.replace(/\{\{(\w+)\}\}/g, (_: string, name: string) => String(options?.[name] ?? ""));
+  },
+  changeLocale: async () => {},
+  getLocale: () => "en",
+};
+
+
 const App: React.FC = () => {
 
   /* 
@@ -432,6 +453,7 @@ const App: React.FC = () => {
             dataProvider={dataProvider}
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
+            i18nProvider={i18nProvider}
             resources={[
               //Adding the main pages at the top of the navigation
               { name: "dashboard", list: "/dashboard", meta: { label: "Business Dashboard", icon: <InsightsIcon/> } },
@@ -561,12 +583,42 @@ const App: React.FC = () => {
                   element={
                     <AuthPage type="login"
                       rememberMe={<></>}
+                      /* Removing the logo and title above the login card */
+                      title={false}
+                      /* Soft beige background with a gentle glow behind the card */
+                      wrapperProps={{
+                        sx: {
+                          background: "radial-gradient(circle at 50% 35%, #fbf4e9 0%, #f1e5d5 55%, #e8d8c0 100%)",
+                        },
+                      }}
+                      /* Raised rounded card, pill shaped fields and a brown button */
                       contentProps={{
-                      sx: {
-                         "& h1": { color: "text.primary" },          // the heading
-                          "& .MuiLink-root": { color: "text.primary" }, // the links
+                        sx: {
+                          borderRadius: 5,
+                          border: "1px solid rgba(56, 35, 34, 0.06)",
+                          boxShadow: "0 20px 50px rgba(56, 35, 34, 0.12), 0 2px 6px rgba(56, 35, 34, 0.06)",
+                          "& .MuiCardContent-root": { padding: "44px 40px" },
+                          "& h1": { color: "#382322", fontSize: 26, fontWeight: 800 },
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 999,
+                            backgroundColor: "#faf6ef",
+                            "& fieldset": { borderColor: "transparent" },
+                            "&:hover fieldset": { borderColor: "#d9c7ab" },
+                            "&.Mui-focused fieldset": { borderColor: "#382322", borderWidth: 1.5 },
                           },
-                        }}
+                          "& button[type='submit']": {
+                            borderRadius: 999,
+                            py: 1.25,
+                            fontWeight: 700,
+                            letterSpacing: 0.5,
+                            backgroundColor: "#382322",
+                            color: "#f1e5d5",
+                            boxShadow: "none",
+                            "&:hover": { backgroundColor: "#4d3130", boxShadow: "0 6px 16px rgba(56, 35, 34, 0.25)" },
+                          },
+                          "& .MuiLink-root": { color: "#382322" },
+                        },
+                      }}
                     />
                   }
                 />
