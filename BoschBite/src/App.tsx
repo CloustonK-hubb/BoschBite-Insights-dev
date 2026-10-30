@@ -24,9 +24,11 @@ import Pending from "./components/Pending";
 import Denied from "./components/Denied";
 import CalendarPage from "./pages/calendar";
 import { LandingPage } from "./pages/landingPage";
+import { LeaderboardPage } from "./pages/Leaderboard";
 import { MyProfile } from "./pages/Profile";
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
 import { SiderContent } from "./components/SideContents";
+
 
 
 /* 
@@ -515,7 +517,7 @@ const App: React.FC = () => {
                 {/*Adding the main pages for the app:*/}
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/CalendarPage" element={<CalendarPage />} />
-              <Route path="/leaderboard" element={<div> <b>Leaderboard coming soon!</b></div> } />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/my-profile" element={<MyProfile />} />
        
                 {/* Example: 
