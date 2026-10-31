@@ -28,6 +28,9 @@ import { LeaderboardPage } from "./pages/Leaderboard";
 import { MyProfile } from "./pages/Profile";
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
 import { SiderContent } from "./components/SideContents";
+import { HelpPage, HelpRequests } from "./pages/Help/Help";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 
 
 
@@ -462,6 +465,8 @@ const App: React.FC = () => {
               { name: "CalendarPage", list: "/CalendarPage", meta: { label: "Calendar", icon: <CalendarMonthIcon /> } },
               { name: "Leaderboard", list: "/leaderboard", meta: {label: "Leaderboard", icon: <LeaderboardIcon/>} },
               { name: "my-profile", list: "/my-profile", meta: { label: "My Profile", icon: <AccountCircleIcon /> } },
+              { name: "help", list: "/help", meta: { label: "Help", icon: <HelpOutlineIcon /> } },
+              { name: "help-requests", list: "/help-requests", meta: { label: "Help requests", icon: <SupportAgentIcon /> } },
               //Creating the grouping for the navigation: 
               { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
               { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
@@ -519,6 +524,8 @@ const App: React.FC = () => {
               <Route path="/CalendarPage" element={<CalendarPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/my-profile" element={<MyProfile />} />
+              <Route path="/help" element={<HelpPage />} />
+              <Route path="/help-requests" element={<HelpRequests />} />
        
                 {/* Example: 
                 <Route path="/posts"> 

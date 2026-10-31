@@ -17,7 +17,7 @@ const ACCENT = "#F8E8A8";
 const TEXT = "#2B2B3A";
 
 //Pages shown in the top section, in this order
-const INSIGHTS = ["dashboard", "Leaderboard", "CalendarPage"];
+const INSIGHTS = ["dashboard", "Leaderboard", "CalendarPage", "help"];
 
 //Pages that are reached by clicking the avatar instead
 const NOT_IN_MENU = ["my-profile"];
@@ -75,10 +75,12 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
   const canSeeProfiles =
     me?.role === "boschbite_admin" || me?.role === "vendor_admin";
 
-  const visible = menuItems.filter(
+    const visible = menuItems.filter(
     (i) =>
       !NOT_IN_MENU.includes(i.name) &&
-      (i.name !== "profiles" || canSeeProfiles),
+      (i.name !== "profiles" || canSeeProfiles) &&
+      (i.name !== "help-requests" || me?.role === "boschbite_admin") &&
+      (i.name !== "help" || me?.role !== "boschbite_admin"),
   );
 
   //Splitting the menu into the top section and the lower section
