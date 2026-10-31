@@ -6,11 +6,11 @@ import { alpha } from "@mui/material/styles";
 import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
 import BalanceOutlinedIcon from "@mui/icons-material/BalanceOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import Chip from "@mui/material/Chip";
 import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
+
+
 
 //Represents the helper buidling blocks that which make up small reuable pieces of the footer component. E.g heading with an icon, grey car, coloured table cell and location bullet 
 const ColumnHeading = ({ icon, title }: { icon: ReactNode; title: string }) => (
@@ -48,9 +48,9 @@ const OutcomeCell = ({ label, type }: { label: string; type: Outcome }) => (
 );
 
 const efficiencyRows: { discount: string; above: [string, Outcome]; below: [string, Outcome] }[] = [
-    { discount: "Deeper", above: ["Paid off", "good"], below: ["Lost money", "bad"] },
-    { discount: "Same", above: ["Demand rose", "neutral"], below: ["Demand fell", "neutral"] },
-    { discount: "Smaller", above: ["Held up", "good"], below: ["Discount worth keeping", "bad"] },
+    { discount: "Bigger discount", above: ["Paid off", "good"], below: ["Lost money", "bad"] },
+    { discount: "Same discount", above: ["Demand rose", "neutral"], below: ["Demand fell", "neutral"] },
+    { discount: "Smaller discount", above: ["Held up", "good"], below: ["Bigger discount worth keeping", "bad"] },
 ];
 
 const LocationPoint = ({ icon, text }: { icon: ReactNode; text: string }) => (
@@ -110,6 +110,9 @@ export const ScoreBreakdownFooter = () => {
                 <Box sx={{ p: 2, borderRight: { md: 1 }, borderColor: "divider" }}>
                     <ColumnHeading icon={<CampaignOutlinedIcon color="primary" />} title="Promotional effectiveness" />
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                       Measures the impact the promotion had in terms of how many students it reached and how many students returned to spend again during the promotion.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         Made up of two parts:
                     </Typography>
                     <GreyCard>
@@ -131,15 +134,16 @@ export const ScoreBreakdownFooter = () => {
                     <ColumnHeading icon={<BalanceOutlinedIcon color="primary" />} title="Efficiency" />
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         Did the promotion earn more than usual after paying for the discount? Each vendor
-                        is compared with itself in the same period type in other years.
+                        is compared with its current discount in the period to its benchmark during the same period type from other years.
                     </Typography>
-                    <GreyCard>
-                        <Typography variant="body2">Net revenue per day ÷ benchmark</Typography>
-                        <Typography variant="body2" color="text.secondary">Above 1 = better than usual</Typography>
-                    </GreyCard>
-                    <Box sx={{ display: "grid", gridTemplateColumns: "60px 1fr 1fr", gap: 0.5, fontSize: 12 }}> <Box />
-                        <Typography variant="caption" color="text.secondary">Above 1</Typography>
-                        <Typography variant="caption" color="text.secondary">Below 1</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        <b>How to read the table</b>: compare the current discount with the benchmark to find the appropriate
+                        row, then use the associated efficiency score (above or below 1) to find the final result.
+                    </Typography>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "80px 1fr 1fr", gap: 0.5, fontSize: 12 }}>
+                        <Box />
+                        <Typography variant="caption" color="text.secondary">Score above 1</Typography>
+                        <Typography variant="caption" color="text.secondary">Score below 1</Typography>
                         {efficiencyRows.map((row) => (
                             <Box key={row.discount} sx={{ display: "contents" }}>
                                 <Typography variant="caption" color="text.secondary">{row.discount}</Typography>
@@ -150,28 +154,18 @@ export const ScoreBreakdownFooter = () => {
                     </Box>
                 </Box>
 
-                {/*Location column */}
+
+                {/* Location column */}
                 <Box sx={{ p: 2 }}>
                     <ColumnHeading icon={<PlaceOutlinedIcon color="primary" />} title="Location score" />
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         Compares each restaurant's address with the vendors around it.
                     </Typography>
-                    <LocationPoint
-                        icon={<ArrowUpwardIcon fontSize="small" color="success" />}
-                        text="Near other vendor types: promotes cross-spending and brings in new customer types"
-                    />
-                    <LocationPoint
-                        icon={<ArrowDownwardIcon fontSize="small" color="error" />}
-                        text="Near vendors of the same type: less diversity in the customers in that area"
-                    />
-                    <GreyCard>
-                        <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
-                            <StorefrontOutlinedIcon fontSize="small" />
-                            <Typography variant="body2">
-                                Like a mall: a restaurant in the food court scores lower than one outside it
-                            </Typography>
-                        </Box>
-                    </GreyCard>
+                    <Typography variant="body2" color="text.secondary">
+                        If the restaurant is in the vicinity of other vendor types, this could promote
+                        cross-spending and bring in a new customer base, as well as potentially provide
+                        opportunities for promotions.
+                    </Typography>
                 </Box>
             </Box>
 
