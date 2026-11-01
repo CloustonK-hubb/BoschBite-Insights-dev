@@ -7,8 +7,8 @@ import { ThemeProvider } from "@mui/material/styles";
 import routerProvider, {NavigateToResource, UnsavedChangesNotifier,DocumentTitleHandler,} from "@refinedev/react-router";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router";
 import { dataProvider } from "./providers/dataProvider";
-import { TransactionList, StudentList, VendorList, VendorTypesList, CalendarList, PromoWindowList ,ProfileList} from "../src/pages/posts";
-import { TransactionShow, StudentShow, VendorShow, VendorTypeShow, CalendarShow, PromoWindowShow } from "./pages/posts/show";
+import { TransactionList, StudentList, CalendarList, PromoWindowList ,ProfileList} from "../src/pages/posts";
+import { TransactionShow, StudentShow, CalendarShow, PromoWindowShow } from "./pages/posts/show";
 import { CalendarEdit, PromoWindowEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 import { DashboardPage } from "./pages/dashboard";
@@ -476,8 +476,6 @@ const App: React.FC = () => {
               //because Refine sends the resource name to the data provider as the table name
               { name: "transaction", list: "/transaction", show: "/transaction/show/:id", meta: {label: "Transaction", parent: "BoschCard-data"}},
               { name: "student", list: "/student", show: "/student/show/:id", edit: "/student/edit/:id", meta: {label: "Student", parent: "BoschCard-data"}},
-              { name: "vendor", list: "/vendor", show: "/vendor/show/:id", meta: {label: "Vendor", parent: "BoschCard-data"}},
-              { name: "vendor_type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {label: "Vendor Type", parent: "BoschCard-data"}},
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
               { name: "calendar_event", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", 
                 meta: {label: "Calendar events", parent: "BoschBites-data", canDelete: true}},
@@ -547,16 +545,6 @@ const App: React.FC = () => {
               <Route path="/student">
                 <Route index element={<StudentList />} />
                 <Route path="show/:id" element={<StudentShow />} />
-              </Route>
-
-              <Route path="/vendor">
-                <Route index element={<VendorList />} />
-                <Route path="show/:id" element={<VendorShow />}/>
-              </Route>
-
-              <Route path="/vendor_type">
-                <Route index element={<VendorTypesList />} />
-                <Route path="show/:id" element={<VendorTypeShow />} />
               </Route>
 
               <Route path="/promo_window">
