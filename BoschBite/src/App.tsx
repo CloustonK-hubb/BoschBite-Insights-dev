@@ -31,6 +31,7 @@ import { SiderContent } from "./components/SideContents";
 import { HelpPage, HelpRequests } from "./pages/Help/Help";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
+import { TopBar } from "./components/TopBar";
 
 
 
@@ -505,6 +506,8 @@ const App: React.FC = () => {
                       <Typography fontWeight={500} fontSize={16} color="#382322">BoschBite Insights</Typography> )}
                       </Box>
                       )}
+                      /* Removing the top bar */
+                      Header={() => <TopBar />}
                       /* Editing the side navigation: profile block, sections and logout button */
                       Sider={(props) => (
                         <ThemedSider
@@ -648,7 +651,7 @@ const App: React.FC = () => {
                     key="catch-all"
                     fallback={<AccessRedirect />}
                   >
-                    <ThemedLayout>
+                    <ThemedLayout Header={() => null}>
                       <Outlet />
                     </ThemedLayout>
                   </Authenticated>
