@@ -35,12 +35,13 @@ const ROLE_CHIP: Record<string, string> = {
   vendor_manager: "Vendor Manager",
 };
 
+//Vendor ids are uuids (strings) in the data model
 type Identity = {
   id: string;
   name?: string;
   avatar?: string;
   role: "boschbite_admin" | "vendor_admin" | "vendor_manager" | null;
-  vendor_id: number | null;
+  vendor_id: string | null;
 };
 
 
@@ -64,9 +65,9 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
     }
 
     supabaseClient
-      .from("Vendor")
+      .from("vendor")
       .select("name")
-      .eq("vendor_id", me.vendor_id)
+      .eq("id", me.vendor_id)
       .maybeSingle()
       .then(({ data }) => setVendorName(data?.name ?? null));
   }, [me?.vendor_id]);
@@ -242,6 +243,16 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
             color: TEXT,
             px: 2,
             py: 2,
+            mx: 1.5,
+            mt: 1,
+            mb: 1,
+            borderRadius: 3,
+            cursor: "pointer",
+            transition: "box-shadow 0.2s ease, background-color 0.2s ease",
+            "&:hover": {
+              backgroundColor: ACCENT,
+              boxShadow: "0 2px 6px rgba(56, 35, 34, 0.08), 0 10px 26px rgba(56, 35, 34, 0.08)",
+            },
           }}
         >
           <Avatar
@@ -254,6 +265,7 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
               color: TEXT,
               fontWeight: 700,
               fontSize: collapsed ? 16 : 28,
+              border: "2px solid #fff",
             }}
           >
             {initials}

@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGetIdentity, useInvalidateAuthStore } from "@refinedev/core";
-import { List } from "@refinedev/mui";
-import { Alert, Avatar, Box, Button, Card, CardContent, Chip, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Avatar, Box, Button, Chip, Paper, Skeleton, TextField, Typography } from "@mui/material";
 import { supabaseClient } from "../providers/supabaseClient";
 
 
 /* 
    SETTINGS
+   Same colours and card style as the Help and People pages
  */
+
+const BROWN = "#382322";
+const CREAM = "#f1e5d5";
+const ACCENT = "#F8E8A8";
 
 //Storage bucket that holds the uploaded logos
 const BUCKET = "vendor-logos";
@@ -15,12 +19,46 @@ const BUCKET = "vendor-logos";
 //Largest file allowed (2 MB)
 const MAX_BYTES = 2 * 1024 * 1024;
 
+//Soft white fields, pill shaped for short fields and rounded for the big description box
+const fieldSx = (radius: number) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: radius,
+    backgroundColor: "#fff",
+    "& fieldset": { borderColor: "rgba(56, 35, 34, 0.12)" },
+    "&:hover fieldset": { borderColor: "#e6d5bd" },
+    "&.Mui-focused fieldset": { borderColor: BROWN, borderWidth: 1.5 },
+    "&.Mui-disabled": { backgroundColor: "#faf6ef" },
+  },
+  "& .MuiInputLabel-root.Mui-focused": { color: BROWN },
+});
+
+const cardSx = {
+  bgcolor: "#fff",
+  borderRadius: 3,
+  boxShadow: "0 1px 3px rgba(56, 35, 34, 0.06), 0 6px 18px rgba(56, 35, 34, 0.04)",
+};
+
+//Brown pill button used for the main action on each card
+const primaryButtonSx = {
+  borderRadius: 999,
+  px: 3,
+  py: 1.1,
+  fontWeight: 700,
+  letterSpacing: 0.5,
+  backgroundColor: BROWN,
+  color: CREAM,
+  boxShadow: "none",
+  "&:hover": { backgroundColor: "#4d3130", boxShadow: "0 6px 16px rgba(56, 35, 34, 0.25)" },
+  "&.Mui-disabled": { backgroundColor: BROWN, color: CREAM, opacity: 0.5 },
+};
+
 type Role = "boschbite_admin" | "vendor_admin" | "vendor_manager";
 
+//Vendor ids are uuids (strings) in the data model
 type Identity = {
   id: string;
   role: Role | null;
-  vendor_id: number | null;
+  vendor_id: string | null;
 };
 
 type OwnProfile = {
@@ -29,11 +67,11 @@ type OwnProfile = {
   last_name: string;
   email: string;
   role: Role;
-  vendor_id: number | null;
+  vendor_id: string | null;
 };
 
 type VendorDetails = {
-  vendor_id: number;
+  vendor_id: string;
   contact_email: string | null;
   contact_phone: string | null;
   description: string | null;
@@ -47,10 +85,10 @@ const ROLE_LABELS: Record<Role, string> = {
   vendor_manager: "Vendor Manager",
 };
 
-//Only JPEG files up to 2 MB are accepted
-const checkJpeg = (file: File): string | null => {
-  if (file.type !== "image/jpeg") {
-    return "Please choose a JPEG image (.jpg or .jpeg).";
+//Only PNG files up to 2 MB are accepted
+const checkPng = (file: File): string | null => {
+  if (file.type !== "image/png") {
+    return "Please choose a PNG image (.png).";
   }
   if (file.size > MAX_BYTES) {
     return "The image must be 2 MB or smaller.";
@@ -82,12 +120,12 @@ const LogoPicker = ({ src, busy, onPick }: LogoPickerProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <Stack direction="row" spacing={2} alignItems="center">
+    <Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
       <Avatar
         src={src}
         variant="rounded"
-        imgProps={{ style: { objectFit: "contain" } }}
-        sx={{ width: 96, height: 96 }}
+        imgProps={{ style: { objectFit: "contain", background: "#fff" } }}
+        sx={{ width: 96, height: 96, bgcolor: "#faf6ef", border: "1px solid rgba(56, 35, 34, 0.12)", borderRadius: 3 }}
       />
 
       <Box>
@@ -96,6 +134,15 @@ const LogoPicker = ({ src, busy, onPick }: LogoPickerProps) => {
           size="small"
           disabled={busy}
           onClick={() => inputRef.current?.click()}
+          sx={{
+            borderRadius: 999,
+            px: 2.5,
+            fontWeight: 700,
+            textTransform: "none",
+            color: BROWN,
+            borderColor: BROWN,
+            "&:hover": { borderColor: BROWN, bgcolor: "rgba(56, 35, 34, 0.06)" },
+          }}
         >
           {busy ? "Uploading…" : "Upload company logo"}
         </Button>
@@ -104,15 +151,15 @@ const LogoPicker = ({ src, busy, onPick }: LogoPickerProps) => {
           variant="caption"
           color="text.secondary"
           display="block"
-          sx={{ mt: 0.5 }}
+          sx={{ mt: 0.75 }}
         >
-          JPEG only, up to 2 MB
+          PNG only, up to 2 MB
         </Typography>
 
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg"
+          accept="image/png"
           hidden
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -122,7 +169,7 @@ const LogoPicker = ({ src, busy, onPick }: LogoPickerProps) => {
           }}
         />
       </Box>
-    </Stack>
+    </Box>
   );
 };
 
@@ -177,9 +224,9 @@ export const MyProfile = () => {
     if (p.vendor_id !== null) {
       const [vendorResult, detailsResult, logoResult] = await Promise.all([
         supabaseClient
-          .from("Vendor")
+          .from("vendor")
           .select("name")
-          .eq("vendor_id", p.vendor_id)
+          .eq("id", p.vendor_id)
           .maybeSingle(),
         supabaseClient
           .from("vendor_details")
@@ -215,7 +262,7 @@ export const MyProfile = () => {
   const uploadLogo = async (file: File) => {
     if (!profile || profile.vendor_id === null) return;
 
-    const problem = checkJpeg(file);
+    const problem = checkPng(file);
     if (problem) {
       setMessage({ type: "error", text: problem });
       return;
@@ -225,12 +272,12 @@ export const MyProfile = () => {
     setMessage(null);
 
     const vendorId = profile.vendor_id;
-    const newPath = `${vendorId}/${Date.now()}.jpg`;
+    const newPath = `${vendorId}/${Date.now()}.png`;
     const oldPath = pathFromUrl(logoUrl);
 
     const { error: uploadError } = await supabaseClient.storage
       .from(BUCKET)
-      .upload(newPath, file, { contentType: "image/jpeg" });
+      .upload(newPath, file, { contentType: "image/png" });
 
     if (uploadError) {
       setBusy(null);
@@ -340,19 +387,37 @@ export const MyProfile = () => {
 
   /* PAGE LAYOUT */
 
+  const pageHeader = (
+    <Box sx={{ mb: 3 }}>
+      <Typography sx={{ fontSize: 30, fontWeight: 800, color: BROWN, lineHeight: 1.1 }}>My profile</Typography>
+      <Typography sx={{ color: "text.secondary", mt: 0.5 }}>
+        Update your details and your company's information.
+      </Typography>
+    </Box>
+  );
+
   if (!me || loading) {
     return (
-      <List title="My Profile">
-        <Typography>Loading your profile…</Typography>
-      </List>
+      <Box sx={{ maxWidth: 720, mx: "auto", py: 1 }}>
+        {pageHeader}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Skeleton variant="rounded" height={320} sx={{ borderRadius: 3 }} />
+          <Skeleton variant="rounded" height={380} sx={{ borderRadius: 3 }} />
+        </Box>
+      </Box>
     );
   }
 
   if (!profile) {
     return (
-      <List title="My Profile">
-        {message && <Alert severity={message.type}>{message.text}</Alert>}
-      </List>
+      <Box sx={{ maxWidth: 720, mx: "auto", py: 1 }}>
+        {pageHeader}
+        {message && (
+          <Alert severity={message.type} sx={{ borderRadius: 3 }}>
+            {message.text}
+          </Alert>
+        )}
+      </Box>
     );
   }
 
@@ -362,144 +427,173 @@ export const MyProfile = () => {
   const initials = `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
 
   return (
-    <List title="My Profile">
-      <Stack spacing={4} sx={{ maxWidth: 720 }}>
+    <Box sx={{ maxWidth: 720, mx: "auto", py: 1 }}>
+      {pageHeader}
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {message && (
-          <Alert severity={message.type} onClose={() => setMessage(null)}>
+          <Alert severity={message.type} onClose={() => setMessage(null)} sx={{ borderRadius: 3 }}>
             {message.text}
           </Alert>
         )}
 
         {/* Personal information */}
-        <Card variant="outlined">
-          <CardContent>
-            <Stack spacing={3}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Typography variant="h5">Personal information</Typography>
-                <Chip label={ROLE_LABELS[profile.role]} size="small" />
+        <Paper elevation={0} sx={{ ...cardSx, p: { xs: 3, sm: 4 } }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* Picture, name and role */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
+              <Avatar
+                src={logoUrl ?? undefined}
+                imgProps={{ style: { objectFit: "contain", background: "#fff" } }}
+                sx={{
+                  width: 72,
+                  height: 72,
+                  bgcolor: ACCENT,
+                  color: BROWN,
+                  fontWeight: 700,
+                  fontSize: 26,
+                  border: logoUrl ? "1px solid #eee" : "none",
+                }}
+              >
+                {initials}
+              </Avatar>
+
+              <Box sx={{ minWidth: 0 }}>
+                <Typography noWrap sx={{ fontSize: 20, fontWeight: 800, color: BROWN }}>
+                  {firstName} {lastName}
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1, mt: 0.5 }}>
+                  <Chip
+                    label={ROLE_LABELS[profile.role]}
+                    size="small"
+                    sx={{ bgcolor: CREAM, color: BROWN, fontWeight: 700 }}
+                  />
+                  {vendorName && (
+                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                      {vendorName}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
+            </Box>
 
-              {/* Company logo shown here but not edited here */}
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar
-                  src={logoUrl ?? undefined}
-                  imgProps={{ style: { objectFit: "contain" } }}
-                  sx={{ width: 72, height: 72 }}
-                >
-                  {initials}
-                </Avatar>
+            <Typography sx={{ fontSize: 18, fontWeight: 800, color: BROWN }}>Personal information</Typography>
 
-                {profile.vendor_id !== null}
-              </Stack>
-
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField
-                  label="First name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  fullWidth
-                  required
-                />
-                <TextField
-                  label="Last name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  fullWidth
-                  required
-                />
-              </Stack>
-
+            <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
               <TextField
-                label="Email"
-                value={profile.email}
-                disabled
-                helperText="Your email can't be changed here."
+                label="First name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 fullWidth
+                required
+                sx={fieldSx(999)}
               />
+              <TextField
+                label="Last name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                fullWidth
+                required
+                sx={fieldSx(999)}
+              />
+            </Box>
 
-              <Box>
-                <Button
-                  variant="contained"
-                  onClick={savePersonal}
-                  disabled={busy === "personal"}
-                >
-                  {busy === "personal" ? "Saving…" : "Save changes"}
-                </Button>
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
+            <TextField
+              label="Email"
+              value={profile.email}
+              disabled
+              helperText="Your email can't be changed here."
+              fullWidth
+              sx={fieldSx(999)}
+            />
+
+            <Box>
+              <Button
+                variant="contained"
+                onClick={savePersonal}
+                disabled={busy === "personal"}
+                sx={primaryButtonSx}
+              >
+                {busy === "personal" ? "Saving…" : "Save changes"}
+              </Button>
+            </Box>
+          </Box>
+        </Paper>
 
         {/* Vendor information */}
         {profile.vendor_id !== null && (
-          <Card variant="outlined">
-            <CardContent>
-              <Stack spacing={3}>
-                <Typography variant="h5">{vendorName ?? "Your vendor"}</Typography>
+          <Paper elevation={0} sx={{ ...cardSx, p: { xs: 3, sm: 4 } }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <Typography sx={{ fontSize: 18, fontWeight: 800, color: BROWN }}>
+                {vendorName ?? "Your vendor"}
+              </Typography>
 
-                {canManageVendor ? (
-                  <LogoPicker
-                    src={logoUrl ?? undefined}
-                    busy={busy === "logo"}
-                    onPick={uploadLogo}
-                  />
-                ) : (
-                  <Avatar
-                    src={logoUrl ?? undefined}
-                    variant="rounded"
-                    imgProps={{ style: { objectFit: "contain" } }}
-                    sx={{ width: 96, height: 96 }}
-                  />
-                )}
-
-                <TextField
-                  label="Contact email"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  disabled={!canManageVendor}
-                  fullWidth
+              {canManageVendor ? (
+                <LogoPicker
+                  src={logoUrl ?? undefined}
+                  busy={busy === "logo"}
+                  onPick={uploadLogo}
                 />
-
-                <TextField
-                  label="Contact phone"
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  disabled={!canManageVendor}
-                  fullWidth
+              ) : (
+                <Avatar
+                  src={logoUrl ?? undefined}
+                  variant="rounded"
+                  imgProps={{ style: { objectFit: "contain", background: "#fff" } }}
+                  sx={{ width: 96, height: 96, bgcolor: "#faf6ef", border: "1px solid rgba(56, 35, 34, 0.12)", borderRadius: 3 }}
                 />
+              )}
 
-                <TextField
-                  label="Description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  disabled={!canManageVendor}
-                  inputProps={{ maxLength: 500 }}
-                  helperText={`${description.length}/500`}
-                  multiline
-                  minRows={3}
-                  fullWidth
-                />
+              <TextField
+                label="Contact email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                disabled={!canManageVendor}
+                fullWidth
+                sx={fieldSx(999)}
+              />
 
-                {canManageVendor ? (
-                  <Box>
-                    <Button
-                      variant="contained"
-                      onClick={saveVendor}
-                      disabled={busy === "vendor"}
-                    >
-                      {busy === "vendor" ? "Saving…" : "Save vendor details"}
-                    </Button>
-                  </Box>
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    Only a Vendor Admin can edit these details.
-                  </Typography>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
+              <TextField
+                label="Contact phone"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                disabled={!canManageVendor}
+                fullWidth
+                sx={fieldSx(999)}
+              />
+
+              <TextField
+                label="Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                disabled={!canManageVendor}
+                inputProps={{ maxLength: 500 }}
+                helperText={`${description.length}/500`}
+                multiline
+                minRows={3}
+                fullWidth
+                sx={fieldSx(3)}
+              />
+
+              {canManageVendor ? (
+                <Box>
+                  <Button
+                    variant="contained"
+                    onClick={saveVendor}
+                    disabled={busy === "vendor"}
+                    sx={primaryButtonSx}
+                  >
+                    {busy === "vendor" ? "Saving…" : "Save vendor details"}
+                  </Button>
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Only a Vendor Admin can edit these details.
+                </Typography>
+              )}
+            </Box>
+          </Paper>
         )}
-      </Stack>
-    </List>
+      </Box>
+    </Box>
   );
 };
