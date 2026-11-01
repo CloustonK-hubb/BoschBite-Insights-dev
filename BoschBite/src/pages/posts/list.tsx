@@ -1,11 +1,11 @@
 import { useMany } from "@refinedev/core";
-import { EditButton, List, useDataGrid, DateField, DeleteButton } from "@refinedev/mui";
+import { EditButton, List, useDataGrid, DateField, DeleteButton, ExportButton } from "@refinedev/mui";
 import React from "react";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import type { ICategory, IPost } from "../../interfaces";
 import { ShowButton } from "@refinedev/mui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useGetIdentity } from "@refinedev/core";
+import { useGetIdentity, useExport } from "@refinedev/core";
 import { Navigate } from "react-router";
 import { Alert, Avatar, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, InputAdornment, MenuItem, Select, Skeleton, TextField, Tooltip, Typography } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -13,10 +13,28 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import { supabaseClient } from "../../providers/supabaseClient";
 
+
+
 //List object for a transaction 
 
 export const TransactionList: React.FC = () => {
   const { dataGridProps } = useDataGrid({ resource: "transaction", meta: { select: "*, vendor(name), student(first_name, last_name)"  }, });
+
+  //enabling an export feature for the trasnaction table which exports all data for this table, not just what is shown in the list 
+  const { triggerExport, isLoading: exportLoading } = useExport({
+    resource: "transaction",
+    meta: { select: "*, vendor(name), student(first_name, last_name)" },
+    mapData: (item) => ({
+      ID: item.id,
+      "Student name": item.student ? `${item.student.first_name} ${item.student.last_name}` : item.student_id,
+      "Vendor name": item.vendor?.name ?? item.vendor_id,
+      "Date & time": item.tx_datetime,
+      "Transaction value": item.value,
+      Discount: item.discount,
+    }),
+    maxItemCount: 5000,
+  });
+
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
@@ -34,7 +52,7 @@ export const TransactionList: React.FC = () => {
   );
 
   return (
-    <List breadcrumb={false}>
+    <List breadcrumb={false} headerButtons={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
       <DataGrid
         {...dataGridProps}
         columns={columns}
@@ -48,6 +66,22 @@ export const TransactionList: React.FC = () => {
 //List object for Students
 export const StudentList: React.FC = () => {
   const { dataGridProps } = useDataGrid({ resource: "student" });
+
+//enabling an export feature for the student table which exports all data for this table, not just what is shown in the list 
+const { triggerExport, isLoading: exportLoading } = useExport({
+  resource: "student",
+  mapData: (item) => ({
+    "Student ID": item.id,
+    "First name": item.first_name,
+    "Last name": item.last_name,
+    Email: item.email,
+    "Date of birth": item.dob,
+    Gender: item.gender,
+    "Cell number": item.phone,
+    Address: item.address,
+  }),
+    maxItemCount: 5000,
+  });
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
@@ -69,7 +103,7 @@ export const StudentList: React.FC = () => {
   );
 
   return (
-    <List breadcrumb={false}>
+    <List breadcrumb={false} headerButtons={<ExportButton onClick={triggerExport} loading={exportLoading} />} >
       <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.id}autoHeight />
     </List>
   );
@@ -106,13 +140,36 @@ export const CalendarList: React.FC = () => {
 
 //List objetc for the Promo_window table
 export const PromoWindowList: React.FC = () => {
-  const { dataGridProps } = useDataGrid({ resource: "promo_window_v2" });
+  const { dataGridProps } = useDataGrid({ resource: "promo_window_v2", meta: { select: "*, vendor(name)" }, });
+
+//enabling an export feature for the student table which exports all data for this table, not just what is shown in the list 
+const { triggerExport, isLoading: exportLoading } = useExport({
+  resource: "promo_window_v2",
+  meta: { select: "*, vendor(name)" },
+  mapData: (item) => ({
+    "Promotion ID": item.promo_id,
+    "Vendor name": item.vendor?.name ?? item.vendor_id,
+    "Promo number": item.promo_number,
+    "Promo type": item.promo_type,
+    "Discount of promo": item.discount,
+    "Weekday of promo": item.promo_weekday,
+    "Start date": item.start_date,
+    "End date": item.end_date,
+    "Duration (days)": item.duration_days,
+    "# Occurrence of promo": item.occurence_count,
+    "# Qualifying days": item.qualifying_days,
+    "# Discounted transactions": item.discounted_transactions,
+    "Total promotion value": item.total_sales_value,
+  }),
+    maxItemCount: 5000,
+  });
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
-      { field: "promo_id", headerName: "Promotion ID", width: 150 },
-      { field: "vendor_id", headerName: "Vendor name", width: 240, renderCell: ({ row }) => row.Vendor?.name ?? "-", },
+      //{ field: "promo_id", headerName: "Promotion ID", width: 90 },
+      { field: "vendor_id", headerName: "Vendor name", width: 200, renderCell: ({ row }) => row.vendor?.name ?? "-", },
       { field: "promo_number", headerName: "Promotion number", width: 150 },
+      { field: "promo_type", headerName: "Promotion type", width: 140 },
       { field: "start_date", headerName: "Start date", flex: 1 },
       { field: "end_date", headerName: "End date", flex: 1 },
       { field: "duration_days", headerName: "Duration (days)", flex: 1 },
@@ -127,7 +184,7 @@ export const PromoWindowList: React.FC = () => {
   );
 
   return (
-    <List breadcrumb={false}>
+    <List breadcrumb={false} headerButtons={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
       <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.promo_id}autoHeight />
     </List>
   );

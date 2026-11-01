@@ -105,30 +105,63 @@ export const CalendarShow: React.FC = () => {
 };
 
 //Show object for the Promo_Window table
+
+//Lookup list for the weekday column in the Promo_Window table to return the day of hte week instead of the number 
+const WEEKDAYS: Record<number, string> = {
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+  7: "Sunday",
+};
+
 export const PromoWindowShow: React.FC = () => {
   const { query } = useShow({ resource: "promo_window_v2", meta : { idColumnName: "promo_id"}});
-  const promo_window = query.data?.data;
+  const promo_window_v2 = query.data?.data;
 
   return (
-    <Show isLoading={query.isLoading}>
+    <Show isLoading={query.isLoading} breadcrumb={false}>
       <Stack gap={1}>
         <Typography variant="body1" fontWeight="bold">Promotion ID</Typography>
-        <TextField value={promo_window?.promo_id} />
+        <TextField value={promo_window_v2?.promo_id} />
 
         <Typography variant="body1" fontWeight="bold">Vendor name</Typography>
-        <TextField value={promo_window?.vendor_id} />
+        <TextField value={promo_window_v2?.vendor_id} />
 
         <Typography variant="body1" fontWeight="bold">Promo number</Typography>
-        <TextField value={promo_window?.promo_number} />
+        <TextField value={promo_window_v2?.promo_number} />
+
+        <Typography variant="body1" fontWeight="bold">Promo type</Typography>
+        <TextField value={promo_window_v2?.promo_type} />
+
+        <Typography variant="body1" fontWeight="bold">Discount of promo</Typography>
+        <TextField value={promo_window_v2?.discount} />
+
+        <Typography variant="body1" fontWeight="bold">Weekday of promo</Typography>
+        <TextField value={WEEKDAYS[promo_window_v2?.promo_weekday] ?? "-"} />
 
         <Typography variant="body1" fontWeight="bold">Start date</Typography>
-        <TextField value={promo_window?.start_date} />
+        <TextField value={promo_window_v2?.start_date} />
 
         <Typography variant="body1" fontWeight="bold">End date</Typography>
-        <TextField value={promo_window?.end_date} />
+        <TextField value={promo_window_v2?.end_date} />
 
-        <Typography variant="body1" fontWeight="bold">Duration</Typography>
-        <TextField value={promo_window?.duration_days} />
+        <Typography variant="body1" fontWeight="bold">Duration (days)</Typography>
+        <TextField value={promo_window_v2 ?.duration_days} />
+
+        <Typography variant="body1" fontWeight="bold"># Occurence of promo</Typography>
+        <TextField value={promo_window_v2?.occurence_count} />
+
+        <Typography variant="body1" fontWeight="bold"># Qualifying days</Typography>
+        <TextField value={promo_window_v2?.qualifying_days} />
+
+        <Typography variant="body1" fontWeight="bold"># Discounted transactions</Typography>
+        <TextField value={promo_window_v2?.discounted_transactions} />
+
+        <Typography variant="body1" fontWeight="bold">Total promotion value</Typography>
+        <TextField value={promo_window_v2?.total_sales_value} />
     
       </Stack>
     </Show>
