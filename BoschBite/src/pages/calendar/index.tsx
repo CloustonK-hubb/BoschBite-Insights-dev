@@ -124,6 +124,13 @@ const formatDiscount = (value: unknown) => {
   return `${(discount * 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}% discount`;
 };
 
+const eventLabel = (event: CalendarEvent) => event.isPromotion
+  ? String(event.row.promo_name ?? "").trim() ||
+    (event.row.discount != null && event.row.discount !== ""
+      ? formatDiscount(event.row.discount)
+      : "Promotion")
+  : formatValue(event.row.period_type ?? event.row.event_type ?? "Other");
+
 const summarizeRow = (row: CalendarRow, dateField: string, endDateField: string) => {
   const fields = Object.keys(row).filter(
     (field) =>
@@ -159,6 +166,7 @@ export const CalendarPage = () => {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [editingPromoName, setEditingPromoName] = useState(false);
   const [editedPromoName, setEditedPromoName] = useState("");
   const [promoNameSaving, setPromoNameSaving] = useState(false);
@@ -581,7 +589,17 @@ export const CalendarPage = () => {
                         <Paper
                           key={day.toISOString()}
                           variant="outlined"
-                          sx={{ minWidth: 0, height: 140, boxSizing: "border-box", border: 0, boxShadow: "inset 0 0 0 1px rgba(128,128,128,0.25)", borderRadius: 0, bgcolor: inMonth ? "background.paper" : "action.hover" }}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`View activities for ${day.toLocaleDateString()}`}
+                          onClick={() => setSelectedDay(day)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setSelectedDay(day);
+                            }
+                          }}
+                          sx={{ minWidth: 0, height: 140, boxSizing: "border-box", border: 0, boxShadow: "inset 0 0 0 1px rgba(128,128,128,0.25)", borderRadius: 0, bgcolor: inMonth ? "background.paper" : "action.hover", cursor: "pointer" }}
                         >
                           <Typography variant="caption" color={inMonth ? "text.primary" : "text.disabled"} sx={{ display: "block", px: 0.75, height: 28 }}>
                             {day.getDate()}
@@ -606,7 +624,8 @@ export const CalendarPage = () => {
                               return (
                                 <Button
                                   key={event.rowIndex}
-                                  onClick={() => {
+                                  onClick={(clickEvent) => {
+                                    clickEvent.stopPropagation();
                                     setSelectedEvent(event);
                                     setEditingPromoName(false);
                                     setEditedPromoName(String(event.row.promo_name ?? ""));
@@ -678,6 +697,60 @@ export const CalendarPage = () => {
           )}
         </>
       )}
+
+      <Dialog open={Boolean(selectedDay)} onClose={() => setSelectedDay(null)} fullWidth maxWidth="sm">
+        <DialogTitle>
+          {selectedDay?.toLocaleDateString(undefined, {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedDay && (() => {
+            const dayEvents = eventsByDay.get(
+              `${selectedDay.getFullYear()}-${selectedDay.getMonth()}-${selectedDay.getDate()}`,
+            ) ?? [];
+            return dayEvents.length ? (
+              <Stack spacing={1}>
+                {dayEvents.map((event) => (
+                  <Button
+                    key={`${event.isPromotion ? "promo" : "event"}-${event.rowIndex}`}
+                    variant="outlined"
+                    onClick={() => {
+                      setSelectedDay(null);
+                      setSelectedEvent(event);
+                      setEditingPromoName(false);
+                      setEditedPromoName(String(event.row.promo_name ?? ""));
+                      setPromoNameError("");
+                    }}
+                    sx={{
+                      justifyContent: "flex-start",
+                      textTransform: "none",
+                      borderColor: event.color.border,
+                      color: event.color.text,
+                      bgcolor: event.color.background,
+                    }}
+                  >
+                    <Stack alignItems="flex-start">
+                      <Typography variant="subtitle2" fontWeight={700}>{eventLabel(event)}</Typography>
+                      <Typography variant="caption">
+                        {event.isPromotion ? "Promotion" : "Calendar event"}
+                      </Typography>
+                    </Stack>
+                  </Button>
+                ))}
+              </Stack>
+            ) : (
+              <Alert severity="info">No activities are scheduled for this day.</Alert>
+            );
+          })()}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedDay(null)}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={Boolean(selectedEvent)} onClose={() => { if (!promoNameSaving) setSelectedEvent(null); }} fullWidth maxWidth="sm">
         <DialogTitle>{selectedEvent?.isPromotion ? "Promotion record" : "Calendar record"}</DialogTitle>
