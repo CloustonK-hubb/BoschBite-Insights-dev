@@ -477,9 +477,7 @@ const App: React.FC = () => {
               { name: "transaction", list: "/transaction", show: "/transaction/show/:id", meta: {label: "Transaction", parent: "BoschCard-data"}},
               { name: "student", list: "/student", show: "/student/show/:id", edit: "/student/edit/:id", meta: {label: "Student", parent: "BoschCard-data"}},
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
-              { name: "calendar_event", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", 
-                meta: {label: "Calendar events", parent: "BoschBites-data", canDelete: true}},
-              { name: "promo_window_v2", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id",
+              { name: "promo_window_v2", list: "/promo_window_v2", show: "/promo_window_v2/show/:id", edit: "/promo_window_v2/edit/:id", 
                 meta: {label: "Promotion Window", parent: "BoschBites-data", canDelete: true}},
               { name: "profiles", list: "/profiles", meta: { label: "User profiles", icon: <PersonAddAltIcon /> } },
             ]}
@@ -547,7 +545,7 @@ const App: React.FC = () => {
                 <Route path="show/:id" element={<StudentShow />} />
               </Route>
 
-              <Route path="/promo_window">
+              <Route path="/promo_window_v2">
                 <Route index element={<PromoWindowList />} />
                 <Route path="show/:id" element={<PromoWindowShow />} />
                 <Route path="edit/:id" element={<PromoWindowEdit />} />
