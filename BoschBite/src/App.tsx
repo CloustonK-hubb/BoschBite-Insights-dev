@@ -481,7 +481,7 @@ const App: React.FC = () => {
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
               { name: "calendar_event", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", 
                 meta: {label: "Calendar events", parent: "BoschBites-data", canDelete: true}},
-              { name: "Promo_Window", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id", 
+              { name: "promo_window_v2", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id",
                 meta: {label: "Promotion Window", parent: "BoschBites-data", canDelete: true}},
               { name: "profiles", list: "/profiles", meta: { label: "User profiles", icon: <PersonAddAltIcon /> } },
             ]}

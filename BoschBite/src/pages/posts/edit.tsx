@@ -86,14 +86,14 @@ const periodTypes = ["Lecture", "Exam", "Recess", "Social Event"]
 export const CalendarEdit: React.FC = () => {
   const { saveButtonProps, register, control, formState: { errors },
   } = useForm({
-    refineCoreProps: { resource: "Calendar", meta: { idColumnName: "period_id" },
+    refineCoreProps: { resource: "calendar_event", meta: { idColumnName: "id" },
     },
   });
 
   return (
     <Edit
       saveButtonProps={saveButtonProps}
-      deleteButtonProps={{ meta: { idColumnName: "period_id" } }}
+      deleteButtonProps={{ meta: { idColumnName: "id" } }}
     >
       <Box component="form" sx={{ display: "flex", flexDirection: "column" }} autoComplete="off">
         <TextField
@@ -166,7 +166,7 @@ export const CalendarEdit: React.FC = () => {
 export const PromoWindowEdit: React.FC = () => {
   const { saveButtonProps, register, formState: { errors },
   } = useForm({
-    refineCoreProps: { resource: "Promo_Window", meta: { idColumnName: "promo_id" },
+    refineCoreProps: { resource: "promo_window_v2", meta: { idColumnName: "promo_id" },
     },
   });
 

@@ -35,7 +35,7 @@ type CalendarRow = Record<string, unknown>;
 
 type Identity = {
   role?: string | null;
-  vendor_id?: number | null;
+  vendor_id?: string | null;
 };
 
 type CalendarEvent = {
@@ -118,6 +118,12 @@ const formatValue = (value: unknown) => {
   return String(value);
 };
 
+const formatDiscount = (value: unknown) => {
+  const discount = Number(value);
+  if (!Number.isFinite(discount)) return "Promotion";
+  return `${(discount * 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}% discount`;
+};
+
 const summarizeRow = (row: CalendarRow, dateField: string, endDateField: string) => {
   const fields = Object.keys(row).filter(
     (field) =>
@@ -153,12 +159,19 @@ export const CalendarPage = () => {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [editingPromoName, setEditingPromoName] = useState(false);
+  const [editedPromoName, setEditedPromoName] = useState("");
+  const [promoNameSaving, setPromoNameSaving] = useState(false);
+  const [promoNameError, setPromoNameError] = useState("");
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [promotionName, setPromotionName] = useState("");
   const [promotionSaving, setPromotionSaving] = useState(false);
   const [promotionSuccess, setPromotionSuccess] = useState("");
   const [promotionStart, setPromotionStart] = useState("");
   const [promotionEnd, setPromotionEnd] = useState("");
+  const [promotionType, setPromotionType] = useState<"ongoing" | "weekly">("ongoing");
+  const [promotionDiscount, setPromotionDiscount] = useState("");
+  const [promotionWeekday, setPromotionWeekday] = useState("");
   const [promotionError, setPromotionError] = useState("");
   const [initialMonthSet, setInitialMonthSet] = useState(false);
 
@@ -169,9 +182,9 @@ export const CalendarPage = () => {
       setLoading(true);
       setLoadError("");
       setSelectedEvent(null);
-      const promotionsQuery = supabaseClient.from("Promo_Window").select("*, Vendor(type_id)");
+      const promotionsQuery = supabaseClient.from("promo_window_v2").select("*");
       const [{ data, error }, promotions] = await Promise.all([
-        supabaseClient.from("Calendar").select("*"),
+        supabaseClient.from("calendar_event").select("*"),
         isVendor
           ? identity.vendor_id == null
             ? Promise.resolve({ data: [], error: null })
@@ -185,7 +198,26 @@ export const CalendarPage = () => {
       } else {
         setRows((data ?? []) as CalendarRow[]);
       }
-      setPromoRows((promotions.data ?? []) as CalendarRow[]);
+      const promoData = (promotions.data ?? []) as CalendarRow[];
+      if (promoData.length > 0) {
+        const { data: vendors, error: vendorError } = await supabaseClient
+          .from("vendor")
+          .select("id,type_id")
+          .in("id", [...new Set(promoData.map((row) => String(row.vendor_id)))]);
+        if (vendorError) {
+          setPromoRows(promoData);
+        } else {
+          const vendorTypes = new Map(
+            (vendors ?? []).map((vendor) => [String(vendor.id), vendor.type_id]),
+          );
+          setPromoRows(promoData.map((row) => ({
+            ...row,
+            type_id: vendorTypes.get(String(row.vendor_id)) ?? row.type_id,
+          })));
+        }
+      } else {
+        setPromoRows([]);
+      }
       setPromoLoadError(isVendor && identity.vendor_id == null
         ? "Your account must be linked to a vendor to view promotions."
         : promotions.error ? `Unable to load promotions: ${promotions.error.message}` : "");
@@ -220,17 +252,18 @@ export const CalendarPage = () => {
 
   useEffect(() => {
     if (loading || initialMonthSet || !dateField) return;
-    const latestDate = rows.reduce<Date | null>((latest, row) => {
-      const date = parseDate(
-        endDateField === NO_END_DATE ? row[dateField] : row[endDateField],
-      ) ?? parseDate(row[dateField]);
+    const latestDate = [...rows, ...promoRows].reduce<Date | null>((latest, row, index) => {
+      const isPromotion = index >= rows.length;
+      const date = isPromotion
+        ? parseDate(row.end_date) ?? parseDate(row.start_date)
+        : parseDate(endDateField === NO_END_DATE ? row[dateField] : row[endDateField]) ?? parseDate(row[dateField]);
       return date && (!latest || date > latest) ? date : latest;
     }, null);
     if (latestDate) {
       setVisibleMonth(new Date(latestDate.getFullYear(), latestDate.getMonth(), 1));
     }
     setInitialMonthSet(true);
-  }, [dateField, endDateField, initialMonthSet, loading, rows]);
+  }, [dateField, endDateField, initialMonthSet, loading, promoRows, rows]);
 
   const eventsByDay = useMemo(() => {
     const events = new Map<string, CalendarEvent[]>();
@@ -249,7 +282,7 @@ export const CalendarPage = () => {
         row,
         rowIndex,
         isPromotion,
-        color: colorForPeriod(isPromotion ? "Promotion" : row.period_type),
+        color: colorForPeriod(isPromotion ? "Promotion" : row.period_type ?? row.event_type),
       };
       const day = new Date(
         Math.max(start.getTime(), firstDay.getTime()),
@@ -313,23 +346,50 @@ export const CalendarPage = () => {
       setPromotionError("Your account must be linked to a vendor to add a promo.");
       return;
     }
+    const discount = Number(promotionDiscount) / 100;
+    if (!promotionDiscount || !Number.isFinite(discount) || discount <= 0 || discount > 1) {
+      setPromotionError("Enter a discount between 1 and 100 percent.");
+      return;
+    }
+    if (promotionType === "weekly" && !promotionWeekday) {
+      setPromotionError("Choose a weekday for a weekly promo.");
+      return;
+    }
     setPromotionSaving(true);
     try {
-      const { data, error } = await supabaseClient.from("Promo_Window").insert({
+      const { data: latest, error: latestError } = await supabaseClient
+        .from("promo_window_v2")
+        .select("promo_number")
+        .eq("vendor_id", identity.vendor_id)
+        .order("promo_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latestError) throw latestError;
+      const start = parseDate(promotionStart)!;
+      const end = parseDate(promotionEnd)!;
+      const durationDays = Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
+      const { data, error } = await supabaseClient.from("promo_window_v2").insert({
         vendor_id: identity.vendor_id,
         promo_name: promotionName.trim(),
+        promo_number: Number(latest?.promo_number ?? 0) + 1,
+        promo_type: promotionType,
+        discount,
+        promo_weekday: promotionType === "weekly" ? Number(promotionWeekday) : null,
         start_date: promotionStart,
         end_date: promotionEnd,
-      }).select("*, Vendor(type_id)").single();
+        duration_days: durationDays,
+      }).select("*").single();
       if (error) throw error;
       setPromoRows((current) => [...current, data as CalendarRow]);
-      const start = parseDate(promotionStart)!;
       setVisibleMonth(new Date(start.getFullYear(), start.getMonth(), 1));
       setPromotionSuccess(`Promo "${promotionName.trim()}" added.`);
       setPromotionDialogOpen(false);
       setPromotionName("");
       setPromotionStart("");
       setPromotionEnd("");
+      setPromotionDiscount("");
+      setPromotionType("ongoing");
+      setPromotionWeekday("");
     } catch (error) {
       const message = error instanceof Error ? error.message
         : typeof error === "object" && error !== null && "message" in error ? String(error.message)
@@ -342,6 +402,38 @@ export const CalendarPage = () => {
 
   const moveMonth = (offset: number) =>
     setVisibleMonth((month) => new Date(month.getFullYear(), month.getMonth() + offset, 1));
+
+  const canEditPromoName = Boolean(selectedEvent?.isPromotion && identity &&
+    (identity.role === "boschbite_admin" || (isVendor && identity.vendor_id != null && String(selectedEvent.row.vendor_id) === String(identity.vendor_id))));
+
+  const savePromoName = async () => {
+    if (!selectedEvent || !canEditPromoName || promoNameSaving) return;
+    setPromoNameSaving(true);
+    setPromoNameError("");
+    try {
+      if (selectedEvent.row.promo_id == null) throw new Error("This promotion has no ID.");
+      let query = supabaseClient.from("promo_window_v2")
+        .update({ promo_name: editedPromoName.trim() })
+        .eq("promo_id", selectedEvent.row.promo_id);
+      if (isVendor) query = query.eq("vendor_id", identity!.vendor_id!);
+      const { data, error } = await query.select("promo_id, promo_name").maybeSingle();
+      if (error) throw error;
+      if (!data) {
+        throw new Error("No promotion was updated. Your account may not have permission to update this promo, or it may have been deleted.");
+      }
+      setPromoRows((current) => current.map((row) => row.promo_id === data.promo_id
+        ? { ...row, promo_name: data.promo_name } : row));
+      setSelectedEvent((current) => current && current.row.promo_id === data.promo_id
+        ? { ...current, row: { ...current.row, promo_name: data.promo_name } } : current);
+      setEditingPromoName(false);
+    } catch (error) {
+      const message = typeof error === "object" && error !== null && "message" in error
+        ? String(error.message) : "Please try again.";
+      setPromoNameError(`Unable to save promo name: ${message}`);
+    } finally {
+      setPromoNameSaving(false);
+    }
+  };
 
   return (
     <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 1500, mx: "auto" }}>
@@ -505,16 +597,21 @@ export const CalendarPage = () => {
                               const connectsLeft = dayEvents[column - 1]?.[eventIndex]?.rowIndex === event.rowIndex;
                               const connectsRight = dayEvents[column + 1]?.[eventIndex]?.rowIndex === event.rowIndex;
                               const label = event.isPromotion ? (
-                                [event.row.promo_number, event.row.promo_name]
-                                  .map((value) => value == null ? "" : String(value).trim())
-                                  .find((value) => value !== "") || "Promotion"
+                                String(event.row.promo_name ?? "").trim() ||
+                                (event.row.discount != null && event.row.discount !== ""
+                                  ? formatDiscount(event.row.discount) : "Promotion")
                               )
-                                : formatValue(event.row.period_type ?? "Other");
+                                : formatValue(event.row.period_type ?? event.row.event_type ?? "Other");
                               const summary = event.isPromotion ? "Promotion" : summarizeRow(event.row, dateField, endDateField);
                               return (
                                 <Button
                                   key={event.rowIndex}
-                                  onClick={() => setSelectedEvent(event)}
+                                  onClick={() => {
+                                    setSelectedEvent(event);
+                                    setEditingPromoName(false);
+                                    setEditedPromoName(String(event.row.promo_name ?? ""));
+                                    setPromoNameError("");
+                                  }}
                                   title={`${label}: ${summary}`}
                                   sx={{
                                     display: "flex",
@@ -566,7 +663,7 @@ export const CalendarPage = () => {
 
           {(rows.length > 0 || promoRows.length > 0) && (
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 2 }}>
-              {[...new Set([...rows.map((row) => String(row.period_type ?? "Other")), ...(promoRows.length ? ["Promotion"] : [])])].map((periodType) => {
+              {[...new Set([...rows.map((row) => String(row.period_type ?? row.event_type ?? "Other")), ...(promoRows.length ? ["Promotion"] : [])])].map((periodType) => {
                 const color = colorForPeriod(periodType);
                 return (
                   <Chip
@@ -582,12 +679,38 @@ export const CalendarPage = () => {
         </>
       )}
 
-      <Dialog open={Boolean(selectedEvent)} onClose={() => setSelectedEvent(null)} fullWidth maxWidth="sm">
+      <Dialog open={Boolean(selectedEvent)} onClose={() => { if (!promoNameSaving) setSelectedEvent(null); }} fullWidth maxWidth="sm">
         <DialogTitle>{selectedEvent?.isPromotion ? "Promotion record" : "Calendar record"}</DialogTitle>
         <DialogContent dividers>
           {selectedEvent && (
             <Stack spacing={1}>
-              {Object.entries(selectedEvent.row).map(([field, value]) => (
+              {promoNameError && <Alert severity="error">{promoNameError}</Alert>}
+              {editingPromoName && (
+                <TextField
+                  label="Promo name"
+                  value={editedPromoName}
+                  onChange={(event) => setEditedPromoName(event.target.value)}
+                  helperText="Leave blank to show the discount percentage."
+                  disabled={promoNameSaving}
+                  autoFocus
+                  fullWidth
+                />
+              )}
+              {Object.entries(selectedEvent.row)
+                .filter(([field]) =>
+                  selectedEvent.isPromotion
+                    ? [
+                        "promo_number",
+                        "promo_name",
+                        "promo_type",
+                        "discount",
+                        "promo_weekday",
+                        "start_date",
+                        "end_date",
+                        "duration_days",
+                      ].includes(field)
+                    : !["id", "recurring"].includes(field),
+                ).map(([field, value]) => (
                 <Box key={field} sx={{ display: "grid", gridTemplateColumns: "minmax(120px, 1fr) 2fr", gap: 1 }}>
                   <Typography variant="body2" fontWeight={700}>{field}</Typography>
                   <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>{formatValue(value)}</Typography>
@@ -597,7 +720,26 @@ export const CalendarPage = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSelectedEvent(null)}>Close</Button>
+          {canEditPromoName && (editingPromoName ? (
+            <>
+              <Button disabled={promoNameSaving} onClick={() => {
+                setEditingPromoName(false);
+                setPromoNameError("");
+              }}>Cancel</Button>
+              <Button variant="contained" disabled={promoNameSaving} onClick={savePromoName}>
+                {promoNameSaving ? "Saving..." : "Save promo name"}
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => {
+              setEditedPromoName(String(selectedEvent?.row.promo_name ?? ""));
+              setEditingPromoName(true);
+              setPromoNameError("");
+            }}>
+              {String(selectedEvent?.row.promo_name ?? "").trim() ? "Edit promo name" : "Add promo name"}
+            </Button>
+          ))}
+          <Button disabled={promoNameSaving} onClick={() => setSelectedEvent(null)}>Close</Button>
         </DialogActions>
       </Dialog>
 
@@ -621,6 +763,44 @@ export const CalendarPage = () => {
               onChange={(event) => setPromotionName(event.target.value)}
               disabled={promotionSaving}
               autoFocus
+              required
+            />
+            <TextField
+              select
+              label="Promo type"
+              value={promotionType}
+              onChange={(event) => setPromotionType(event.target.value as "ongoing" | "weekly")}
+              disabled={promotionSaving}
+              required
+            >
+              <MenuItem value="ongoing">Ongoing</MenuItem>
+              <MenuItem value="weekly">Weekly</MenuItem>
+            </TextField>
+            {promotionType === "weekly" && (
+              <TextField
+                select
+                label="Promo weekday"
+                value={promotionWeekday}
+                onChange={(event) => setPromotionWeekday(event.target.value)}
+                disabled={promotionSaving}
+                required
+              >
+                <MenuItem value="1">Monday</MenuItem>
+                <MenuItem value="2">Tuesday</MenuItem>
+                <MenuItem value="3">Wednesday</MenuItem>
+                <MenuItem value="4">Thursday</MenuItem>
+                <MenuItem value="5">Friday</MenuItem>
+                <MenuItem value="6">Saturday</MenuItem>
+                <MenuItem value="7">Sunday</MenuItem>
+              </TextField>
+            )}
+            <TextField
+              label="Discount (%)"
+              type="number"
+              value={promotionDiscount}
+              onChange={(event) => setPromotionDiscount(event.target.value)}
+              disabled={promotionSaving}
+              inputProps={{ min: 1, max: 100, step: 0.5 }}
               required
             />
             <TextField
