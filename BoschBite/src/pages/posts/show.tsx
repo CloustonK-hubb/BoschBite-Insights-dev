@@ -5,15 +5,15 @@ import React from "react";
 
 //Show page for transaction table 
 export const TransactionShow: React.FC = () => {
-  const { query } = useShow({ resource: "Transaction", meta : { idColumnName: "transaction_id"} });//The filter is natually looking for a column in the table called id.
+  const { query } = useShow({ resource: "transaction", meta : { idColumnName: "id"} });//The filter is natually looking for a column in the table called id.
   //But the transaction tables id column is "transaction_id"
   const transaction = query.data?.data;
 
   return (
-    <Show isLoading={query.isLoading}>
+    <Show isLoading={query.isLoading} breadcrumb={false}>
       <Stack gap={1}>
         <Typography variant="body1" fontWeight="bold">Transaction ID</Typography>
-        <TextField value={transaction?.transaction_id} />
+        <TextField value={transaction?.id} />
 
         <Typography variant="body1" fontWeight="bold">Student ID</Typography>
         <TextField value={transaction?.student_id} />
@@ -22,7 +22,7 @@ export const TransactionShow: React.FC = () => {
         <TextField value={transaction?.vendor_id} />
 
         <Typography variant="body1" fontWeight="bold">Date & time</Typography>
-        <DateField value={transaction?.datetime} format="DD MMM YYYY HH:mm" />
+        <DateField value={transaction?.tx_datetime} format="DD MMM YYYY HH:mm" />
 
         <Typography variant="body1" fontWeight="bold">Value</Typography>
         <TextField value={transaction?.value} />
@@ -36,14 +36,14 @@ export const TransactionShow: React.FC = () => {
 
 //Show page for the Student table
 export const StudentShow: React.FC = () => {
-  const { query } = useShow({ resource: "Student", meta : { idColumnName: "id_number"}});
+  const { query } = useShow({ resource: "student", meta : { idColumnName: "id"}});
   const student = query.data?.data;
 
   return (
-    <Show isLoading={query.isLoading}>
+    <Show isLoading={query.isLoading} canEdit={false} breadcrumb={false}>
       <Stack gap={1}>
-        <Typography variant="body1" fontWeight="bold">ID</Typography>
-        <TextField value={student?.id_number} />
+        <Typography variant="body1" fontWeight="bold">Student ID</Typography>
+        <TextField value={student?.id} />
 
         <Typography variant="body1" fontWeight="bold">First name</Typography>
         <TextField value={student?.first_name} />
