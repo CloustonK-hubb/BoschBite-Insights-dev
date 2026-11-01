@@ -202,15 +202,16 @@ type Profile = {
   last_name: string;
   email: string;
   role: Role;
-  vendor_id: number | null;
+  vendor_id: string | null;
   status: Status;
   created_at: string;
 };
 
+//Vendor ids are uuids (strings) in the data model
 type Identity = {
   id: string;
   role: Role | null;
-  vendor_id: number | null;
+  vendor_id: string | null;
 };
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -397,8 +398,8 @@ export const ProfileList = () => {
   const { data: me, isLoading: identityLoading } = useGetIdentity<Identity>();
 
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [vendorNames, setVendorNames] = useState<Record<number, string>>({});
-  const [vendorLogos, setVendorLogos] = useState<Record<number, string>>({});
+  const [vendorNames, setVendorNames] = useState<Record<string, string>>({});
+  const [vendorLogos, setVendorLogos] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toRemove, setToRemove] = useState<Profile | null>(null);
@@ -429,7 +430,7 @@ export const ProfileList = () => {
 
     const [profilesResult, vendorsResult, logosResult] = await Promise.all([
       profilesQuery,
-      supabaseClient.from("Vendor").select("vendor_id, name"),
+      supabaseClient.from("vendor").select("id, name"),
       supabaseClient.from("Vendor_logo").select("vendor_id, logo_url"),
     ]);
 
@@ -442,7 +443,7 @@ export const ProfileList = () => {
     const list = (profilesResult.data ?? []) as unknown as Profile[];
 
     setProfiles(list);
-    setVendorNames(Object.fromEntries((vendorsResult.data ?? []).map((v: any) => [v.vendor_id, v.name])));
+    setVendorNames(Object.fromEntries((vendorsResult.data ?? []).map((v: any) => [v.id, v.name])));
     setVendorLogos(Object.fromEntries((logosResult.data ?? []).map((l: any) => [l.vendor_id, String(l.logo_url).trim()])));
 
     //Opens on Pending, or on Verified when nobody is waiting

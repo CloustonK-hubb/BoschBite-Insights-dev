@@ -12,6 +12,8 @@ import { Alert, Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, T
 const BROWN = "#382322";
 const CREAM = "#f1e5d5";
 
+const RESTAURANT_TYPE_ID = "77fb2c0a-9f29-478f-bcd7-fb5e6967d9e8";
+
 //Pill shaped fields with a cream fill, used by every input on the page
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
@@ -24,8 +26,9 @@ const fieldSx = {
   "& .MuiInputLabel-root.Mui-focused": { color: BROWN },
 };
 
+//Matches the VENDOR table in the data model: id is a uuid
 interface Vendor {
-  vendor_id: number;
+  id: string;
   name: string;
 }
 
@@ -48,13 +51,13 @@ function Register() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  //Loads the vendors for the dropdown (only vendors with type 1)
+  //Loads the vendors for the dropdown (only restaurants)
   useEffect(() => {
     const fetchVendors = async () => {
       const { data, error } = await supabaseClient
-        .from("Vendor")
-        .select("vendor_id, name")
-        .eq("type_id", 1)
+        .from("vendor")
+        .select("id, name")
+        .eq("type_id", RESTAURANT_TYPE_ID)
         .order("name");
 
       if (error) {
@@ -248,7 +251,7 @@ function Register() {
               MenuProps={{ PaperProps: { sx: { borderRadius: 3, mt: 0.5 } } }}
             >
               {vendors.map((vendor) => (
-                <MenuItem key={vendor.vendor_id} value={vendor.vendor_id.toString()}>
+                <MenuItem key={vendor.id} value={vendor.id}>
                   {vendor.name}
                 </MenuItem>
               ))}

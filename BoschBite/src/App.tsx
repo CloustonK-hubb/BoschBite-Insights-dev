@@ -472,12 +472,14 @@ const App: React.FC = () => {
               { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
               { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
               //Adding the relevant CRUD pages to the first grouping using: meta: {parent: "BoschCard-data"}
-              { name: "Transaction", list: "/transaction", show: "/transaction/show/:id", meta: {parent: "BoschCard-data"}},
-              { name: "Student", list: "/student", show: "/student/show/:id", edit: "/student/edit/:id", meta: {parent: "BoschCard-data"}},
-              { name: "Vendor", list: "/vendor", show: "/vendor/show/:id", meta: {parent: "BoschCard-data"}},
-              { name: "Vendor_Type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {parent: "BoschCard-data"}},
+              //Resource names must match the table names in the data model exactly (lowercase snake_case),
+              //because Refine sends the resource name to the data provider as the table name
+              { name: "transaction", list: "/transaction", show: "/transaction/show/:id", meta: {label: "Transaction", parent: "BoschCard-data"}},
+              { name: "student", list: "/student", show: "/student/show/:id", edit: "/student/edit/:id", meta: {label: "Student", parent: "BoschCard-data"}},
+              { name: "vendor", list: "/vendor", show: "/vendor/show/:id", meta: {label: "Vendor", parent: "BoschCard-data"}},
+              { name: "vendor_type", list: "/vendor_type", show: "/vendor_type/show/:id", meta: {label: "Vendor Type", parent: "BoschCard-data"}},
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
-              { name: "Calendar", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", 
+              { name: "calendar_event", list: "/calendar", show: "/calendar/show/:id", edit: "/calendar/edit/:id", 
                 meta: {label: "Calendar events", parent: "BoschBites-data", canDelete: true}},
               { name: "Promo_Window", list: "/promo_window", show: "/promo_window/show/:id", edit: "/promo_window/edit/:id", 
                 meta: {label: "Promotion Window", parent: "BoschBites-data", canDelete: true}},
