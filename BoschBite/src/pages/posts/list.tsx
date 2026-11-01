@@ -121,7 +121,7 @@ export const VendorTypesList: React.FC = () => {
 
 //List object for the Calendar
 export const CalendarList: React.FC = () => {
-  const { dataGridProps } = useDataGrid({ resource: "Calendar" });
+  const { dataGridProps } = useDataGrid({ resource: "calendar_event" });
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
@@ -150,7 +150,7 @@ export const CalendarList: React.FC = () => {
 
 //List objetc for the Promo_window table
 export const PromoWindowList: React.FC = () => {
-  const { dataGridProps } = useDataGrid({ resource: "Promo_Window", meta: { select: "*, Vendor(name)" }, });
+  const { dataGridProps } = useDataGrid({ resource: "promo_window_v2" });
 
   const columns = React.useMemo<GridColDef[]>(
     () => [

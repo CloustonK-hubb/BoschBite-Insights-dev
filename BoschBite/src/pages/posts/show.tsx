@@ -119,7 +119,7 @@ export const VendorTypeShow: React.FC = () => {
 
 //Show object for the Calendar table
 export const CalendarShow: React.FC = () => {
-  const { query } = useShow({ resource: "Calendar", meta : { idColumnName: "period_id"}});
+  const { query } = useShow({ resource: "calendar_event", meta : { idColumnName: "id"}});
   const calendar = query.data?.data;
 
   return (
@@ -150,7 +150,7 @@ export const CalendarShow: React.FC = () => {
 
 //Show object for the Promo_Window table
 export const PromoWindowShow: React.FC = () => {
-  const { query } = useShow({ resource: "Promo_Window", meta : { idColumnName: "promo_id"}});
+  const { query } = useShow({ resource: "promo_window_v2", meta : { idColumnName: "promo_id"}});
   const promo_window = query.data?.data;
 
   return (
