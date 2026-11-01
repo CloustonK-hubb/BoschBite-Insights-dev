@@ -20,7 +20,7 @@ export const TransactionList: React.FC = () => {
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
-      { field: "id", headerName: "ID", type: "number", width: 90 },
+      //{ field: "id", headerName: "ID", type: "number", width: 90 },
       { field: "student_id", headerName: "Student name", width: 180, renderCell: ({ row }) => row.student?`${row.student.first_name} ${row.student.last_name}` : row.student_id, },
       { field: "vendor_id", headerName: "Vendor name", type: "number", width: 200, renderCell: ({ row }) => row.vendor?.name ?? row.vendor_id, },
       { field: "tx_datetime", headerName: "Date & time", flex: 1, minWidth: 200, renderCell: ({ row }) => (
@@ -34,7 +34,7 @@ export const TransactionList: React.FC = () => {
   );
 
   return (
-    <List>
+    <List breadcrumb={false}>
       <DataGrid
         {...dataGridProps}
         columns={columns}
@@ -51,14 +51,14 @@ export const StudentList: React.FC = () => {
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
-      { field: "id", headerName: "ID", width: 80 },
-      { field: "first_name", headerName: "First name", flex: 1 },
-      { field: "last_name", headerName: "Last name", flex: 1 },
-      { field: "email", headerName: "Email", flex: 1 },
+      //{ field: "id", headerName: "ID", width: 80 },
+      { field: "first_name", headerName: "First name", flex: 1, width: 90 },
+      { field: "last_name", headerName: "Last name", flex: 1, width: 90 },
+      { field: "email", headerName: "Email", width: 200 },
       { field: "dob", headerName: "Date of Birth", flex: 1, renderCell: ({ row }) => (<DateField value={row.dob} format="YYYY-MM-DD" />)}, 
-      { field: "gender", headerName: "Gender", flex: 1}, 
-      { field: "phone", headerName: "Cell number", flex: 1},
-      { field: "address", headerName: "Address", felx: 1},
+      { field: "gender", headerName: "Gender", width: 90}, 
+      { field: "phone", headerName: "Cell number", width: 140},
+      { field: "address", headerName: "Address", flex: 1},
       { field: "actions", headerName: "Actions", sortable: false, width: 100, renderCell: ({ row }) => ( <>
         <ShowButton hideText recordItemId={row.id} />
       </>
@@ -69,7 +69,7 @@ export const StudentList: React.FC = () => {
   );
 
   return (
-    <List>
+    <List breadcrumb={false}>
       <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.id}autoHeight />
     </List>
   );
@@ -127,7 +127,7 @@ export const PromoWindowList: React.FC = () => {
   );
 
   return (
-    <List>
+    <List breadcrumb={false}>
       <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.promo_id}autoHeight />
     </List>
   );

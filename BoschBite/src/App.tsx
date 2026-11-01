@@ -7,8 +7,8 @@ import { ThemeProvider } from "@mui/material/styles";
 import routerProvider, {NavigateToResource, UnsavedChangesNotifier,DocumentTitleHandler,} from "@refinedev/react-router";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router";
 import { dataProvider } from "./providers/dataProvider";
-import { TransactionList, StudentList, CalendarList, PromoWindowList ,ProfileList} from "../src/pages/posts";
-import { TransactionShow, StudentShow, CalendarShow, PromoWindowShow } from "./pages/posts/show";
+import { TransactionList, StudentList, PromoWindowList ,ProfileList} from "../src/pages/posts";
+import { TransactionShow, StudentShow, PromoWindowShow } from "./pages/posts/show";
 import { CalendarEdit, PromoWindowEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 import { DashboardPage } from "./pages/dashboard";
@@ -553,11 +553,6 @@ const App: React.FC = () => {
                 <Route path="edit/:id" element={<PromoWindowEdit />} />
               </Route>
 
-              <Route path="/calendar">
-                <Route index element={<CalendarList />} />
-                <Route path="show/:id" element={<CalendarShow />} />
-                <Route path="edit/:id" element={<CalendarEdit/> } />
-              </Route> 
 
               <Route path="/profiles" element={<ProfileList />} />
           </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
