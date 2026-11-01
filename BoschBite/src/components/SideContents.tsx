@@ -28,11 +28,15 @@ const ADMIN_LABEL = "ADMIN TOOLS";
 //Height of the logo header above the menu, used to pin the logout button to the bottom
 const HEADER_HEIGHT = 100;
 
+//Capitalises the first letter of every word, and turns underscores into spaces
+const titleCase = (text: string) =>
+  text.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+
 //Text shown on the role chip under the name
 const ROLE_CHIP: Record<string, string> = {
   boschbite_admin: "Admin",
-  vendor_admin: "Vendor Admin",
-  vendor_manager: "Vendor Manager",
+  vendor_admin: "Admin",
+  vendor_manager: "Manager",
 };
 
 //Vendor ids are uuids (strings) in the data model
@@ -118,7 +122,7 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
     const key = String(item.key ?? item.name);
     const children = item.children ?? [];
     const hasChildren = children.length > 0;
-    const label = item.label ?? item.name;
+    const label = titleCase(String(item.label ?? item.name));
 
     //Only the top level items show an icon
     const icon =
