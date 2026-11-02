@@ -34,6 +34,7 @@ import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import { TopBar } from "./components/TopBar";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import { DemandForecastPage } from "./pages/DemandForecast";
+import {queryClient} from "./queryClient";
 
 
 
@@ -214,6 +215,9 @@ const App: React.FC = () => {
         };
       }
 
+    //Clears the previous user's cached data so the new user only sees their own
+      queryClient.clear();
+
       const { data: profile, error: profileError } =
         await supabaseClient
           .from("profiles")
@@ -383,6 +387,8 @@ const App: React.FC = () => {
           },
         };
       }
+      //Clears the cached data on logout so it isn't left in the browser
+      queryClient.clear();
       return {
         success: true,
         redirectTo: "/",
@@ -563,6 +569,8 @@ const App: React.FC = () => {
             options={{
               syncWithLocation: true,
               warnWhenUnsavedChanges: true,
+              //for the caching problem 
+              reactQuery: { clientConfig: queryClient },
               /*Editing the title and the image of the app */
               title: {
                 text: "BoschBite Insights", icon: (
