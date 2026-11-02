@@ -12,10 +12,43 @@ import SearchIcon from "@mui/icons-material/Search";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import { supabaseClient } from "../../providers/supabaseClient";
+import { listStyles, peopleStyles } from "../../providers/theme";
 
 
+//Page layout around each table: big title, short description, buttons on the right
+type ThemedListProps = {
+  title: string;
+  subtitle: string;
+  exportButton?: React.ReactNode;
+  children: React.ReactNode;
+};
 
-//List object for a transaction 
+const ThemedList = ({ title, subtitle, exportButton, children }: ThemedListProps) => (
+  <List
+    breadcrumb={false}
+    title={
+      <Box>
+        <Typography sx={listStyles.title}>{title}</Typography>
+        <Typography sx={listStyles.subtitle}>{subtitle}</Typography>
+      </Box>
+    }
+    headerButtons={({ defaultButtons }) => (
+      <Box sx={listStyles.headerButtons}>
+        {defaultButtons}
+        {exportButton}
+      </Box>
+    )}
+    wrapperProps={{ sx: listStyles.wrapper }}
+    headerProps={{ disableTypography: true, sx: listStyles.header }}
+    contentProps={{ sx: listStyles.content }}
+  >
+    {children}
+  </List>
+);
+
+
+//List object for a transaction
+
 //Splits the transaction date and time into two parts
 const txDate = (value?: string) =>
   value ? new Date(value).toLocaleDateString("en-ZA", { day: "2-digit", month: "short", year: "numeric" }) : "";
@@ -23,11 +56,22 @@ const txDate = (value?: string) =>
 const txTime = (value?: string) =>
   value ? new Date(value).toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" }) : "";
 
+//Shows money as R 12.50
+const rands = (value?: number | string | null) =>
+  value === null || value === undefined || value === "" ? "" : `R ${Number(value).toFixed(2)}`;
+
+//Shows a discount as a percentage. 0.15 and 15 both show as 15%
+const percent = (value?: number | string | null) => {
+  if (value === null || value === undefined || value === "") return "";
+  const n = Number(value);
+  return `${Number((n <= 1 ? n * 100 : n).toFixed(1))}%`;
+};
+
 export const TransactionList: React.FC = () => {
   //student_directory(student_no) brings in each student's number from the safe view
   const { dataGridProps } = useDataGrid({ resource: "transaction", meta: { select: "*, vendor(name), student_directory(student_no)" }, });
 
-  //enabling an export feature for the trasnaction table which exports all data for this table, not just what is shown in the list 
+  //enabling an export feature for the trasnaction table which exports all data for this table, not just what is shown in the list
   const { triggerExport, isLoading: exportLoading } = useExport({
     resource: "transaction",
     meta: { select: "*, vendor(name), student_directory(student_no)" },
@@ -46,28 +90,28 @@ export const TransactionList: React.FC = () => {
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
-      //{ field: "id", headerName: "ID", type: "number", width: 90 },
-      { field: "student_no", headerName: "Student", width: 110, sortable: false, filterable: false, renderCell: ({ row }) => row.student_directory?.student_no ?? "—", },
-      { field: "vendor_id", headerName: "Vendor name", type: "number", width: 200, renderCell: ({ row }) => row.vendor?.name ?? row.vendor_id, },
-            { field: "tx_datetime", headerName: "Date", width: 140, renderCell: ({ row }) => txDate(row.tx_datetime) },
-      { field: "tx_time", headerName: "Time", width: 100, sortable: false, filterable: false, renderCell: ({ row }) => txTime(row.tx_datetime) },
-      {field: "value",headerName: "Transaction value", type: "number", width: 110,
-        renderCell: ({ row }) => Number(row.value).toFixed(2),},
-      { field: "discount", headerName: "Discount", type: "number", width: 110 },
-      { field: "actions", headerName: "Actions", sortable: false, width: 100,renderCell: ({ row }) => <ShowButton hideText recordItemId={row.id} />}
+      { field: "id", headerName: "Transaction ID", flex: 1, minWidth: 130 },
+      { field: "student_no", headerName: "Student", flex: 0.6, minWidth: 90, sortable: false, renderCell: ({ row }) => row.student_directory?.student_no ?? "—", },
+      { field: "vendor_id", headerName: "Vendor name", flex: 1.4, minWidth: 160, renderCell: ({ row }) => row.vendor?.name ?? row.vendor_id, },
+      { field: "tx_datetime", headerName: "Date", flex: 0.9, minWidth: 120, renderCell: ({ row }) => txDate(row.tx_datetime) },
+      { field: "tx_time", headerName: "Time", flex: 0.6, minWidth: 80, sortable: false, renderCell: ({ row }) => txTime(row.tx_datetime) },
+      {field: "value",headerName: "Transaction value", type: "number", flex: 0.9, minWidth: 130, align: "left", headerAlign: "left",
+        renderCell: ({ row }) => rands(row.value),},
+      { field: "discount", headerName: "Discount", type: "number", flex: 0.7, minWidth: 100, align: "left", headerAlign: "left", renderCell: ({ row }) => percent(row.discount) },
+      { field: "actions", headerName: "", sortable: false, width: 64, renderCell: ({ row }) => <ShowButton hideText recordItemId={row.id} />}
     ],
     []
   );
 
   return (
-    <List breadcrumb={false} headerButtons={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
+    <ThemedList title="Transactions" subtitle="Purchases made with BoschCard." exportButton={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
       <DataGrid
         {...dataGridProps}
         columns={columns}
         getRowId={(row) => row.id}
         autoHeight
       />
-    </List>
+    </ThemedList>
   );
 };
 
@@ -79,7 +123,7 @@ export const StudentList: React.FC = () => {
     sorters: { initial: [{ field: "student_no", order: "asc" }] },
   });
 
-//enabling an export feature for the student table which exports all data for this table, not just what is shown in the list 
+//enabling an export feature for the student table which exports all data for this table, not just what is shown in the list
 const { triggerExport, isLoading: exportLoading } = useExport({
   resource: "student_directory",
   sorters: [{ field: "student_no", order: "asc" }],
@@ -95,11 +139,11 @@ const { triggerExport, isLoading: exportLoading } = useExport({
   const columns = React.useMemo<GridColDef[]>(
     () => [
       //{ field: "id", headerName: "ID", width: 80 },
-      { field: "student_no", headerName: "Student", type: "number", width: 110, align: "left", headerAlign: "left" },
-      { field: "dob", headerName: "Date of Birth", flex: 1, renderCell: ({ row }) => (<DateField value={row.dob} format="YYYY-MM-DD" />)}, 
-      { field: "gender", headerName: "Gender", width: 90}, 
-      { field: "address", headerName: "Address", flex: 1},
-      { field: "actions", headerName: "Actions", sortable: false, width: 100, renderCell: ({ row }) => ( <>
+      { field: "student_no", headerName: "Student", type: "number", flex: 0.5, minWidth: 90, align: "left", headerAlign: "left" },
+      { field: "dob", headerName: "Date of Birth", flex: 0.8, minWidth: 130, renderCell: ({ row }) => row.dob ?? "" },
+      { field: "gender", headerName: "Gender", flex: 0.6, minWidth: 100},
+      { field: "address", headerName: "Address", flex: 2, minWidth: 200},
+      { field: "actions", headerName: "", sortable: false, width: 64, renderCell: ({ row }) => ( <>
         <ShowButton hideText recordItemId={row.id} />
       </>
       )
@@ -109,9 +153,9 @@ const { triggerExport, isLoading: exportLoading } = useExport({
   );
 
   return (
-    <List breadcrumb={false} headerButtons={<ExportButton onClick={triggerExport} loading={exportLoading} />} >
-      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.id}autoHeight />
-    </List>
+    <ThemedList title="Students" subtitle="Students who use BoschCard." exportButton={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.id} autoHeight />
+    </ThemedList>
   );
 };
 
@@ -121,13 +165,13 @@ export const CalendarList: React.FC = () => {
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
-      { field: "period_id", headerName: "ID", width: 80 },
-      { field: "function", headerName: "Calendar function", flex: 1 },
-      { field: "year", headerName: "Year", flex: 1 },
-      { field: "start_date", headerName: "Start date", flex: 1 },
-      { field: "end_date", headerName: "End date", flex: 1 },
-      { field: "period_type", headerName: "Period category", flex: 1 },
-      { field: "actions", headerName: "Actions", sortable: false, width: 150, renderCell: ({ row }) => ( <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, height: "100%" }}>
+      { field: "period_id", headerName: "ID", flex: 0.4, minWidth: 70 },
+      { field: "function", headerName: "Calendar function", flex: 1.2, minWidth: 150 },
+      { field: "year", headerName: "Year", flex: 0.5, minWidth: 80 },
+      { field: "start_date", headerName: "Start date", flex: 0.8, minWidth: 110 },
+      { field: "end_date", headerName: "End date", flex: 0.8, minWidth: 110 },
+      { field: "period_type", headerName: "Period category", flex: 1, minWidth: 140 },
+      { field: "actions", headerName: "", sortable: false, width: 132, renderCell: ({ row }) => ( <Box sx={listStyles.actionIcons}>
         <ShowButton hideText recordItemId={row.period_id} />
         <EditButton hideText recordItemId= {row.period_id}/>
        <DeleteButton hideText recordItemId= {row.period_id} meta ={{ idColumnName: "period_id"}}/>
@@ -138,9 +182,9 @@ export const CalendarList: React.FC = () => {
   );
 
   return (
-    <List>
-      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.period_id}autoHeight />
-    </List>
+    <ThemedList title="Calendar" subtitle="Key dates in the academic year.">
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.period_id} autoHeight />
+    </ThemedList>
   );
 };
 
@@ -148,7 +192,7 @@ export const CalendarList: React.FC = () => {
 export const PromoWindowList: React.FC = () => {
   const { dataGridProps } = useDataGrid({ resource: "promo_window_v2", meta: { select: "*, vendor(name)" }, });
 
-//enabling an export feature for the student table which exports all data for this table, not just what is shown in the list 
+//enabling an export feature for the student table which exports all data for this table, not just what is shown in the list
 const { triggerExport, isLoading: exportLoading } = useExport({
   resource: "promo_window_v2",
   meta: { select: "*, vendor(name)" },
@@ -173,13 +217,13 @@ const { triggerExport, isLoading: exportLoading } = useExport({
   const columns = React.useMemo<GridColDef[]>(
     () => [
       //{ field: "promo_id", headerName: "Promotion ID", width: 90 },
-      { field: "vendor_id", headerName: "Vendor name", width: 200, renderCell: ({ row }) => row.vendor?.name ?? "-", },
-      { field: "promo_number", headerName: "Promotion number", width: 150 },
-      { field: "promo_type", headerName: "Promotion type", width: 140 },
-      { field: "start_date", headerName: "Start date", flex: 1 },
-      { field: "end_date", headerName: "End date", flex: 1 },
-      { field: "duration_days", headerName: "Duration (days)", flex: 1 },
-      { field: "actions", headerName: "Actions", sortable: false, width: 150, renderCell: ({ row }) => ( <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, height: "100%" }}>
+      { field: "vendor_id", headerName: "Vendor name", flex: 1.3, minWidth: 160, renderCell: ({ row }) => row.vendor?.name ?? "-", },
+      { field: "promo_number", headerName: "Promotion number", flex: 0.9, minWidth: 130 },
+      { field: "promo_type", headerName: "Promotion type", flex: 1, minWidth: 130 },
+      { field: "start_date", headerName: "Start date", flex: 0.8, minWidth: 110 },
+      { field: "end_date", headerName: "End date", flex: 0.8, minWidth: 110 },
+      { field: "duration_days", headerName: "Duration (days)", flex: 0.8, minWidth: 120 },
+      { field: "actions", headerName: "", sortable: false, width: 132, renderCell: ({ row }) => ( <Box sx={listStyles.actionIcons}>
         <ShowButton hideText recordItemId={row.promo_id} />
         <EditButton hideText recordItemId= {row.promo_id}/>
         <DeleteButton hideText recordItemId= {row.promo_id} meta ={{ idColumnName: "promo_id"}}/>
@@ -190,27 +234,14 @@ const { triggerExport, isLoading: exportLoading } = useExport({
   );
 
   return (
-    <List breadcrumb={false} headerButtons={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
-      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.promo_id}autoHeight />
-    </List>
+    <ThemedList title="Promotion windows" subtitle="Promotions run by BoschBite vendors." exportButton={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
+      <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.promo_id} autoHeight />
+    </ThemedList>
   );
 };
 
 
-// List object for Profiles 
-
-/* 
-   SETTINGS
- */
-
-const BROWN = "#382322";
-const CREAM = "#f1e5d5";
-const ACCENT = "#F8E8A8";
-const RED = "#D72C32";
-const GREEN = "#2E7D5B";
-
-//Column widths for each row (on a phone the columns stack)
-const ROW_GRID = { xs: "1fr", md: "2.4fr 1.4fr 1.4fr 1fr 1.7fr" };
+// List object for Profiles
 
 type Role = "boschbite_admin" | "vendor_admin" | "vendor_manager";
 type Status = "pending" | "verified" | "denied";
@@ -240,7 +271,6 @@ const ROLE_LABELS: Record<Role, string> = {
 };
 
 const VENDOR_ROLES: Role[] = ["vendor_admin", "vendor_manager"];
-const ALL_ROLES: Role[] = ["boschbite_admin", ...VENDOR_ROLES];
 
 const TABS: { key: Status; label: string }[] = [
   { key: "pending", label: "Pending" },
@@ -255,7 +285,7 @@ const EMPTY_TEXT: Record<Status, string> = {
 };
 
 
-/* 
+/*
    ONE PERSON
  */
 
@@ -272,49 +302,34 @@ type PersonRowProps = {
 
 const PersonRow = ({ p, me, isBosch, vendorName, logo, onStatus, onRole, onRemove }: PersonRowProps) => {
   const isMe = p.id === me.id;
-  const roleOptions = isBosch ? ALL_ROLES : VENDOR_ROLES;
+
+  //Only vendor roles can be picked. BoschBite Admin is never offered in the dropdown
+  const roleOptions = VENDOR_ROLES;
 
   //Nobody can change their own role or remove themselves
   const manage = !isMe && (isBosch || VENDOR_ROLES.includes(p.role));
 
+  //A BoschBite Admin's role is shown as text, because it can't be picked in the dropdown
+  const canChangeRole = manage && VENDOR_ROLES.includes(p.role);
+
   const initials = `${p.first_name?.[0] ?? ""}${p.last_name?.[0] ?? ""}`.toUpperCase();
 
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: ROW_GRID,
-        gap: { xs: 1.5, md: 2 },
-        alignItems: "center",
-        bgcolor: "#fff",
-        borderRadius: 3,
-        px: 2.5,
-        py: 2,
-        boxShadow: "0 1px 3px rgba(56, 35, 34, 0.06), 0 6px 18px rgba(56, 35, 34, 0.04)",
-        transition: "box-shadow 0.2s ease, transform 0.2s ease",
-        "&:hover": {
-          boxShadow: "0 2px 6px rgba(56, 35, 34, 0.08), 0 10px 26px rgba(56, 35, 34, 0.08)",
-        },
-      }}
-    >
+    <Box sx={peopleStyles.row}>
       {/* Picture, name and email */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}>
-        <Avatar
-          src={logo}
-          imgProps={{ style: { objectFit: "contain", background: "#fff" } }}
-          sx={{ width: 44, height: 44, bgcolor: ACCENT, color: BROWN, fontWeight: 700, fontSize: 16, border: logo ? "1px solid #eee" : "none" }}
-        >
+      <Box sx={peopleStyles.person}>
+        <Avatar src={logo} imgProps={{ style: peopleStyles.avatarImage }} sx={peopleStyles.avatar(!!logo)}>
           {initials}
         </Avatar>
 
-        <Box sx={{ minWidth: 0 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography noWrap sx={{ fontWeight: 700, color: BROWN }}>
+        <Box sx={peopleStyles.nameText}>
+          <Box sx={peopleStyles.nameLine}>
+            <Typography noWrap sx={peopleStyles.name}>
               {p.first_name} {p.last_name}
             </Typography>
-            {isMe && <Chip label="You" size="small" sx={{ height: 20, fontSize: 11, fontWeight: 700, bgcolor: CREAM, color: BROWN }} />}
+            {isMe && <Chip label="You" size="small" sx={peopleStyles.youChip} />}
           </Box>
-          <Typography noWrap variant="body2" sx={{ color: "text.secondary" }}>
+          <Typography noWrap variant="body2" sx={peopleStyles.email}>
             {p.email}
           </Typography>
         </Box>
@@ -322,21 +337,13 @@ const PersonRow = ({ p, me, isBosch, vendorName, logo, onStatus, onRole, onRemov
 
       {/* Role */}
       <Box>
-        {manage ? (
+        {canChangeRole ? (
           <Select
             variant="standard"
             disableUnderline
             value={p.role}
             onChange={(e) => onRole(p, e.target.value as Role)}
-            sx={{
-              bgcolor: CREAM,
-              color: BROWN,
-              borderRadius: 999,
-              pl: 1.75,
-              fontSize: 13,
-              fontWeight: 700,
-              "& .MuiSelect-select": { py: 0.5, "&:focus": { bgcolor: "transparent" } },
-            }}
+            sx={peopleStyles.roleSelect}
           >
             {roleOptions.map((r) => (
               <MenuItem key={r} value={r}>
@@ -345,22 +352,22 @@ const PersonRow = ({ p, me, isBosch, vendorName, logo, onStatus, onRole, onRemov
             ))}
           </Select>
         ) : (
-          <Typography sx={{ fontSize: 13, fontWeight: 700, color: BROWN }}>{ROLE_LABELS[p.role]}</Typography>
+          <Typography sx={peopleStyles.roleText}>{ROLE_LABELS[p.role]}</Typography>
         )}
       </Box>
 
       {/* Vendor */}
-      <Typography noWrap sx={{ fontSize: 14, color: BROWN }}>
+      <Typography noWrap sx={peopleStyles.vendor}>
         {vendorName}
       </Typography>
 
       {/* Joined */}
-      <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
+      <Typography sx={peopleStyles.joined}>
         {new Date(p.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}
       </Typography>
 
       {/* Actions */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "flex-end" }, gap: 1 }}>
+      <Box sx={peopleStyles.actions}>
         {isBosch && p.status === "pending" && (
           <>
             <Button
@@ -368,14 +375,14 @@ const PersonRow = ({ p, me, isBosch, vendorName, logo, onStatus, onRole, onRemov
               disableElevation
               variant="contained"
               onClick={() => onStatus(p, "verified")}
-              sx={{ borderRadius: 999, px: 2, fontWeight: 700, bgcolor: GREEN, "&:hover": { bgcolor: "#256a4b" } }}
+              sx={peopleStyles.verifyButton}
             >
               Verify
             </Button>
             <Button
               size="small"
               onClick={() => onStatus(p, "denied")}
-              sx={{ borderRadius: 999, px: 1.5, fontWeight: 700, color: RED }}
+              sx={peopleStyles.denyButton}
             >
               Deny
             </Button>
@@ -386,19 +393,19 @@ const PersonRow = ({ p, me, isBosch, vendorName, logo, onStatus, onRole, onRemov
           <Button
             size="small"
             onClick={() => onStatus(p, "verified")}
-            sx={{ borderRadius: 999, px: 1.5, fontWeight: 700, color: GREEN }}
+            sx={peopleStyles.reinstateButton}
           >
             Reinstate
           </Button>
         )}
 
         {!isBosch && p.status === "pending" && (
-          <Chip label="Awaiting BoschBite" size="small" sx={{ bgcolor: ACCENT, color: BROWN, fontWeight: 700 }} />
+          <Chip label="Awaiting BoschBite" size="small" sx={peopleStyles.awaitingChip} />
         )}
 
         {manage && (
           <Tooltip title="Remove">
-            <IconButton size="small" onClick={() => onRemove(p)} sx={{ color: "text.secondary", "&:hover": { color: RED, bgcolor: "rgba(215, 44, 50, 0.08)" } }}>
+            <IconButton size="small" onClick={() => onRemove(p)} sx={peopleStyles.removeIcon}>
               <DeleteOutlineIcon fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -409,7 +416,7 @@ const PersonRow = ({ p, me, isBosch, vendorName, logo, onStatus, onRole, onRemov
 };
 
 
-/* 
+/*
    PAGE
  */
 
@@ -565,12 +572,12 @@ export const ProfileList = () => {
   if (!allowed) return <Navigate to="/" replace />;
 
   return (
-    <Box sx={{ maxWidth: 1100, mx: "auto", py: 1 }}>
+    <Box sx={peopleStyles.page}>
       {/* Title and search */}
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 2, mb: 3 }}>
+      <Box sx={peopleStyles.header}>
         <Box>
-          <Typography sx={{ fontSize: 30, fontWeight: 800, color: BROWN, lineHeight: 1.1 }}>People</Typography>
-          <Typography sx={{ color: "text.secondary", mt: 0.5 }}>
+          <Typography sx={peopleStyles.title}>People</Typography>
+          <Typography sx={peopleStyles.subtitle}>
             {isBosch ? "Approve new sign-ups and manage who has access." : "Manage the people in your company."}
           </Typography>
         </Box>
@@ -587,26 +594,18 @@ export const ProfileList = () => {
               </InputAdornment>
             ),
           }}
-          sx={{
-            width: { xs: "100%", sm: 280 },
-            "& .MuiOutlinedInput-root": {
-              bgcolor: "#fff",
-              borderRadius: 999,
-              "& fieldset": { border: "none" },
-              boxShadow: "0 1px 3px rgba(56, 35, 34, 0.08)",
-            },
-          }}
+          sx={peopleStyles.search}
         />
       </Box>
 
       {errorMessage && (
-        <Alert severity="error" onClose={() => setErrorMessage(null)} sx={{ mb: 3, borderRadius: 3 }}>
+        <Alert severity="error" onClose={() => setErrorMessage(null)} sx={peopleStyles.error}>
           {errorMessage}
         </Alert>
       )}
 
       {/* Tabs */}
-      <Box sx={{ display: "inline-flex", gap: 0.5, p: 0.5, mb: 3, bgcolor: CREAM, borderRadius: 999 }}>
+      <Box sx={peopleStyles.tabs}>
         {TABS.map((t) => {
           const selected = tab === t.key;
 
@@ -615,30 +614,10 @@ export const ProfileList = () => {
               key={t.key}
               disableElevation
               onClick={() => setTab(t.key)}
-              sx={{
-                borderRadius: 999,
-                px: 2.5,
-                py: 0.75,
-                fontWeight: 700,
-                textTransform: "none",
-                bgcolor: selected ? BROWN : "transparent",
-                color: selected ? CREAM : BROWN,
-                "&:hover": { bgcolor: selected ? BROWN : "rgba(56, 35, 34, 0.08)" },
-              }}
+              sx={peopleStyles.tab(selected)}
             >
               {t.label}
-              <Box
-                component="span"
-                sx={{
-                  ml: 1,
-                  px: 1,
-                  minWidth: 22,
-                  borderRadius: 999,
-                  fontSize: 12,
-                  lineHeight: "20px",
-                  bgcolor: selected ? "rgba(241, 229, 213, 0.2)" : "rgba(56, 35, 34, 0.08)",
-                }}
-              >
+              <Box component="span" sx={peopleStyles.tabCount(selected)}>
                 {counts[t.key]}
               </Box>
             </Button>
@@ -647,22 +626,22 @@ export const ProfileList = () => {
       </Box>
 
       {/* Column labels (hidden on phones) */}
-      <Box sx={{ display: { xs: "none", md: "grid" }, gridTemplateColumns: ROW_GRID, gap: 2, px: 2.5, pb: 1 }}>
+      <Box sx={peopleStyles.columnLabels}>
         {["Person", "Role", "Vendor", "Joined", ""].map((label, i) => (
-          <Typography key={i} sx={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "text.secondary" }}>
+          <Typography key={i} sx={peopleStyles.columnLabel}>
             {label}
           </Typography>
         ))}
       </Box>
 
       {/* The list */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+      <Box sx={peopleStyles.list}>
         {loading ? (
-          [0, 1, 2].map((i) => <Skeleton key={i} variant="rounded" height={76} sx={{ borderRadius: 3 }} />)
+          [0, 1, 2].map((i) => <Skeleton key={i} variant="rounded" height={76} sx={peopleStyles.skeleton} />)
         ) : visible.length === 0 ? (
-          <Box sx={{ textAlign: "center", py: 8, color: "text.secondary" }}>
-            <PeopleOutlineIcon sx={{ fontSize: 44, opacity: 0.4 }} />
-            <Typography sx={{ mt: 1 }}>{search ? "No one matches your search." : EMPTY_TEXT[tab]}</Typography>
+          <Box sx={peopleStyles.empty}>
+            <PeopleOutlineIcon sx={peopleStyles.emptyIcon} />
+            <Typography sx={peopleStyles.emptyText}>{search ? "No one matches your search." : EMPTY_TEXT[tab]}</Typography>
           </Box>
         ) : (
           visible.map((p) => (
@@ -682,22 +661,22 @@ export const ProfileList = () => {
       </Box>
 
       {/* Remove confirmation */}
-      <Dialog open={!!toRemove} onClose={() => setToRemove(null)} PaperProps={{ sx: { borderRadius: 4, p: 1 } }}>
-        <DialogTitle sx={{ fontWeight: 800, color: BROWN }}>Remove this person?</DialogTitle>
+      <Dialog open={!!toRemove} onClose={() => setToRemove(null)} PaperProps={{ sx: peopleStyles.dialog }}>
+        <DialogTitle sx={peopleStyles.dialogTitle}>Remove this person?</DialogTitle>
         <DialogContent>
           <DialogContentText>
             {toRemove?.first_name} {toRemove?.last_name} ({toRemove?.email}) will lose access to BoschBite Insights.
           </DialogContentText>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setToRemove(null)} sx={{ borderRadius: 999, color: BROWN, fontWeight: 700 }}>
+        <DialogActions sx={peopleStyles.dialogActions}>
+          <Button onClick={() => setToRemove(null)} sx={peopleStyles.cancelButton}>
             Cancel
           </Button>
           <Button
             disableElevation
             variant="contained"
             onClick={confirmRemove}
-            sx={{ borderRadius: 999, fontWeight: 700, bgcolor: RED, "&:hover": { bgcolor: "#b8242a" } }}
+            sx={peopleStyles.removeButton}
           >
             Remove
           </Button>

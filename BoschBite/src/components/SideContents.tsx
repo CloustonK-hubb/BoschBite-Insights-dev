@@ -6,6 +6,7 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { supabaseClient } from "../providers/supabaseClient";
+import { siderStyles } from "../providers/theme";
 
 
 /* 
@@ -222,8 +223,6 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
 
   /* LAYOUT */
 
-    /* LAYOUT */
-
   return (
     <Box
       sx={{
@@ -232,8 +231,8 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
         height: `calc(100vh - ${HEADER_HEIGHT}px)`,
       }}
     >
-      {/* Scrolling part: profile block and menu sections */}
-      <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+      {/* Scrolling part: profile block and menu sections. The scroll bar look comes from the theme */}
+      <Box sx={siderStyles.scroll}>
         {/* Profile block at the top, click it to open My Profile */}
         <Box
           component={Link}
@@ -308,7 +307,7 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
 
       {/* Log out button stays at the bottom of the side navigation */}
       <Box sx={{ flexShrink: 0, p: 2, borderTop: "1px solid", borderColor: "divider" }}>
-                       <Button
+        <Button
           fullWidth
           variant="contained"
           disableElevation
