@@ -130,6 +130,51 @@ const i18nProvider = {
 };
 
 
+
+/* Shared styling for the public login and password recovery pages */
+const authPageProps = {
+  rememberMe: <></>,
+  title: false,
+  wrapperProps: {
+    sx: {
+      minHeight: "100vh",
+      background:
+        "radial-gradient(circle at 50% 35%, #fbf4e9 0%, #f1e5d5 55%, #e8d8c0 100%)",
+    },
+  },
+  contentProps: {
+    sx: {
+      borderRadius: 5,
+      border: "1px solid rgba(56, 35, 34, 0.06)",
+      boxShadow:
+        "0 20px 50px rgba(56, 35, 34, 0.12), 0 2px 6px rgba(56, 35, 34, 0.06)",
+      "& .MuiCardContent-root": { padding: "44px 40px" },
+      "& h1": { color: "#382322", fontSize: 26, fontWeight: 800 },
+      "& .MuiOutlinedInput-root": {
+        borderRadius: 999,
+        backgroundColor: "#faf6ef",
+        "& fieldset": { borderColor: "transparent" },
+        "&:hover fieldset": { borderColor: "#d9c7ab" },
+        "&.Mui-focused fieldset": { borderColor: "#382322", borderWidth: 1.5 },
+      },
+      "& button[type='submit']": {
+        borderRadius: 999,
+        py: 1.25,
+        fontWeight: 700,
+        letterSpacing: 0.5,
+        backgroundColor: "#382322",
+        color: "#f1e5d5",
+        boxShadow: "none",
+        "&:hover": {
+          backgroundColor: "#4d3130",
+          boxShadow: "0 6px 16px rgba(56, 35, 34, 0.25)",
+        },
+      },
+      "& .MuiLink-root": { color: "#382322" },
+    },
+  },
+};
+
 const App: React.FC = () => {
 
   /* 
@@ -599,8 +644,10 @@ const App: React.FC = () => {
 
               {/* inserting the landing page route*/}
               <Route path="/" element={<LandingPage />} />
-              {/* making update password publicly available */}
-              <Route path="/update-password" element={<AuthPage type="updatePassword" />} />
+              <Route path="/update-password" element={
+                  <AuthPage type="updatePassword" {...authPageProps} />
+                }
+              />
 
               <Route
                 element={
@@ -611,52 +658,12 @@ const App: React.FC = () => {
               >
                 <Route
                   path="/login"
-                  element={
-                    <AuthPage type="login"
-                      rememberMe={<></>}
-                      /* Removing the logo and title above the login card */
-                      title={false}
-                      /* Soft beige background with a gentle glow behind the card */
-                      wrapperProps={{
-                        sx: {
-                          background: "radial-gradient(circle at 50% 35%, #fbf4e9 0%, #f1e5d5 55%, #e8d8c0 100%)",
-                        },
-                      }}
-                      /* Raised rounded card, pill shaped fields and a brown button */
-                      contentProps={{
-                        sx: {
-                          borderRadius: 5,
-                          border: "1px solid rgba(56, 35, 34, 0.06)",
-                          boxShadow: "0 20px 50px rgba(56, 35, 34, 0.12), 0 2px 6px rgba(56, 35, 34, 0.06)",
-                          "& .MuiCardContent-root": { padding: "44px 40px" },
-                          "& h1": { color: "#382322", fontSize: 26, fontWeight: 800 },
-                          "& .MuiOutlinedInput-root": {
-                            borderRadius: 999,
-                            backgroundColor: "#faf6ef",
-                            "& fieldset": { borderColor: "transparent" },
-                            "&:hover fieldset": { borderColor: "#d9c7ab" },
-                            "&.Mui-focused fieldset": { borderColor: "#382322", borderWidth: 1.5 },
-                          },
-                          "& button[type='submit']": {
-                            borderRadius: 999,
-                            py: 1.25,
-                            fontWeight: 700,
-                            letterSpacing: 0.5,
-                            backgroundColor: "#382322",
-                            color: "#f1e5d5",
-                            boxShadow: "none",
-                            "&:hover": { backgroundColor: "#4d3130", boxShadow: "0 6px 16px rgba(56, 35, 34, 0.25)" },
-                          },
-                          "& .MuiLink-root": { color: "#382322" },
-                        },
-                      }}
-                    />
-                  }
+                  element={<AuthPage type="login" {...authPageProps} />}
                 />
                 <Route path="/register" element={<Register />} />
                 <Route
                   path="/forgot-password"
-                  element={<AuthPage type="forgotPassword" />}
+                  element={<AuthPage type="forgotPassword" {...authPageProps} />}
                 />
 
               </Route>
