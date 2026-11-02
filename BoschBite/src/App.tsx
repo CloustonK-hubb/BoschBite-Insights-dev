@@ -32,6 +32,8 @@ import { HelpPage, HelpRequests } from "./pages/Help/Help";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import { TopBar } from "./components/TopBar";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
+import { DemandForecastPage } from "./pages/DemandForecast";
 
 
 
@@ -494,6 +496,7 @@ const App: React.FC = () => {
               { name: "dashboard", list: "/dashboard", meta: { label: "Business Dashboard", icon: <InsightsIcon /> } },
               { name: "CalendarPage", list: "/CalendarPage", meta: { label: "Calendar", icon: <CalendarMonthIcon /> } },
               { name: "Leaderboard", list: "/leaderboard", meta: { label: "Leaderboard", icon: <LeaderboardIcon /> } },
+              { name: "DemandForecastPage", list: "/DemandForecastPage", meta: { label: "Demand forecast (BETA)", icon: <QueryStatsIcon /> } },
               { name: "my-profile", list: "/my-profile", meta: { label: "My Profile", icon: <AccountCircleIcon /> } },
               { name: "help", list: "/help", meta: { label: "Help", icon: <HelpOutlineIcon /> } },
               { name: "help-requests", list: "/help-requests", meta: { label: "Help requests", icon: <SupportAgentIcon /> } },
@@ -558,6 +561,7 @@ const App: React.FC = () => {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/CalendarPage" element={<CalendarPage />} />
                 <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/DemandForecastPage" element={<DemandForecastPage />} />
                 <Route path="/my-profile" element={<MyProfile />} />
                 <Route path="/help" element={<HelpPage />} />
                 <Route path="/help-requests" element={<HelpRequests />} />
