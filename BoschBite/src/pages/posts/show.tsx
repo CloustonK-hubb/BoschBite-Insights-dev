@@ -1,4 +1,4 @@
-import { useShow, useOne } from "@refinedev/core";
+import { useShow, useOne, useGetIdentity } from "@refinedev/core";
 import { Show, TextFieldComponent as TextField, MarkdownField, DateField } from "@refinedev/mui";
 import { Stack, Typography } from "@mui/material";
 import React from "react";
@@ -36,23 +36,31 @@ export const TransactionShow: React.FC = () => {
 
 //Show page for the Student table
 export const StudentShow: React.FC = () => {
-  const { query } = useShow({ resource: "student", meta : { idColumnName: "id"}});
+  const { data: me } = useGetIdentity<{ role?: string | null }>();
+  const isBosch = me?.role === "boschbite_admin";
+
+  //Reads the safe view: names, email and cell number are only filled in for BoschBite Admins
+  const { query } = useShow({ resource: "student_directory", meta : { idColumnName: "id"}});
   const student = query.data?.data;
 
   return (
-    <Show isLoading={query.isLoading} canEdit={false} breadcrumb={false}>
+    <Show isLoading={query.isLoading} canEdit={false} canDelete={false} breadcrumb={false}>
       <Stack gap={1}>
         <Typography variant="body1" fontWeight="bold">Student ID</Typography>
-        <TextField value={student?.id} />
+        <TextField value={isBosch ? student?.id : String(student?.id ?? "").slice(0, 8)} />
 
-        <Typography variant="body1" fontWeight="bold">First name</Typography>
-        <TextField value={student?.first_name} />
+        {isBosch && (
+          <>
+            <Typography variant="body1" fontWeight="bold">First name</Typography>
+            <TextField value={student?.first_name} />
 
-        <Typography variant="body1" fontWeight="bold">Last name</Typography>
-        <TextField value={student?.last_name} />
+            <Typography variant="body1" fontWeight="bold">Last name</Typography>
+            <TextField value={student?.last_name} />
 
-        <Typography variant="body1" fontWeight="bold">Email</Typography>
-        <TextField value={student?.email} />
+            <Typography variant="body1" fontWeight="bold">Email</Typography>
+            <TextField value={student?.email} />
+          </>
+        )}
 
         <Typography variant="body1" fontWeight="bold">Date of Birth</Typography>
         <TextField value={student?.dob} />
@@ -60,8 +68,12 @@ export const StudentShow: React.FC = () => {
         <Typography variant="body1" fontWeight="bold">Gender</Typography>
         <TextField value={student?.gender} />
 
-        <Typography variant="body1" fontWeight="bold">Cell number</Typography>
-        <TextField value={student?.phone} />
+        {isBosch && (
+          <>
+            <Typography variant="body1" fontWeight="bold">Cell number</Typography>
+            <TextField value={student?.phone} />
+          </>
+        )}
 
         <Typography variant="body1" fontWeight="bold">Address</Typography>
         <TextField value={student?.address} />

@@ -18,15 +18,15 @@ import { supabaseClient } from "../../providers/supabaseClient";
 //List object for a transaction 
 
 export const TransactionList: React.FC = () => {
-  const { dataGridProps } = useDataGrid({ resource: "transaction", meta: { select: "*, vendor(name), student(first_name, last_name)"  }, });
+  const { dataGridProps } = useDataGrid({ resource: "transaction", meta: { select: "*, vendor(name)"  }, });
 
   //enabling an export feature for the trasnaction table which exports all data for this table, not just what is shown in the list 
   const { triggerExport, isLoading: exportLoading } = useExport({
     resource: "transaction",
-    meta: { select: "*, vendor(name), student(first_name, last_name)" },
+    meta: { select: "*, vendor(name)" },
     mapData: (item) => ({
       ID: item.id,
-      "Student name": item.student ? `${item.student.first_name} ${item.student.last_name}` : item.student_id,
+      Student: String(item.student_id).slice(0, 8),
       "Vendor name": item.vendor?.name ?? item.vendor_id,
       "Date & time": item.tx_datetime,
       "Transaction value": item.value,
@@ -39,7 +39,7 @@ export const TransactionList: React.FC = () => {
   const columns = React.useMemo<GridColDef[]>(
     () => [
       //{ field: "id", headerName: "ID", type: "number", width: 90 },
-      { field: "student_id", headerName: "Student name", width: 180, renderCell: ({ row }) => row.student?`${row.student.first_name} ${row.student.last_name}` : row.student_id, },
+      { field: "student_id", headerName: "Student", width: 180, renderCell: ({ row }) => String(row.student_id).slice(0, 8), },
       { field: "vendor_id", headerName: "Vendor name", type: "number", width: 200, renderCell: ({ row }) => row.vendor?.name ?? row.vendor_id, },
       { field: "tx_datetime", headerName: "Date & time", flex: 1, minWidth: 200, renderCell: ({ row }) => (
           <DateField value={row.tx_datetime} format="DD MMM YYYY HH:mm" />),},
@@ -65,19 +65,21 @@ export const TransactionList: React.FC = () => {
 
 //List object for Students
 export const StudentList: React.FC = () => {
-  const { dataGridProps } = useDataGrid({ resource: "student" });
+  const { data: me } = useGetIdentity<{ role?: string | null }>();
+  const isBosch = me?.role === "boschbite_admin";
+
+  //Reads the safe view: names, emails and cell numbers are only filled in for BoschBite Admins
+  const { dataGridProps } = useDataGrid({ resource: "student_directory" });
 
 //enabling an export feature for the student table which exports all data for this table, not just what is shown in the list 
 const { triggerExport, isLoading: exportLoading } = useExport({
-  resource: "student",
+  resource: "student_directory",
   mapData: (item) => ({
     "Student ID": item.id,
-    "First name": item.first_name,
-    "Last name": item.last_name,
-    Email: item.email,
+    ...(isBosch ? { "First name": item.first_name, "Last name": item.last_name, Email: item.email } : {}),
     "Date of birth": item.dob,
     Gender: item.gender,
-    "Cell number": item.phone,
+    ...(isBosch ? { "Cell number": item.phone } : {}),
     Address: item.address,
   }),
     maxItemCount: 5000,
@@ -86,12 +88,18 @@ const { triggerExport, isLoading: exportLoading } = useExport({
   const columns = React.useMemo<GridColDef[]>(
     () => [
       //{ field: "id", headerName: "ID", width: 80 },
-      { field: "first_name", headerName: "First name", flex: 1, width: 90 },
-      { field: "last_name", headerName: "Last name", flex: 1, width: 90 },
-      { field: "email", headerName: "Email", width: 200 },
+      ...(isBosch
+        ? [
+            { field: "first_name", headerName: "First name", flex: 1, width: 90 },
+            { field: "last_name", headerName: "Last name", flex: 1, width: 90 },
+            { field: "email", headerName: "Email", width: 200 },
+          ]
+        : [
+            { field: "id", headerName: "Student", width: 140, renderCell: ({ row }: any) => String(row.id).slice(0, 8) },
+          ]),
       { field: "dob", headerName: "Date of Birth", flex: 1, renderCell: ({ row }) => (<DateField value={row.dob} format="YYYY-MM-DD" />)}, 
       { field: "gender", headerName: "Gender", width: 90}, 
-      { field: "phone", headerName: "Cell number", width: 140},
+      ...(isBosch ? [{ field: "phone", headerName: "Cell number", width: 140 }] : []),
       { field: "address", headerName: "Address", flex: 1},
       { field: "actions", headerName: "Actions", sortable: false, width: 100, renderCell: ({ row }) => ( <>
         <ShowButton hideText recordItemId={row.id} />
@@ -99,7 +107,7 @@ const { triggerExport, isLoading: exportLoading } = useExport({
       )
       },
     ],
-    []
+    [isBosch]
   );
 
   return (
