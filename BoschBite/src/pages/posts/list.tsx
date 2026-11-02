@@ -75,6 +75,7 @@ export const TransactionList: React.FC = () => {
   const { triggerExport, isLoading: exportLoading } = useExport({
     resource: "transaction",
     meta: { select: "*, vendor(name), student_directory(student_no)" },
+    pageSize: 1000, 
     mapData: (item) => ({
       ID: item.id,
       Student: item.student_directory?.student_no ?? "",
@@ -84,7 +85,7 @@ export const TransactionList: React.FC = () => {
       "Transaction value": item.value,
       Discount: item.discount,
     }),
-    maxItemCount: 5000,
+    maxItemCount: 10000,
   });
 
 
@@ -127,13 +128,14 @@ export const StudentList: React.FC = () => {
 const { triggerExport, isLoading: exportLoading } = useExport({
   resource: "student_directory",
   sorters: [{ field: "student_no", order: "asc" }],
+  pageSize: 1000, 
   mapData: (item) => ({
     Student: item.student_no,
     "Date of birth": item.dob,
     Gender: item.gender,
     Address: item.address,
   }),
-    maxItemCount: 5000,
+    maxItemCount: 10000,
   });
 
   const columns = React.useMemo<GridColDef[]>(
