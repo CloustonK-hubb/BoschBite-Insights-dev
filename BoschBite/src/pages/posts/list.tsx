@@ -69,7 +69,8 @@ const percent = (value?: number | string | null) => {
 
 export const TransactionList: React.FC = () => {
   //student_directory(student_no) brings in each student's number from the safe view
-  const { dataGridProps } = useDataGrid({ resource: "transaction", meta: { select: "*, vendor(name), student_directory(student_no)" }, });
+  const { dataGridProps } = useDataGrid({ resource: "transaction", meta: { select: "*, vendor(name), student_directory(student_no)" }, 
+    queryOptions: { refetchOnMount: "always",}, });
 
   //enabling an export feature for the trasnaction table which exports all data for this table, not just what is shown in the list
   const { triggerExport, isLoading: exportLoading } = useExport({
