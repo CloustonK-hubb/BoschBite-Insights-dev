@@ -24,30 +24,18 @@ import {
   PieChart,
   ChartsContainer,
 } from "@mui/x-charts";
-import { rainbowSurgePalette } from "@mui/x-charts/colorPalettes";
 import { useGo } from "@refinedev/core";
 import { useRpc } from "../../hooks/useRpc";
+import { insightsColours, chartColours, eventColours, insightsLayout, pageTitle, pageSubtitle } from "../../providers/theme";
 
-/* ---------- layout ---------- */
-// Height taken by Refine's top bar + the layout's own padding.
-// If the page still scrolls (or leaves a gap at the bottom), adjust this number.
-const LAYOUT_OFFSET_PX = 112;
-// Extra white space left and right of the content
-const SIDE_MARGIN = { xs: 1, md: 4, lg: 8 };
-
-/* ---------- BoschBite palette ---------- */
-const C = {
-  blue: "#B1C8EA",
-  yellow: "#FFEBAA",
-  brown: "#382322",
-  cream: "#FDEBDE",
-  midBlue: "#5F7FB5",
-  taupe: "#8A7370",
-  border: "rgba(56,35,34,0.15)",
-};
-const DEFAULT = rainbowSurgePalette("light");
-const CHART = { market: DEFAULT[0], you: DEFAULT[1] };
-const EVENT_COLORS = { exam: DEFAULT[2], term: DEFAULT[3], event: DEFAULT[4] };
+/* ---------- layout + colours ---------- */
+// Margins and colours now live in providers/theme.ts so the dashboard and leaderboard share them.
+// Change them there, not here.
+const LAYOUT_OFFSET_PX = insightsLayout.offsetPx;
+const SIDE_MARGIN = insightsLayout.sideMargin;
+const C = insightsColours;
+const CHART = chartColours;
+const EVENT_COLORS = eventColours;
 
 /* ---------- types returned by the SQL functions ---------- */
 type Cards = {
@@ -164,8 +152,8 @@ export const DashboardPage = () => {
       {/* header */}
       <Stack direction="row" justifyContent="space-between" alignItems="flex-end" spacing={2} sx={{ flexShrink: 0 }}>
         <Box>
-          <Typography variant="h5" fontWeight={800}>Business dashboard</Typography>
-          <Typography variant="body2" fontWeight={500}>
+          <Typography sx={pageTitle}>Business dashboard</Typography>
+          <Typography sx={pageSubtitle}>
             Restaurants &amp; Cafés market on BoschCard · {longDay(day)} · other vendors stay anonymous
           </Typography>
         </Box>

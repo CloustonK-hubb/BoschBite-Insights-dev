@@ -13,39 +13,29 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import LinearProgress from "@mui/material/LinearProgress";
 import { alpha } from "@mui/material/styles";
-import { rainbowSurgePalette } from "@mui/x-charts/colorPalettes";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
 import RepeatOutlinedIcon from "@mui/icons-material/RepeatOutlined";
 import BalanceOutlinedIcon from "@mui/icons-material/BalanceOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import { useRpc } from "../../hooks/useRpc";
+import { insightsColours, scorePartColours, insightsLayout, pageTitle, pageSubtitle } from "../../providers/theme";
 
 
 /*
    SETTINGS
-   Same colours, margins and rounded shapes as the business dashboard
+   Colours and margins come from providers/theme.ts, shared with the dashboard.
+   Change them there, not here.
  */
 
 //Extra white space left and right of the content
-const SIDE_MARGIN = { xs: 1, md: 4, lg: 8 };
+const SIDE_MARGIN = insightsLayout.sideMargin;
 
-//BoschBite colours, same as the dashboard
-const C = {
-  blue: "#B1C8EA",
-  yellow: "#FFEBAA",
-  brown: "#382322",
-  cream: "#FDEBDE",
-  midBlue: "#5F7FB5",
-  taupe: "#8A7370",
-  border: "rgba(56,35,34,0.15)",
-  up: "#2E7D32",
-  down: "#C62828",
-};
+//BoschBite colours
+const C = insightsColours;
 
-//One colour per part of the score, from the same chart palette as the dashboard
-const DEFAULT = rainbowSurgePalette("light");
-const PART_COLOURS = { reach: DEFAULT[0], loyalty: DEFAULT[1], efficiency: DEFAULT[2], location: DEFAULT[3] };
+//One colour per part of the score
+const PART_COLOURS = scorePartColours;
 
 
 /*
@@ -124,7 +114,7 @@ const rand = (n: number | null | undefined) =>
 
 const points = (n: number | null | undefined) => (n == null ? "–" : Number(n).toFixed(1));
 
-//Efficiency points keep up to 2 decimals (6.25, 12.5, 18.75)
+//Efficiency points keep up to 2 decimals (2.5, 6.25, 13.75, 21.25)
 const effPoints = (n: number | null | undefined) =>
   n == null ? "–" : String(Number(Number(n).toFixed(2)));
 
@@ -379,7 +369,7 @@ export const LeaderboardPage = () => {
       <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 2, alignItems: "flex-end", justifyContent: "space-between" }}>
         <Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="h5" fontWeight={800}>
+            <Typography sx={pageTitle}>
               Leaderboard
             </Typography>
             <Tooltip
@@ -391,7 +381,7 @@ export const LeaderboardPage = () => {
               </IconButton>
             </Tooltip>
           </Box>
-          <Typography variant="body2" fontWeight={500}>
+          <Typography sx={pageSubtitle}>
             {period
               ? isCurrent
                 ? `${period.period_name} · ${period.period_type} · day ${period.days_counted} of ${periodLength(period.period_start, period.period_end)} · other restaurants stay anonymous`

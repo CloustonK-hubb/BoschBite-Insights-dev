@@ -1,5 +1,6 @@
 import { createTheme, type SxProps, type Theme } from "@mui/material";
 import type {} from "@mui/x-data-grid/themeAugmentation";
+import { rainbowSurgePalette } from "@mui/x-charts/colorPalettes";
 import type { CSSProperties } from "react";
 
 type Sx = SxProps<Theme>;
@@ -43,6 +44,10 @@ export const pillButton = {
   "&:hover": { bgcolor: "#2a1a19", boxShadow: "none" },
   "&.Mui-disabled": { bgcolor: "rgba(56, 35, 34, 0.3)", color: cream },
 } as const;
+
+//Page title and the line under it, the same as the list, show and People pages (used by the dashboard and leaderboard)
+export const pageTitle = { fontSize: 30, fontWeight: 800, color: brown, lineHeight: 1.1 } as const;
+export const pageSubtitle = { color: "text.secondary", mt: 0.5 } as const;
 
 //Small capital labels above columns
 const columnLabel = {
@@ -270,6 +275,55 @@ export const peopleStyles = {
   dialogActions: { px: 3, pb: 2 } as Sx,
   cancelButton: { borderRadius: 999, color: brown, fontWeight: 700 } as Sx,
   removeButton: { borderRadius: 999, fontWeight: 700, bgcolor: red, "&:hover": { bgcolor: "#b8242a" } } as Sx,
+};
+
+
+/*
+   DASHBOARD AND LEADERBOARD
+   Colours and margins shared by the business dashboard and the leaderboard.
+   Change them here and both pages update.
+ */
+
+//Colours used on both pages (brown, blue and yellow come from brand above)
+export const insightsColours = {
+  blue: brand.blue,
+  yellow: brand.yellow,
+  brown: brand.brown,
+  //Lighter cream than brand.cream, used for chips, the week strip and rank badges
+  cream: "#FDEBDE",
+  midBlue: "#5F7FB5",
+  taupe: "#8A7370",
+  //Soft brown outline around the cards
+  border: "rgba(56, 35, 34, 0.15)",
+  //Green for an increase and red for a decrease
+  up: "#2E7D32",
+  down: "#C62828",
+};
+
+//Chart colours from the MUI rainbow surge palette
+const chartPalette = rainbowSurgePalette("light");
+
+//Dashboard charts: market bars and the vendor's own orders
+export const chartColours = { market: chartPalette[0], you: chartPalette[1] };
+
+//Dashboard week strip: exams, term dates and other events
+export const eventColours = { exam: chartPalette[2], term: chartPalette[3], event: chartPalette[4] };
+
+//Leaderboard: one colour per part of the score
+export const scorePartColours = {
+  reach: chartPalette[0],
+  loyalty: chartPalette[1],
+  efficiency: chartPalette[2],
+  location: chartPalette[3],
+};
+
+//Page margins for the dashboard and the leaderboard
+export const insightsLayout = {
+  //Height taken by Refine's top bar and the layout's own padding
+  //If the dashboard still scrolls or leaves a gap at the bottom, adjust this number
+  offsetPx: 112,
+  //Extra white space left and right of the content
+  sideMargin: { xs: 1, md: 4, lg: 8 },
 };
 
 
