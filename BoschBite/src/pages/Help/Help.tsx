@@ -296,7 +296,7 @@ export const HelpRequests = () => {
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", py: 1 }}>
       <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: 30, fontWeight: 800, color: BROWN, lineHeight: 1.1 }}>Help requests</Typography>
+        <Typography sx={{ fontSize: 30, fontWeight: 800, color: BROWN, lineHeight: 1.1 }}>Help Requests</Typography>
         <Typography sx={{ color: "text.secondary", mt: 0.5 }}>Requests sent by people using BoschBite Insights.</Typography>
       </Box>
 

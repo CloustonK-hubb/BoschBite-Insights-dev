@@ -18,7 +18,7 @@ const ACCENT = "#F8E8A8";
 const TEXT = "#2B2B3A";
 
 //Pages shown in the top section, in this order
-export const INSIGHTS = ["dashboard", "Leaderboard", "CalendarPage", "help"];
+export const INSIGHTS = ["dashboard", "Leaderboard", "CalendarPage","DemandForecastPage", "help"];
 
 //Pages that are reached by clicking the avatar instead
 const NOT_IN_MENU = ["my-profile"];

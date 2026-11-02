@@ -69,12 +69,14 @@ const percent = (value?: number | string | null) => {
 
 export const TransactionList: React.FC = () => {
   //student_directory(student_no) brings in each student's number from the safe view
-  const { dataGridProps } = useDataGrid({ resource: "transaction", meta: { select: "*, vendor(name), student_directory(student_no)" }, });
+  const { dataGridProps } = useDataGrid({ resource: "transaction", meta: { select: "*, vendor(name), student_directory(student_no)" }, 
+    queryOptions: { refetchOnMount: "always",}, });
 
   //enabling an export feature for the trasnaction table which exports all data for this table, not just what is shown in the list
   const { triggerExport, isLoading: exportLoading } = useExport({
     resource: "transaction",
     meta: { select: "*, vendor(name), student_directory(student_no)" },
+    pageSize: 1000, 
     mapData: (item) => ({
       ID: item.id,
       Student: item.student_directory?.student_no ?? "",
@@ -84,13 +86,13 @@ export const TransactionList: React.FC = () => {
       "Transaction value": item.value,
       Discount: item.discount,
     }),
-    maxItemCount: 5000,
+    maxItemCount: 10000,
   });
 
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
-      { field: "id", headerName: "Transaction ID", flex: 1, minWidth: 130 },
+      //{ field: "id", headerName: "Transaction ID", flex: 1, minWidth: 130 },
       { field: "student_no", headerName: "Student", flex: 0.6, minWidth: 90, sortable: false, renderCell: ({ row }) => row.student_directory?.student_no ?? "—", },
       { field: "vendor_id", headerName: "Vendor name", flex: 1.4, minWidth: 160, renderCell: ({ row }) => row.vendor?.name ?? row.vendor_id, },
       { field: "tx_datetime", headerName: "Date", flex: 0.9, minWidth: 120, renderCell: ({ row }) => txDate(row.tx_datetime) },
@@ -127,13 +129,14 @@ export const StudentList: React.FC = () => {
 const { triggerExport, isLoading: exportLoading } = useExport({
   resource: "student_directory",
   sorters: [{ field: "student_no", order: "asc" }],
+  pageSize: 1000, 
   mapData: (item) => ({
     Student: item.student_no,
     "Date of birth": item.dob,
     Gender: item.gender,
     Address: item.address,
   }),
-    maxItemCount: 5000,
+    maxItemCount: 10000,
   });
 
   const columns = React.useMemo<GridColDef[]>(
@@ -234,7 +237,7 @@ const { triggerExport, isLoading: exportLoading } = useExport({
   );
 
   return (
-    <ThemedList title="Promotion windows" subtitle="Promotions run by BoschBite vendors." exportButton={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
+    <ThemedList title="Promotion Windows" subtitle="Promotions run by BoschBite vendors." exportButton={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
       <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.promo_id} autoHeight />
     </ThemedList>
   );
