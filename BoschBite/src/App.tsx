@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react";
-import { Refine,type AuthProvider,Authenticated,} from "@refinedev/core";
-import {ThemedLayout, ErrorComponent, RefineThemes, useNotificationProvider, RefineSnackbarProvider,AuthPage, ThemedSider} from "@refinedev/mui";
+import { Refine, type AuthProvider, Authenticated, } from "@refinedev/core";
+import { ThemedLayout, ErrorComponent, RefineThemes, useNotificationProvider, RefineSnackbarProvider, AuthPage, ThemedSider } from "@refinedev/mui";
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import { ThemeProvider } from "@mui/material/styles";
-import routerProvider, {NavigateToResource, UnsavedChangesNotifier,DocumentTitleHandler,} from "@refinedev/react-router";
-import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router";
+import routerProvider, { NavigateToResource, UnsavedChangesNotifier, DocumentTitleHandler, } from "@refinedev/react-router";
+import { BrowserRouter, Routes, Route, Outlet, Navigate, useNavigate } from "react-router";
 import { dataProvider } from "./providers/dataProvider";
-import { TransactionList, StudentList, PromoWindowList ,ProfileList} from "../src/pages/posts";
+import { TransactionList, StudentList, PromoWindowList, ProfileList } from "../src/pages/posts";
 import { TransactionShow, StudentShow, PromoWindowShow } from "./pages/posts/show";
 import { CalendarEdit, PromoWindowEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 import { DashboardPage } from "./pages/dashboard";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import InsightsIcon from "@mui/icons-material/Insights"; 
-import LeaderboardIcon from "@mui/icons-material/Leaderboard";  
+import InsightsIcon from "@mui/icons-material/Insights";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { customTheme } from "./providers/theme";
 import { Box, Typography } from "@mui/material";
@@ -79,6 +79,55 @@ const AccessRedirect = () => {
   }, []);
 
   return target ? <Navigate to={target} replace /> : null;
+};
+
+/* 
+   PASSWORD RECOVERY REDIRECT
+   The reset email link signs the person in. Wherever they land,
+   this sends them to the page where they choose a new password.
+ */
+
+const PasswordRecoveryRedirect = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    //The link carries "type=recovery" in the address. Keep it, Supabase needs it to sign them in
+    if (window.location.hash.includes("type=recovery") && window.location.pathname !== "/update-password") {
+      navigate(`/update-password${window.location.hash}`, { replace: true });
+    }
+
+    //Supabase also announces a password reset once it has read the link
+    const { data } = supabaseClient.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        navigate("/update-password", { replace: true });
+      }
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, [navigate]);
+
+  return null;
+};
+
+
+/* 
+   WORDING
+   Replaces the text Refine shows on its built-in pages
+ */
+
+const customWording: Record<string, string> = {
+  "pages.login.title": "Sign into your BoschBite Account",
+};
+
+const i18nProvider = {
+  translate: (key: string, options?: any, defaultMessage?: string) => {
+    if (customWording[key]) return customWording[key];
+    const text = typeof options === "string" ? options : (defaultMessage ?? key);
+    //Fills in placeholders such as {{resource}}
+    return text.replace(/\{\{(\w+)\}\}/g, (_: string, name: string) => String(options?.[name] ?? ""));
+  },
+  changeLocale: async () => { },
+  getLocale: () => "en",
 };
 
 
@@ -183,8 +232,8 @@ const App: React.FC = () => {
     /* REGISTER */
 
     //Option to register 
-    register: async ({ email, password,first_name, last_name,}) => {
-    if (!email || !password || !first_name || !last_name) {
+    register: async ({ email, password, first_name, last_name, }) => {
+      if (!email || !password || !first_name || !last_name) {
         return {
           success: false,
           error: {
@@ -285,6 +334,8 @@ const App: React.FC = () => {
           },
         };
       }
+      await supabaseClient.auth.signOut();
+
       return {
         success: true,
         redirectTo: "/login",
@@ -415,10 +466,10 @@ const App: React.FC = () => {
       //Everyone shares their vendor's logo as their picture
       const { data: logo } = p?.vendor_id
         ? await supabaseClient
-            .from("Vendor_logo")
-            .select("logo_url")
-            .eq("vendor_id", p.vendor_id)
-            .maybeSingle()
+          .from("Vendor_logo")
+          .select("logo_url")
+          .eq("vendor_id", p.vendor_id)
+          .maybeSingle()
         : { data: null };
 
       return {
@@ -445,9 +496,9 @@ const App: React.FC = () => {
     },
   };
 
-//Refine component 
-//Edit the pages that appear in the navigation 
-//Must add the page content to the routes otherwise will throw an error 
+  //Refine component 
+  //Edit the pages that appear in the navigation 
+  //Must add the page content to the routes otherwise will throw an error 
   return (
     <BrowserRouter>
       <ThemeProvider theme={customTheme}>
@@ -462,33 +513,38 @@ const App: React.FC = () => {
             i18nProvider={i18nProvider}
             resources={[
               //Adding the main pages at the top of the navigation
-              { name: "dashboard", list: "/dashboard", meta: { label: "Business Dashboard", icon: <InsightsIcon/> } },
+              { name: "dashboard", list: "/dashboard", meta: { label: "Business Dashboard", icon: <InsightsIcon /> } },
               { name: "CalendarPage", list: "/CalendarPage", meta: { label: "Calendar", icon: <CalendarMonthIcon /> } },
-              { name: "Leaderboard", list: "/leaderboard", meta: {label: "Leaderboard", icon: <LeaderboardIcon/>} },
+              { name: "Leaderboard", list: "/leaderboard", meta: { label: "Leaderboard", icon: <LeaderboardIcon /> } },
               { name: "my-profile", list: "/my-profile", meta: { label: "My Profile", icon: <AccountCircleIcon /> } },
               { name: "help", list: "/help", meta: { label: "Help", icon: <HelpOutlineIcon /> } },
               { name: "help-requests", list: "/help-requests", meta: { label: "Help requests", icon: <SupportAgentIcon /> } },
               //Creating the grouping for the navigation: 
-              { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon/>}},
-              { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon/>}},
+              { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon /> } },
+              { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon /> } },
               //Adding the relevant CRUD pages to the first grouping using: meta: {parent: "BoschCard-data"}
               //Resource names must match the table names in the data model exactly (lowercase snake_case),
               //because Refine sends the resource name to the data provider as the table name
-              { name: "transaction", list: "/transaction", show: "/transaction/show/:id", meta: {label: "Transaction", parent: "BoschCard-data"}},
-              { name: "student", list: "/student", show: "/student/show/:id", edit: "/student/edit/:id", meta: {label: "Student", parent: "BoschCard-data"}},
+              { name: "transaction", list: "/transaction", show: "/transaction/show/:id", meta: { label: "Transaction", parent: "BoschCard-data" } },
+              { name: "student", list: "/student", show: "/student/show/:id", edit: "/student/edit/:id", meta: { label: "Student", parent: "BoschCard-data" } },
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
-              { name: "promo_window_v2", list: "/promo_window_v2", show: "/promo_window_v2/show/:id", edit: "/promo_window_v2/edit/:id", 
-                meta: {label: "Promotion Window", parent: "BoschBites-data", canDelete: true}},
+              {
+                name: "promo_window_v2", list: "/promo_window_v2", show: "/promo_window_v2/show/:id", edit: "/promo_window_v2/edit/:id",
+                meta: { label: "Promotion Window", parent: "BoschBites-data", canDelete: true }
+              },
               { name: "profiles", list: "/profiles", meta: { label: "User profiles", icon: <PersonAddAltIcon /> } },
             ]}
-          options={{
-        syncWithLocation: true,
-        warnWhenUnsavedChanges: true,
-        /*Editing the title and the image of the app */
-        title: { text: "BoschBite Insights", icon: (
-        <image href= "/BoschBites-logo-cropped.png" width= "25" height="25"/> )},
-          }}
+            options={{
+              syncWithLocation: true,
+              warnWhenUnsavedChanges: true,
+              /*Editing the title and the image of the app */
+              title: {
+                text: "BoschBite Insights", icon: (
+                  <image href="/BoschBites-logo-cropped.png" width="25" height="25" />)
+              },
+            }}
           >
+            <PasswordRecoveryRedirect />
             <Routes>
               <Route
                 element={
@@ -497,13 +553,13 @@ const App: React.FC = () => {
                     fallback={<AccessRedirect />}
                   >
                     {/* Editing the header of the app */}
-                    <ThemedLayout Title= {({ collapsed }) => (
+                    <ThemedLayout Title={({ collapsed }) => (
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                        <img src= "BoschBites-logo-cropped.png" alt="BoschBites logo" style={{ height: collapsed ? 50 : 63}} />
+                        <img src="BoschBites-logo-cropped.png" alt="BoschBites logo" style={{ height: collapsed ? 50 : 63 }} />
                         {!collapsed && (
-                      <Typography fontWeight={500} fontSize={16} color="#382322">BoschBite Insights</Typography> )}
+                          <Typography fontWeight={500} fontSize={16} color="#382322">BoschBite Insights</Typography>)}
                       </Box>
-                      )}
+                    )}
                       /* Removing the top bar */
                       Header={() => <TopBar />}
                       /* Editing the side navigation: profile block, sections and logout button */
@@ -513,7 +569,7 @@ const App: React.FC = () => {
                           render={({ collapsed }) => <SiderContent collapsed={collapsed} />}
                         />
                       )}
-                      >
+                    >
                       <Outlet />
                     </ThemedLayout>
                   </Authenticated>
@@ -521,13 +577,13 @@ const App: React.FC = () => {
               >
 
                 {/*Adding the main pages for the app:*/}
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/CalendarPage" element={<CalendarPage />} />
-              <Route path="/leaderboard" element={<LeaderboardPage />} />
-              <Route path="/my-profile" element={<MyProfile />} />
-              <Route path="/help" element={<HelpPage />} />
-              <Route path="/help-requests" element={<HelpRequests />} />
-       
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/CalendarPage" element={<CalendarPage />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/my-profile" element={<MyProfile />} />
+                <Route path="/help" element={<HelpPage />} />
+                <Route path="/help-requests" element={<HelpRequests />} />
+
                 {/* Example: 
                 <Route path="/posts"> 
                   <Route index element={<PostList />} />
@@ -535,25 +591,25 @@ const App: React.FC = () => {
                   <Route path="create" element={<PostCreate />} />
                   <Route path="edit/:id" element={<PostEdit />} />
                 </Route>*/}
-               <Route path = "/transaction"> 
-                <Route index element={<TransactionList/>}/>
-                <Route path="show/:id" element={<TransactionShow />} />
-              </Route> 
-              
-              <Route path="/student">
-                <Route index element={<StudentList />} />
-                <Route path="show/:id" element={<StudentShow />} />
-              </Route>
+                <Route path="/transaction">
+                  <Route index element={<TransactionList />} />
+                  <Route path="show/:id" element={<TransactionShow />} />
+                </Route>
 
-              <Route path="/promo_window_v2">
-                <Route index element={<PromoWindowList />} />
-                <Route path="show/:id" element={<PromoWindowShow />} />
-                <Route path="edit/:id" element={<PromoWindowEdit />} />
-              </Route>
+                <Route path="/student">
+                  <Route index element={<StudentList />} />
+                  <Route path="show/:id" element={<StudentShow />} />
+                </Route>
+
+                <Route path="/promo_window_v2">
+                  <Route index element={<PromoWindowList />} />
+                  <Route path="show/:id" element={<PromoWindowShow />} />
+                  <Route path="edit/:id" element={<PromoWindowEdit />} />
+                </Route>
 
 
-              <Route path="/profiles" element={<ProfileList />} />
-          </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
+                <Route path="/profiles" element={<ProfileList />} />
+              </Route> {/* End of major naivgation. All routes must be out in here to show the same layout*/}
 
               {/* 
                   PUBLIC ACCOUNT STATUS PAGES
@@ -565,6 +621,8 @@ const App: React.FC = () => {
 
               {/* inserting the landing page route*/}
               <Route path="/" element={<LandingPage />} />
+              {/* making update password publicly available */}
+              <Route path="/update-password" element={<AuthPage type="updatePassword" />} />
 
               <Route
                 element={
@@ -622,10 +680,7 @@ const App: React.FC = () => {
                   path="/forgot-password"
                   element={<AuthPage type="forgotPassword" />}
                 />
-                <Route
-                  path="/update-password"
-                  element={<AuthPage type="updatePassword" />}
-                />
+
               </Route>
 
               <Route
@@ -646,10 +701,10 @@ const App: React.FC = () => {
             <UnsavedChangesNotifier />
             {/* Changing the tab names to include the BoschBite name*/}
             <DocumentTitleHandler handler={({ resource }) =>
-                resource?.meta?.label
+              resource?.meta?.label
                 ? `${resource.meta.label} | BoschBite`
-                    : "BoschBite Insights"
-              }/>
+                : "BoschBite Insights"
+            } />
           </Refine>
         </RefineSnackbarProvider>
       </ThemeProvider>
