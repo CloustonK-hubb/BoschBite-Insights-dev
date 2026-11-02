@@ -91,7 +91,7 @@ export const TransactionList: React.FC = () => {
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
-      { field: "id", headerName: "Transaction ID", flex: 1, minWidth: 130 },
+      //{ field: "id", headerName: "Transaction ID", flex: 1, minWidth: 130 },
       { field: "student_no", headerName: "Student", flex: 0.6, minWidth: 90, sortable: false, renderCell: ({ row }) => row.student_directory?.student_no ?? "—", },
       { field: "vendor_id", headerName: "Vendor name", flex: 1.4, minWidth: 160, renderCell: ({ row }) => row.vendor?.name ?? row.vendor_id, },
       { field: "tx_datetime", headerName: "Date", flex: 0.9, minWidth: 120, renderCell: ({ row }) => txDate(row.tx_datetime) },
