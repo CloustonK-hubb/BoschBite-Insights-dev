@@ -652,10 +652,10 @@
     prop-types "^15.8.1"
     react-is "^19.2.3"
 
-"@mui/x-charts-vendor@8.23.0":
-  version "8.23.0"
-  resolved "https://registry.npmjs.org/@mui/x-charts-vendor/-/x-charts-vendor-8.23.0.tgz"
-  integrity sha512-AmGNPEFX8bTgmCuljxEcFaa2JQkUxRJKvHJYfCvy76Hexu4O1aQC15wznlKiL1nrFo3otQHw0bnozpz0PHIxWg==
+"@mui/x-charts-vendor@8.29.0":
+  version "8.29.0"
+  resolved "https://registry.npmjs.org/@mui/x-charts-vendor/-/x-charts-vendor-8.29.0.tgz"
+  integrity sha512-nYjgW337QxvCJXct8b0UIir9ELDjMEfWSmMVSfUQsEjn3ZD5jjK3MQVZSHSM1hP79PZcjRQIAuWI1fHkqG04ug==
   dependencies:
     "@babel/runtime" "^7.28.4"
     "@types/d3-array" "^3.2.2"
@@ -664,13 +664,13 @@
     "@types/d3-interpolate" "^3.0.4"
     "@types/d3-path" "^3.1.1"
     "@types/d3-scale" "^4.0.9"
-    "@types/d3-shape" "^3.1.7"
+    "@types/d3-shape" "^3.1.8"
     "@types/d3-time" "^3.0.4"
     "@types/d3-time-format" "^4.0.3"
     "@types/d3-timer" "^3.0.2"
     d3-array "^3.2.4"
     d3-color "^3.1.0"
-    d3-format "^3.1.0"
+    d3-format "^3.1.2"
     d3-interpolate "^3.0.1"
     d3-path "^3.1.0"
     d3-scale "^4.0.2"
@@ -681,16 +681,16 @@
     flatqueue "^3.0.0"
     internmap "^2.0.3"
 
-"@mui/x-charts@^8.24.0":
-  version "8.24.0"
-  resolved "https://registry.npmjs.org/@mui/x-charts/-/x-charts-8.24.0.tgz"
-  integrity sha512-SPpEwd5a+17wrnvCXnKTZbLU1pyhlpd8W23p7RW6ZVniQc9Gw+AOcQvQY5QXHHvcsu6WTd1V0pbCZDg39+w+Iw==
+"@mui/x-charts@^8.29.3":
+  version "8.29.3"
+  resolved "https://registry.npmjs.org/@mui/x-charts/-/x-charts-8.29.3.tgz"
+  integrity sha512-8hF+rnf/rj258FmBMx6XwNmdFXM+gCnR9TKpd8ywJUwVPzZoZ0U/LMtsFHe16MZ9YOpOhTSdKHycq/OmiYXFlQ==
   dependencies:
     "@babel/runtime" "^7.28.4"
     "@mui/utils" "^7.3.5"
-    "@mui/x-charts-vendor" "8.23.0"
-    "@mui/x-internal-gestures" "0.4.0"
-    "@mui/x-internals" "8.24.0"
+    "@mui/x-charts-vendor" "8.29.0"
+    "@mui/x-internal-gestures" "0.5.0"
+    "@mui/x-internals" "8.29.3"
     bezier-easing "^2.1.0"
     clsx "^2.1.1"
     prop-types "^15.8.1"
@@ -710,22 +710,12 @@
     prop-types "^15.8.1"
     use-sync-external-store "^1.6.0"
 
-"@mui/x-internal-gestures@0.4.0":
-  version "0.4.0"
-  resolved "https://registry.npmjs.org/@mui/x-internal-gestures/-/x-internal-gestures-0.4.0.tgz"
-  integrity sha512-i0W6v9LoiNY8Yf1goOmaygtz/ncPJGBedhpDfvNg/i8BvzPwJcBaeW4rqPucJfVag9KQ8MSssBBrvYeEnrQmhw==
+"@mui/x-internal-gestures@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.npmjs.org/@mui/x-internal-gestures/-/x-internal-gestures-0.5.0.tgz"
+  integrity sha512-LTnaD8WAWld9ecW8Q5tO4Sq2ucyMWca4SKDu6Cx+0RHO3XfgMa7NxB7aBzldAYMN8QrSquBVdu8Zcf9cnp8qwQ==
   dependencies:
     "@babel/runtime" "^7.28.4"
-
-"@mui/x-internals@8.24.0":
-  version "8.24.0"
-  resolved "https://registry.npmjs.org/@mui/x-internals/-/x-internals-8.24.0.tgz"
-  integrity sha512-tHPk8eUcuwvhNsAc4zcia8y+issjC+bLGssrQQSdLLeLIf9ewFbcwAURNTSnNhreyj/4RJOemVrSxKXpjkdVvQ==
-  dependencies:
-    "@babel/runtime" "^7.28.4"
-    "@mui/utils" "^7.3.5"
-    reselect "^5.1.1"
-    use-sync-external-store "^1.6.0"
 
 "@mui/x-internals@8.29.3":
   version "8.29.3"
@@ -1120,7 +1110,7 @@
   dependencies:
     "@types/d3-time" "*"
 
-"@types/d3-shape@^3.1.7":
+"@types/d3-shape@^3.1.8":
   version "3.2.0"
   resolved "https://registry.npmjs.org/@types/d3-shape/-/d3-shape-3.2.0.tgz"
   integrity sha512-kVd74ta9eof3eJOvbNd1vGKS/XERRyQbT26Og63hIsvDO84cjD5gEOhsXf26w3FSoNlPVz84DOFcKv/oou+fMw==
@@ -1781,7 +1771,7 @@ d3-color@^3.1.0, "d3-color@1 - 3":
   resolved "https://registry.npmjs.org/d3-color/-/d3-color-3.1.0.tgz"
   integrity sha512-zg/chbXyeBtMQ1LbD/WSoW2DpC3I0mpmPdW+ynRTj/x2DAWYrIY7qeZIHidozwV24m4iavr15lNwIwLxRmOxhA==
 
-d3-format@^3.1.0, "d3-format@1 - 3":
+d3-format@^3.1.2, "d3-format@1 - 3":
   version "3.1.2"
   resolved "https://registry.npmjs.org/d3-format/-/d3-format-3.1.2.tgz"
   integrity sha512-AJDdYOdnyRDV5b6ArilzCPPwc1ejkHcoyFarqlPqT7zRYjhavcT3uSrqcMvsgh2CgoPbK3RCwyHaVyxYcP2Arg==
