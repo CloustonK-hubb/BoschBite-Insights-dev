@@ -131,6 +131,27 @@ const i18nProvider = {
 };
 
 
+/* 
+   WORDING
+   Replaces the text Refine shows on its built-in pages
+ */
+
+const customWording: Record<string, string> = {
+  "pages.login.title": "Sign into your BoschBite Account",
+};
+
+const i18nProvider = {
+  translate: (key: string, options?: any, defaultMessage?: string) => {
+    if (customWording[key]) return customWording[key];
+    const text = typeof options === "string" ? options : (defaultMessage ?? key);
+    //Fills in placeholders such as {{resource}}
+    return text.replace(/\{\{(\w+)\}\}/g, (_: string, name: string) => String(options?.[name] ?? ""));
+  },
+  changeLocale: async () => {},
+  getLocale: () => "en",
+};
+
+
 const App: React.FC = () => {
 
   /* 
