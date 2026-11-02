@@ -152,7 +152,7 @@ export const DashboardPage = () => {
       {/* header */}
       <Stack direction="row" justifyContent="space-between" alignItems="flex-end" spacing={2} sx={{ flexShrink: 0 }}>
         <Box>
-          <Typography sx={pageTitle}>Business dashboard</Typography>
+          <Typography sx={pageTitle}>Business Dashboard</Typography>
           <Typography sx={pageSubtitle}>
             Restaurants &amp; Cafés market on BoschCard · {longDay(day)} · other vendors stay anonymous
           </Typography>

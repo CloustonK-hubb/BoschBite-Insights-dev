@@ -541,21 +541,21 @@ const App: React.FC = () => {
               { name: "Leaderboard", list: "/leaderboard", meta: { label: "Leaderboard", icon: <LeaderboardIcon /> } },
               { name: "my-profile", list: "/my-profile", meta: { label: "My Profile", icon: <AccountCircleIcon /> } },
               { name: "help", list: "/help", meta: { label: "Help", icon: <HelpOutlineIcon /> } },
-              { name: "help-requests", list: "/help-requests", meta: { label: "Help requests", icon: <SupportAgentIcon /> } },
+              { name: "help-requests", list: "/help-requests", meta: { label: "Help Requests", icon: <SupportAgentIcon /> } },
               //Creating the grouping for the navigation: 
               { name: "BoschCard-data", meta: { label: "BoschCard data", icon: <StorageIcon /> } },
               { name: "BoschBites-data", meta: { label: "BoschBites data", icon: <StorageIcon /> } },
               //Adding the relevant CRUD pages to the first grouping using: meta: {parent: "BoschCard-data"}
               //Resource names must match the table names in the data model exactly (lowercase snake_case),
               //because Refine sends the resource name to the data provider as the table name
-              { name: "transaction", list: "/transaction", show: "/transaction/show/:id", meta: { label: "Transaction", parent: "BoschCard-data" } },
-              { name: "student", list: "/student", show: "/student/show/:id", edit: "/student/edit/:id", meta: { label: "Student", parent: "BoschCard-data" } },
+              { name: "transaction", list: "/transaction", show: "/transaction/show/:id", meta: { label: "Transactions", parent: "BoschCard-data" } },
+              { name: "student", list: "/student", show: "/student/show/:id", edit: "/student/edit/:id", meta: { label: "Students", parent: "BoschCard-data" } },
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
               {
                 name: "promo_window_v2", list: "/promo_window_v2", show: "/promo_window_v2/show/:id", edit: "/promo_window_v2/edit/:id",
                 meta: { label: "Promotion Window", parent: "BoschBites-data", canDelete: true }
               },
-              { name: "profiles", list: "/profiles", meta: { label: "User profiles", icon: <PersonAddAltIcon /> } },
+              { name: "profiles", list: "/profiles", meta: { label: "User Profiles", icon: <PersonAddAltIcon /> } },
             ]}
             options={{
               syncWithLocation: true,
