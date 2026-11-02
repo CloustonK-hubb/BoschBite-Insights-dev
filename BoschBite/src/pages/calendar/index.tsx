@@ -35,6 +35,7 @@ import {
   pageSubtitle,
   pageTitle,
   pillButton,
+  showStyles,
 } from "../../providers/theme";
 import { promotionRunsOnDay, selectDailyPromotions } from "./promotions";
 
@@ -67,6 +68,7 @@ const PERIOD_COLORS = [
 ] as const;
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const NO_END_DATE = "__no_end_date__";
 
 const parseDate = (value: unknown): Date | null => {
@@ -131,7 +133,26 @@ const formatValue = (value: unknown) => {
 const formatDiscount = (value: unknown) => {
   const discount = Number(value);
   if (!Number.isFinite(discount)) return "Promotion";
-  return `${(discount * 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}% discount`;
+  const percentage = discount > 0 && discount <= 1 ? discount * 100 : discount;
+  return `${percentage.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
+};
+
+const formatCalendarFieldLabel = (field: string) =>
+  field
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const formatCalendarFieldValue = (field: string, value: unknown) => {
+  if (field === "discount") return formatDiscount(value);
+  if (field === "promo_weekday") {
+    const weekday = Number(value);
+    return Number.isInteger(weekday) && weekday >= 1 && weekday <= 7
+      ? WEEKDAY_NAMES[weekday - 1]
+      : formatValue(value);
+  }
+  return formatValue(value);
 };
 
 const eventLabel = (event: CalendarEvent) => event.isPromotion
@@ -652,8 +673,23 @@ export const CalendarPage = () => {
                             sx={{ height: 88, overflowY: "auto", overflowX: "hidden", overscrollBehaviorY: "contain", scrollSnapType: "y mandatory", scrollbarWidth: "thin" }}
                           >
                             {events.map((event, eventIndex) => {
-                              const connectsLeft = dayEvents[column - 1]?.[eventIndex]?.rowIndex === event.rowIndex;
-                              const connectsRight = dayEvents[column + 1]?.[eventIndex]?.rowIndex === event.rowIndex;
+                              const previousDay = new Date(day);
+                              previousDay.setDate(previousDay.getDate() - 1);
+                              const previousDayEvents = eventsByDay.get(
+                                `${previousDay.getFullYear()}-${previousDay.getMonth()}-${previousDay.getDate()}`,
+                              ) ?? [];
+                              const connectsLeft = Boolean(
+                                previousDayEvents.some((leftEvent) => leftEvent.rowIndex === event.rowIndex),
+                              );
+                              const nextDay = new Date(day);
+                              nextDay.setDate(nextDay.getDate() + 1);
+                              const nextDayEvents = eventsByDay.get(
+                                `${nextDay.getFullYear()}-${nextDay.getMonth()}-${nextDay.getDate()}`,
+                              ) ?? [];
+                              const connectsRight = Boolean(
+                                nextDayEvents.some((rightEvent) => rightEvent.rowIndex === event.rowIndex),
+                              );
+                              const continuesPeriod = connectsLeft;
                               const label = event.isPromotion ? (
                                 String(event.row.promo_name ?? "").trim() ||
                                 (event.row.discount != null && event.row.discount !== ""
@@ -694,14 +730,16 @@ export const CalendarPage = () => {
                                     "&:hover": { bgcolor: event.color.background, filter: "brightness(0.97)" },
                                   }}
                                 >
-                                  <Box sx={{ minWidth: 0, textAlign: "left" }}>
-                                    <Typography variant="caption" fontWeight={700} noWrap display="block" sx={{ lineHeight: 1.2 }}>
-                                      {label}
-                                    </Typography>
-                                    {laneCount < 3 && (
-                                      <Typography variant="caption" noWrap display="block" sx={{ lineHeight: 1.2 }}>{summary}</Typography>
-                                    )}
-                                  </Box>
+                                  {!continuesPeriod && (
+                                    <Box sx={{ minWidth: 0, textAlign: "left" }}>
+                                      <Typography variant="caption" fontWeight={700} noWrap display="block" sx={{ lineHeight: 1.2 }}>
+                                        {label}
+                                      </Typography>
+                                      {laneCount < 3 && (
+                                        <Typography variant="caption" noWrap display="block" sx={{ lineHeight: 1.2 }}>{summary}</Typography>
+                                      )}
+                                    </Box>
+                                  )}
                                 </Button>
                               );
                             })}
@@ -740,20 +778,22 @@ export const CalendarPage = () => {
 
       <Dialog open={Boolean(selectedDay)} onClose={() => setSelectedDay(null)} fullWidth maxWidth="sm">
         <DialogTitle>
-          {selectedDay?.toLocaleDateString(undefined, {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+          <Typography sx={showStyles.title}>
+            {selectedDay?.toLocaleDateString(undefined, {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </Typography>
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent sx={{ p: 0 }}>
           {selectedDay && (() => {
             const dayEvents = eventsByDay.get(
               `${selectedDay.getFullYear()}-${selectedDay.getMonth()}-${selectedDay.getDate()}`,
             ) ?? [];
             return dayEvents.length ? (
-              <Stack spacing={1}>
+              <Box sx={{ ...showStyles.card, m: 2, gridTemplateColumns: "1fr" }}>
                 {dayEvents.map((event) => (
                   <Button
                     key={`${event.isPromotion ? "promo" : "event"}-${event.rowIndex}`}
@@ -771,6 +811,9 @@ export const CalendarPage = () => {
                       borderColor: event.color.border,
                       color: event.color.text,
                       bgcolor: event.color.background,
+                      borderRadius: 3,
+                      px: 2,
+                      py: 1.5,
                     }}
                   >
                     <Stack alignItems="flex-start">
@@ -781,7 +824,7 @@ export const CalendarPage = () => {
                     </Stack>
                   </Button>
                 ))}
-              </Stack>
+              </Box>
             ) : (
               <Alert severity="info">No activities are scheduled for this day.</Alert>
             );
@@ -793,10 +836,19 @@ export const CalendarPage = () => {
       </Dialog>
 
       <Dialog open={Boolean(selectedEvent)} onClose={() => { if (!promoNameSaving) setSelectedEvent(null); }} fullWidth maxWidth="sm">
-        <DialogTitle>{selectedEvent?.isPromotion ? "Promotion record" : "Calendar record"}</DialogTitle>
-        <DialogContent dividers>
+        <DialogTitle>
+          <Typography sx={showStyles.title}>
+            {selectedEvent?.isPromotion ? "Promotion window" : "Calendar event"}
+          </Typography>
+          <Typography sx={showStyles.subtitle}>
+            {selectedEvent?.isPromotion
+              ? "One promotion run by a BoschBite vendor."
+              : "A key date in the academic year."}
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
           {selectedEvent && (
-            <Stack spacing={1}>
+            <Box sx={{ ...showStyles.card, m: 2 }}>
               {promoNameError && <Alert severity="error">{promoNameError}</Alert>}
               {editingPromoName && (
                 <TextField
@@ -824,12 +876,14 @@ export const CalendarPage = () => {
                       ].includes(field)
                     : !["id", "recurring"].includes(field),
                 ).map(([field, value]) => (
-                <Box key={field} sx={{ display: "grid", gridTemplateColumns: "minmax(120px, 1fr) 2fr", gap: 1 }}>
-                  <Typography variant="body2" fontWeight={700}>{field}</Typography>
-                  <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>{formatValue(value)}</Typography>
+                <Box key={field} sx={showStyles.field}>
+                  <Typography sx={showStyles.label}>{formatCalendarFieldLabel(field)}</Typography>
+                  <Typography sx={showStyles.value}>
+                    {formatCalendarFieldValue(field, value)}
+                  </Typography>
                 </Box>
               ))}
-            </Stack>
+            </Box>
           )}
         </DialogContent>
         <DialogActions>
