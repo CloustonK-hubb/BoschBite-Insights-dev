@@ -16,19 +16,27 @@ import { supabaseClient } from "../../providers/supabaseClient";
 
 
 //List object for a transaction 
+//Splits the transaction date and time into two parts
+const txDate = (value?: string) =>
+  value ? new Date(value).toLocaleDateString("en-ZA", { day: "2-digit", month: "short", year: "numeric" }) : "";
+
+const txTime = (value?: string) =>
+  value ? new Date(value).toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" }) : "";
 
 export const TransactionList: React.FC = () => {
-  const { dataGridProps } = useDataGrid({ resource: "transaction", meta: { select: "*, vendor(name)"  }, });
+  //student_directory(student_no) brings in each student's number from the safe view
+  const { dataGridProps } = useDataGrid({ resource: "transaction", meta: { select: "*, vendor(name), student_directory(student_no)" }, });
 
   //enabling an export feature for the trasnaction table which exports all data for this table, not just what is shown in the list 
   const { triggerExport, isLoading: exportLoading } = useExport({
     resource: "transaction",
-    meta: { select: "*, vendor(name)" },
+    meta: { select: "*, vendor(name), student_directory(student_no)" },
     mapData: (item) => ({
       ID: item.id,
-      Student: String(item.student_id).slice(0, 8),
+      Student: item.student_directory?.student_no ?? "",
       "Vendor name": item.vendor?.name ?? item.vendor_id,
-      "Date & time": item.tx_datetime,
+      Date: txDate(item.tx_datetime),
+      Time: txTime(item.tx_datetime),
       "Transaction value": item.value,
       Discount: item.discount,
     }),
@@ -39,10 +47,10 @@ export const TransactionList: React.FC = () => {
   const columns = React.useMemo<GridColDef[]>(
     () => [
       //{ field: "id", headerName: "ID", type: "number", width: 90 },
-      { field: "student_id", headerName: "Student", width: 180, renderCell: ({ row }) => String(row.student_id).slice(0, 8), },
+      { field: "student_no", headerName: "Student", width: 110, sortable: false, filterable: false, renderCell: ({ row }) => row.student_directory?.student_no ?? "—", },
       { field: "vendor_id", headerName: "Vendor name", type: "number", width: 200, renderCell: ({ row }) => row.vendor?.name ?? row.vendor_id, },
-      { field: "tx_datetime", headerName: "Date & time", flex: 1, minWidth: 200, renderCell: ({ row }) => (
-          <DateField value={row.tx_datetime} format="DD MMM YYYY HH:mm" />),},
+            { field: "tx_datetime", headerName: "Date", width: 140, renderCell: ({ row }) => txDate(row.tx_datetime) },
+      { field: "tx_time", headerName: "Time", width: 100, sortable: false, filterable: false, renderCell: ({ row }) => txTime(row.tx_datetime) },
       {field: "value",headerName: "Transaction value", type: "number", width: 110,
         renderCell: ({ row }) => Number(row.value).toFixed(2),},
       { field: "discount", headerName: "Discount", type: "number", width: 110 },
@@ -65,21 +73,20 @@ export const TransactionList: React.FC = () => {
 
 //List object for Students
 export const StudentList: React.FC = () => {
-  const { data: me } = useGetIdentity<{ role?: string | null }>();
-  const isBosch = me?.role === "boschbite_admin";
-
-  //Reads the safe view: names, emails and cell numbers are only filled in for BoschBite Admins
-  const { dataGridProps } = useDataGrid({ resource: "student_directory" });
+  //Reads the safe view: names, emails and cell numbers are hidden for everyone
+  const { dataGridProps } = useDataGrid({
+    resource: "student_directory",
+    sorters: { initial: [{ field: "student_no", order: "asc" }] },
+  });
 
 //enabling an export feature for the student table which exports all data for this table, not just what is shown in the list 
 const { triggerExport, isLoading: exportLoading } = useExport({
   resource: "student_directory",
+  sorters: [{ field: "student_no", order: "asc" }],
   mapData: (item) => ({
-    "Student ID": item.id,
-    ...(isBosch ? { "First name": item.first_name, "Last name": item.last_name, Email: item.email } : {}),
+    Student: item.student_no,
     "Date of birth": item.dob,
     Gender: item.gender,
-    ...(isBosch ? { "Cell number": item.phone } : {}),
     Address: item.address,
   }),
     maxItemCount: 5000,
@@ -88,18 +95,9 @@ const { triggerExport, isLoading: exportLoading } = useExport({
   const columns = React.useMemo<GridColDef[]>(
     () => [
       //{ field: "id", headerName: "ID", width: 80 },
-      ...(isBosch
-        ? [
-            { field: "first_name", headerName: "First name", flex: 1, width: 90 },
-            { field: "last_name", headerName: "Last name", flex: 1, width: 90 },
-            { field: "email", headerName: "Email", width: 200 },
-          ]
-        : [
-            { field: "id", headerName: "Student", width: 140, renderCell: ({ row }: any) => String(row.id).slice(0, 8) },
-          ]),
+      { field: "student_no", headerName: "Student", type: "number", width: 110, align: "left", headerAlign: "left" },
       { field: "dob", headerName: "Date of Birth", flex: 1, renderCell: ({ row }) => (<DateField value={row.dob} format="YYYY-MM-DD" />)}, 
       { field: "gender", headerName: "Gender", width: 90}, 
-      ...(isBosch ? [{ field: "phone", headerName: "Cell number", width: 140 }] : []),
       { field: "address", headerName: "Address", flex: 1},
       { field: "actions", headerName: "Actions", sortable: false, width: 100, renderCell: ({ row }) => ( <>
         <ShowButton hideText recordItemId={row.id} />
@@ -107,7 +105,7 @@ const { triggerExport, isLoading: exportLoading } = useExport({
       )
       },
     ],
-    [isBosch]
+    []
   );
 
   return (
