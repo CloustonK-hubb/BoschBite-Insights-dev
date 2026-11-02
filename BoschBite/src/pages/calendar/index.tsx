@@ -29,9 +29,19 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { supabaseClient } from "../../providers/supabaseClient";
+import {
+  insightsColours,
+  insightsLayout,
+  pageSubtitle,
+  pageTitle,
+  pillButton,
+} from "../../providers/theme";
 import { promotionRunsOnDay, selectDailyPromotions } from "./promotions";
 
 type CalendarRow = Record<string, unknown>;
+
+const SIDE_MARGIN = insightsLayout.sideMargin;
+const C = insightsColours;
 
 type Identity = {
   role?: string | null;
@@ -444,7 +454,7 @@ export const CalendarPage = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 1500, mx: "auto" }}>
+    <Box sx={{ px: SIDE_MARGIN, pb: 3, color: C.brown, maxWidth: 1500, mx: "auto" }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={1.5}
@@ -452,9 +462,12 @@ export const CalendarPage = () => {
         justifyContent="space-between"
         sx={{ mb: 2 }}
       >
-        <Typography variant="h4">Calendar</Typography>
+        <Box>
+          <Typography sx={pageTitle}>Calendar</Typography>
+          <Typography sx={pageSubtitle}>Scheduled events and promotions.</Typography>
+        </Box>
         {isVendor && (
-          <Button variant="contained" onClick={() => {
+          <Button variant="contained" sx={pillButton} onClick={() => {
             setPromotionError("");
             setPromotionSuccess("");
             setPromotionDialogOpen(true);
@@ -486,13 +499,29 @@ export const CalendarPage = () => {
             sx={{ mb: 2 }}
           >
             <Stack direction="row" spacing={1} alignItems="center">
-              <IconButton aria-label="Previous month" onClick={() => moveMonth(-1)}>
+              <IconButton
+                aria-label="Previous month"
+                onClick={() => moveMonth(-1)}
+                sx={{ color: C.brown }}
+              >
                 <ArrowBackIcon />
               </IconButton>
-              <Typography variant="h6" sx={{ minWidth: 180, textAlign: "center" }}>
+              <Typography
+                sx={{
+                  minWidth: 180,
+                  textAlign: "center",
+                  fontSize: 18,
+                  fontWeight: 800,
+                  color: C.brown,
+                }}
+              >
                 {visibleMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
               </Typography>
-              <IconButton aria-label="Next month" onClick={() => moveMonth(1)}>
+              <IconButton
+                aria-label="Next month"
+                onClick={() => moveMonth(1)}
+                sx={{ color: C.brown }}
+              >
                 <ArrowForwardIcon />
               </IconButton>
             </Stack>
@@ -575,7 +604,18 @@ export const CalendarPage = () => {
             <Box sx={{ overflowX: "auto" }}>
               <Box sx={{ minWidth: 760, display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 0.5 }}>
                 {WEEKDAYS.map((weekday) => (
-                  <Typography key={weekday} variant="subtitle2" align="center" sx={{ py: 1, fontWeight: 700 }}>
+                  <Typography
+                    key={weekday}
+                    align="center"
+                    sx={{
+                      py: 1,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: 1,
+                      textTransform: "uppercase",
+                      color: "text.secondary",
+                    }}
+                  >
                     {weekday}
                   </Typography>
                 ))}
