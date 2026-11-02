@@ -9,7 +9,7 @@ import { BrowserRouter, Routes, Route, Outlet, Navigate, useNavigate } from "rea
 import { dataProvider } from "./providers/dataProvider";
 import { TransactionList, StudentList, PromoWindowList, ProfileList } from "../src/pages/posts";
 import { TransactionShow, StudentShow, PromoWindowShow } from "./pages/posts/show";
-import { CalendarEdit, PromoWindowEdit } from "./pages/posts/edit";
+import { PromoWindowEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 import { DashboardPage } from "./pages/dashboard";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
