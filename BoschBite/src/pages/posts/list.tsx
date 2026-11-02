@@ -236,7 +236,7 @@ const { triggerExport, isLoading: exportLoading } = useExport({
   );
 
   return (
-    <ThemedList title="Promotion windows" subtitle="Promotions run by BoschBite vendors." exportButton={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
+    <ThemedList title="Promotion Windows" subtitle="Promotions run by BoschBite vendors." exportButton={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
       <DataGrid {...dataGridProps} columns={columns} getRowId={(row)=> row.promo_id} autoHeight />
     </ThemedList>
   );
