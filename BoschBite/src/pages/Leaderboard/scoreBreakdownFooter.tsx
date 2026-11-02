@@ -47,6 +47,7 @@ const OutcomeCell = ({ label, type }: { label: string; type: Outcome }) => (
     </Box>
 );
 
+//defining the efficiency table rows 
 const efficiencyRows: { discount: string; above: [string, Outcome]; below: [string, Outcome] }[] = [
     { discount: "Bigger discount", above: ["Paid off", "good"], below: ["Lost money", "bad"] },
     { discount: "Same discount", above: ["Demand rose", "neutral"], below: ["Demand fell", "neutral"] },
@@ -60,11 +61,24 @@ const LocationPoint = ({ icon, text }: { icon: ReactNode; text: string }) => (
     </Box>
 );
 
+//defining the different parts of the overall leaderboard score 
 const scoreParts = [
     { label: "Reach", weight: 25 },
     { label: "Loyalty", weight: 25 },
     { label: "Efficiency", weight: 25 },
     { label: "Location", weight: 25 },
+];
+
+//defining the different intervals for efficiency scores and the points associated with that interval. 
+const efficiencyBands = [
+    { range: "No benchmark available", points: "0" },
+    { range: "0 to 4.99", points: "2.5" },
+    { range: "0.5 to 7.99", points: "6.25" },
+    { range: "0.8 to 0.99", points: "10" },
+    { range: "1.0 to 1.199", points: "13.75" },
+    { range: "1.2 to under 1.499", points: "17.5" },
+    { range: "1.5 to under 1.99", points: "21.25" },
+    { range: "2.0 or more", points: "25" },
 ];
 
 //Represents the actual content inside the three columns of the footer component: text for reach and loyatly, the efficiency table and the location points
@@ -110,7 +124,7 @@ export const ScoreBreakdownFooter = () => {
                 <Box sx={{ p: 2, borderRight: { md: 1 }, borderColor: "divider" }}>
                     <ColumnHeading icon={<CampaignOutlinedIcon color="primary" />} title="Promotional effectiveness" />
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                       Measures the impact the promotion had in terms of how many students it reached and how many students returned to spend again during the promotion.
+                        Measures the impact the promotion had in terms of how many students it reached and how many students returned to spend again during the promotion.
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         Made up of two parts:
@@ -169,6 +183,7 @@ export const ScoreBreakdownFooter = () => {
                 </Box>
             </Box>
 
+
             {/* Score breakdown row; final section of the footer */}
             <Box sx={{ borderTop: 1, borderColor: "divider" }}>
                 <Box sx={{ px: 2, pt: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
@@ -178,6 +193,7 @@ export const ScoreBreakdownFooter = () => {
                     </Typography>
                 </Box>
 
+                {/* Promtional effectiveness score section */}
                 <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" } }}>
                     <Box sx={{ p: 2, borderRight: { md: 1 }, borderColor: "divider" }}>
                         <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
@@ -189,15 +205,27 @@ export const ScoreBreakdownFooter = () => {
                         </Typography>
                     </Box>
 
+                    {/* Efficiency points section*/}
                     <Box sx={{ p: 2, borderRight: { md: 1 }, borderColor: "divider" }}>
                         <Box sx={{ mb: 1 }}>
                             <Chip label="Efficiency 25%" size="small" color="primary" variant="outlined" />
                         </Box>
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ mb: 1 }}>
                             Earning more per day than your usual benchmark raises your score.
                         </Typography>
+                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", columnGap: 2, rowGap: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary">Efficiency score intervals</Typography>
+                            <Typography variant="caption" color="text.secondary" textAlign="right">Points</Typography>
+                            {efficiencyBands.map((band) => (
+                                <Box key={band.range} sx={{ display: "contents" }}>
+                                    <Typography variant="body2">{band.range}</Typography>
+                                    <Typography variant="body2" textAlign="right">{band.points}</Typography>
+                                </Box>
+                            ))}
+                        </Box>
                     </Box>
 
+                    {/* Location points section */}
                     <Box sx={{ p: 2 }}>
                         <Box sx={{ mb: 1 }}>
                             <Chip label="Location 25%" size="small" color="primary" variant="outlined" />
