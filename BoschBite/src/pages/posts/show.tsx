@@ -1,5 +1,5 @@
 import { useShow, useResourceParams } from "@refinedev/core";
-import { Show, EditButton, DeleteButton } from "@refinedev/mui";
+import { Show, EditButton} from "@refinedev/mui";
 import { Alert, Box, Typography } from "@mui/material";
 import React from "react";
 import { showStyles } from "../../providers/theme";
@@ -50,7 +50,7 @@ const ThemedShow = ({ title, subtitle, isLoading, errorMessage, canEdit, canDele
     headerButtons={({ editButtonProps, deleteButtonProps }) => (
       <Box sx={showStyles.headerButtons}>
         {editButtonProps && <EditButton {...editButtonProps} sx={showStyles.editButton} />}
-        {deleteButtonProps && <DeleteButton {...deleteButtonProps} sx={showStyles.deleteButton} />}
+        {/*{deleteButtonProps && <DeleteButton {...deleteButtonProps} sx={showStyles.deleteButton} />}*/}
       </Box>
     )}
     wrapperProps={{ sx: showStyles.wrapper }}
