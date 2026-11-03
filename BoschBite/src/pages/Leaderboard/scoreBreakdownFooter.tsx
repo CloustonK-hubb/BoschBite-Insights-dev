@@ -109,6 +109,18 @@ const BandTable = ({ title, bands }: { title: string; bands: { range: string; po
     </Box>
 );
 
+//defining the different intervals for efficiency scores and the points associated with that interval. 
+const efficiencyBands = [
+    { range: "No benchmark available", points: "0" },
+    { range: "0 to 4.99", points: "2.5" },
+    { range: "0.5 to 7.99", points: "6.25" },
+    { range: "0.8 to 0.99", points: "10" },
+    { range: "1.0 to 1.199", points: "13.75" },
+    { range: "1.2 to under 1.499", points: "17.5" },
+    { range: "1.5 to under 1.99", points: "21.25" },
+    { range: "2.0 or more", points: "25" },
+];
+
 //Represents the actual content inside the three columns of the footer component: text for reach and loyatly, the efficiency table and the location points
 //This part uses the building blocks from the previous code block 
 export const ScoreBreakdownFooter = () => {
@@ -254,6 +266,16 @@ export const ScoreBreakdownFooter = () => {
                             Earning more per day than your usual benchmark raises your score.
                         </Typography>
                         <BandTable title="Efficiency score intervals" bands={efficiencyBands} />
+                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", columnGap: 2, rowGap: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary">Efficiency score intervals</Typography>
+                            <Typography variant="caption" color="text.secondary" textAlign="right">Points</Typography>
+                            {efficiencyBands.map((band) => (
+                                <Box key={band.range} sx={{ display: "contents" }}>
+                                    <Typography variant="body2">{band.range}</Typography>
+                                    <Typography variant="body2" textAlign="right">{band.points}</Typography>
+                                </Box>
+                            ))}
+                        </Box>
                     </Box>
 
                     {/* Location points section */}
