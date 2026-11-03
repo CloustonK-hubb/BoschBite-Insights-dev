@@ -102,10 +102,10 @@ type ScoreRow = {
   efficiency_result: string | null;
   nearby_other_types: number | null;
   nearby_restaurants: number | null;
-  //Reach score: your students / the typical (median) restaurant's students this period
+  //Reach score: your students / the median restaurant's students this period
   reach_ratio: number | null;
   typical_reach: number | null;
-  //Location net (other vendor types - restaurants nearby) and its score against the typical restaurant
+  //Nearby vendor mix (other vendor types nearby, each nearby restaurant counting against it) and its score against the median restaurant
   location_net: number | null;
   location_ratio: number | null;
   typical_location: number | null;
@@ -127,15 +127,15 @@ const effPoints = (n: number | null | undefined) =>
 
 //The interval a ratio score falls in (efficiency, reach and location use the same intervals)
 const ratioBand = (ratio: number) =>
-  ratio >= 2 ? "2.0 or more" : ratio >= 1.5 ? "1.5 to 2.0" : ratio >= 1.2 ? "1.2 to 1.5"
-    : ratio >= 1 ? "1.0 to 1.2" : ratio >= 0.8 ? "0.8 to 1.0" : ratio >= 0.5 ? "0.5 to 0.8" : "under 0.5";
+  ratio >= 2 ? "2.0 or more" : ratio >= 1.5 ? "1.5 - 1.999" : ratio >= 1.2 ? "1.2 - 1.499"
+    : ratio >= 1 ? "1.0 - 1.199" : ratio >= 0.8 ? "0.8 - 0.999" : ratio >= 0.5 ? "0.5 - 0.799" : "0 - 0.499";
 
 //The interval a loyalty percentage falls in
 const loyaltyBand = (pct: number) =>
-  pct >= 97 ? "97% or more" : pct >= 90 ? "90% to 97%" : pct >= 80 ? "80% to 90%"
-    : pct >= 70 ? "70% to 80%" : pct >= 55 ? "55% to 70%" : pct >= 40 ? "40% to 55%" : "under 40%";
+  pct >= 97 ? "97% or more" : pct >= 90 ? "90% - 96.9%" : pct >= 80 ? "80% - 89.9%"
+    : pct >= 70 ? "70% - 79.9%" : pct >= 55 ? "55% - 69.9%" : pct >= 40 ? "40% - 54.9%" : "0% - 39.9%";
 
-//A score against the typical restaurant, for example "Reach score 1.54 (above 1)"
+//A score against the median restaurant, for example "Reach score 1.54 (above 1)"
 const ratioScore = (name: string, ratio: number | null | undefined) =>
   ratio == null ? `No ${name.toLowerCase()} data` : `${name} score ${String(Number(Number(ratio).toFixed(2)))} (${Number(ratio) >= 1 ? "above" : "below"} 1)`;
 
@@ -541,7 +541,7 @@ export const LeaderboardPage = () => {
                            value={now.reach_points} pointsText={effPoints(now.reach_points)}
                            headline={`${now.customers_reached} students bought from you · ${ratioScore("Reach", now.reach_ratio)}`}
                            lastYear={ly && <>Last year: {ly.customers_reached} students · {ratioScore("Reach", ly.reach_ratio)} · {effPoints(ly.reach_points)} pts<Change now={now.reach_points} before={ly.reach_points} /></>}>
-                  <Box>The typical restaurant reached {now.typical_reach ?? "–"} students this period, over {now.promo_days} day{now.promo_days === 1 ? "" : "s"} of discounted sales</Box>
+                  <Box>The median restaurant reached {now.typical_reach ?? "–"} students this period, over {now.promo_days} day{now.promo_days === 1 ? "" : "s"} of discounted sales</Box>
                   {now.reach_ratio != null && <Box>Interval {ratioBand(Number(now.reach_ratio))} → {effPoints(now.reach_points)} points</Box>}
                 </ScorePart>
 
@@ -580,7 +580,7 @@ export const LeaderboardPage = () => {
                            headline={`${now.nearby_other_types} other vendors and ${now.nearby_restaurants} restaurants nearby · ${ratioScore("Location", now.location_ratio)}`}
                            lastYear={ly && <>Last year: {effPoints(ly.location_points)} pts<Change now={now.location_points} before={ly.location_points} /></>}>
                   <Box>Within 300 m. Other vendor types bring new customers, other restaurants compete with you</Box>
-                  <Box>Your net {signed(now.location_net)} against {signed(now.typical_location)} for the typical restaurant on campus</Box>
+                  <Box>Your nearby vendor mix {signed(now.location_net)} against {signed(now.typical_location)} for the median restaurant in the whole area.</Box>
                   {now.location_ratio != null && <Box>Interval {ratioBand(Number(now.location_ratio))} → {effPoints(now.location_points)} points</Box>}
                 </ScorePart>
               </Panel>
