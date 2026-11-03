@@ -1,3 +1,24 @@
-This is the ReadMe file for BoschBite Insights development project 
-This repository is where only final changes will be made so the work environement is well organised 
-Reference the BoschBite-Insights-testing repository for method work 
+# BoschBite Insights 
+BoschBite insights is a web-based dashboard for restaurants in the stellenbosch area, apart of the BoschCard loyalty programme. Vendors can sign in and see insights derived from BoschCard transactions data presented through feature such as the business dahsboard, leaderboard and calendar feature 
+
+Our app was built using: 
+* Refine: React framework with Material UI (MUI)
+* Typescript 
+* Vite: development server
+* Supabase: database and authentication including Row Level Security sp each vendor only sees their own data 
+
+The adaption document is included in ADAPTION.md which will explain how we adapted the requirements provided by the product owners 
+
+## 1. Requirements 
+Before you begin pelase ensure the following is installed on your computer:
+
+| Requirement | Notes |
+| Node.js | Download from nodejs.org. npm is installed automatically with Node.js|
+| Git | Needed to cloe the repository |
+| A web browser | E.g Chrome, Edge, Safari, Firefox. The app was mainly tested through Chrome and Edge |
+
+To check that Node.js and npm are installed, please run: 
+node -v 
+npm -v
+in your terminal.
+Both commands should print a version number. If a version number is not returned these requirements may not yet be installed. 
