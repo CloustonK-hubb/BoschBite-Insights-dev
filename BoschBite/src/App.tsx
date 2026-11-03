@@ -25,7 +25,7 @@ import Denied from "./components/Denied";
 import CalendarPage from "./pages/calendar";
 import { LandingPage } from "./pages/landingPage";
 import { LeaderboardPage } from "./pages/Leaderboard";
-import { MyProfile } from "./pages/Profile";
+import { MyProfile } from "./components/Profile";
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
 import { SiderContent } from "./components/SideContents";
 import { HelpPage, HelpRequests } from "./pages/Help/Help";
@@ -34,15 +34,13 @@ import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import { TopBar } from "./components/TopBar";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import { DemandForecastPage } from "./pages/DemandForecast";
-import {queryClient} from "./queryClient";
+import { queryClient } from "./queryClient";
 
 
 
 /* 
-   ACCESS REDIRECT
-   Used when someone is not allowed into the app.
-   Sends pending / denied users to their status page
-   and everyone else to the login page.
+ACCESS REDIRECT: Used when someone is not allowed into the app.
+Sends pending / denied users to their status page and everyone else to the login page.
  */
 
 const AccessRedirect = () => {
@@ -85,9 +83,8 @@ const AccessRedirect = () => {
 };
 
 /* 
-   PASSWORD RECOVERY REDIRECT
-   The reset email link signs the person in. Wherever they land,
-   this sends them to the page where they choose a new password.
+PASSWORD RECOVERY REDIRECT: The reset email link signs the person in. Wherever they land,
+this sends them to the page where they choose a new password.
  */
 
 const PasswordRecoveryRedirect = () => {
@@ -113,8 +110,7 @@ const PasswordRecoveryRedirect = () => {
 };
 
 /* 
-   WORDING
-   Replaces the text Refine shows on its built-in pages
+WORDING: Replaces the text Refine shows on its built-in pages
  */
 
 const customWording: Record<string, string> = {
@@ -128,7 +124,7 @@ const i18nProvider = {
     //Fills in placeholders such as {{resource}}
     return text.replace(/\{\{(\w+)\}\}/g, (_: string, name: string) => String(options?.[name] ?? ""));
   },
-  changeLocale: async () => {},
+  changeLocale: async () => { },
   getLocale: () => "en",
 };
 
@@ -181,7 +177,7 @@ const authPageProps = {
 const App: React.FC = () => {
 
   /* 
-     SUPABASE AUTH PROVIDER
+SUPABASE AUTH PROVIDER
    */
 
   //Auth Provider 
@@ -215,7 +211,7 @@ const App: React.FC = () => {
         };
       }
 
-    //Clears the previous user's cached data so the new user only sees their own
+      //Clears the previous user's cached data so the new user only sees their own
       queryClient.clear();
 
       const { data: profile, error: profileError } =
@@ -564,7 +560,7 @@ const App: React.FC = () => {
                 name: "promo_window_v2", list: "/promo_window_v2", show: "/promo_window_v2/show/:id", edit: "/promo_window_v2/edit/:id",
                 meta: { label: "Promotion Window", parent: "BoschBites-data", canDelete: true }
               },
-              { name: "profiles", list: "/profiles", meta: { label: "User Profiles", icon: <PersonAddAltIcon /> } },
+              { name: "profiles", list: "/profiles", meta: { label: "People", icon: <PersonAddAltIcon /> } },
             ]}
             options={{
               syncWithLocation: true,
@@ -618,14 +614,6 @@ const App: React.FC = () => {
                 <Route path="/my-profile" element={<MyProfile />} />
                 <Route path="/help" element={<HelpPage />} />
                 <Route path="/help-requests" element={<HelpRequests />} />
-
-                {/* Example: 
-                <Route path="/posts"> 
-                  <Route index element={<PostList />} />
-                  <Route path="show/:id" element={<PostShow />} />
-                  <Route path="create" element={<PostCreate />} />
-                  <Route path="edit/:id" element={<PostEdit />} />
-                </Route>*/}
                 <Route path="/transaction">
                   <Route index element={<TransactionList />} />
                   <Route path="show/:id" element={<TransactionShow />} />
@@ -657,8 +645,8 @@ const App: React.FC = () => {
               {/* inserting the landing page route*/}
               <Route path="/" element={<LandingPage />} />
               <Route path="/update-password" element={
-                  <AuthPage type="updatePassword" {...authPageProps} />
-                }
+                <AuthPage type="updatePassword" {...authPageProps} />
+              }
               />
 
               <Route

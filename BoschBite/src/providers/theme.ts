@@ -6,7 +6,7 @@ import type { CSSProperties } from "react";
 type Sx = SxProps<Theme>;
 
 /*
-   COLOURS
+COLOURS
  */
 
 export const brand = {
@@ -28,7 +28,7 @@ const shadowHover = "0 2px 6px rgba(56, 35, 34, 0.08), 0 10px 26px rgba(56, 35, 
 
 
 /*
-   SHARED PIECES
+SHARED PIECES
  */
 
 //Pill shaped buttons at the top of each list page (Export, Create)
@@ -62,7 +62,7 @@ const columnLabel = {
 const personGrid = { xs: "1fr", md: "2.4fr 1.4fr 1.4fr 1fr 1.7fr" };
 
 /*
-   SIDE NAVIGATION
+SIDE NAVIGATION
  */
 
 //Hides the scroll bar, but the menu still scrolls with the mouse wheel or trackpad
@@ -72,7 +72,7 @@ const hiddenScrollbar = {
   "&::-webkit-scrollbar": { display: "none" },
 } as const;
 
-//A thin, soft brown scroll bar. Swap it in for hiddenScrollbar below if you'd rather see it
+//A thin, soft brown scroll bar
 const slimScrollbar = {
   scrollbarWidth: "thin",
   scrollbarColor: "rgba(56, 35, 34, 0.25) transparent",
@@ -90,7 +90,7 @@ export const siderStyles = {
 
 
 /*
-   LIST PAGES (Transactions, Students, Calendar, Promotion windows)
+LIST PAGES (Transactions, Students, Calendar, Promotion windows)
  */
 
 export const listStyles = {
@@ -118,7 +118,7 @@ export const listStyles = {
 
 
 /*
-   SHOW PAGES (one record: Transaction, Student, Calendar, Promotion window)
+SHOW PAGES (one record: Transaction, Student, Calendar, Promotion window)
  */
 
 export const showStyles = {
@@ -164,7 +164,7 @@ export const showStyles = {
 
 
 /*
-   PEOPLE PAGE
+PEOPLE PAGE
  */
 
 export const peopleStyles = {

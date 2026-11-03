@@ -6,7 +6,7 @@ import { showStyles } from "../../providers/theme";
 
 
 /*
-   SHARED PIECES
+SHARED PIECES
  */
 
 //One label with its value underneath. Empty values show as a dash
