@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGetIdentity, useInvalidateAuthStore } from "@refinedev/core";
 import { Alert, Avatar, Box, Button, Chip, Paper, Skeleton, TextField, Typography } from "@mui/material";
@@ -7,20 +8,19 @@ const BROWN = "#382322";
 const CREAM = "#f1e5d5";
 const ACCENT = "#F8E8A8";
 
-// Storage bucket that holds the uploaded logos
 const BUCKET = "vendor-logos";
-
-// Largest file allowed (2 MB)
 const MAX_BYTES = 2 * 1024 * 1024;
 
-// Field styling
 const fieldSx = (radius: number) => ({
   "& .MuiOutlinedInput-root": {
     borderRadius: radius,
     backgroundColor: "#fff",
     "& fieldset": { borderColor: "rgba(56, 35, 34, 0.12)" },
     "&:hover fieldset": { borderColor: "#e6d5bd" },
-    "&.Mui-focused fieldset": { borderColor: BROWN, borderWidth: 1.5 },
+    "&.Mui-focused fieldset": {
+      borderColor: BROWN,
+      borderWidth: 1.5,
+    },
     "&.Mui-disabled": { backgroundColor: "#faf6ef" },
   },
   "& .MuiInputLabel-root.Mui-focused": { color: BROWN },
@@ -33,7 +33,6 @@ const cardSx = {
     "0 1px 3px rgba(56, 35, 34, 0.06), 0 6px 18px rgba(56, 35, 34, 0.04)",
 };
 
-// Main action button
 const primaryButtonSx = {
   borderRadius: 999,
   px: 3,
@@ -89,7 +88,6 @@ const ROLE_LABELS: Record<Role, string> = {
   vendor_manager: "Vendor Manager",
 };
 
-// Only PNG files up to 2 MB are accepted
 const checkPng = (file: File): string | null => {
   if (file.type !== "image/png") {
     return "Please choose a PNG image (.png).";
@@ -102,7 +100,6 @@ const checkPng = (file: File): string | null => {
   return null;
 };
 
-// Gets the file path inside our bucket from a saved logo link
 const pathFromUrl = (url: string | null): string | null => {
   if (!url) return null;
 
@@ -180,8 +177,6 @@ const LogoPicker = ({ src, busy, onPick }: LogoPickerProps) => {
           hidden
           onChange={(e) => {
             const file = e.target.files?.[0];
-
-            // Allows the same file to be selected again
             e.target.value = "";
 
             if (file) onPick(file);
@@ -208,8 +203,6 @@ export const MyProfile = () => {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-
-  // Editable authentication email
   const [email, setEmail] = useState("");
 
   const [contactEmail, setContactEmail] = useState("");
@@ -219,7 +212,7 @@ export const MyProfile = () => {
   const [loading, setLoading] = useState(true);
 
   const [busy, setBusy] = useState<
-    "logo" | "personal" | "vendor" | "email" | null
+    "logo" | "personal" | "vendor" | null
   >(null);
 
   const [message, setMessage] = useState<Message | null>(null);
@@ -298,10 +291,9 @@ export const MyProfile = () => {
   }, [load]);
 
   /*
-  ACTIONS
+  LOGO UPLOAD
   */
 
-  // Uploads the new logo, saves its link, then deletes the old file
   const uploadLogo = async (file: File) => {
     if (!profile || profile.vendor_id === null) return;
 
@@ -336,7 +328,6 @@ export const MyProfile = () => {
       .from(BUCKET)
       .getPublicUrl(newPath).data.publicUrl;
 
-    // Creates the vendor's row if it does not exist, otherwise updates it
     const { error: saveError } = await supabaseClient
       .from("Vendor_logo")
       .upsert(
@@ -352,7 +343,6 @@ export const MyProfile = () => {
       return;
     }
 
-    // Only removes files uploaded by this page
     if (oldPath && oldPath.startsWith(`${vendorId}/`)) {
       await supabaseClient.storage.from(BUCKET).remove([oldPath]);
     }
@@ -368,61 +358,25 @@ export const MyProfile = () => {
     invalidateAuthStore();
   };
 
-  // Save first and last name
+  /*
+  SAVE PERSONAL INFORMATION: Names and authentication email share ONE button.
+  */
+
   const savePersonal = async () => {
     if (!profile) return;
 
     const first = firstName.trim();
     const last = lastName.trim();
+    const newEmail = email.trim().toLowerCase();
+    const currentEmail = profile.email?.trim().toLowerCase() ?? "";
 
     if (!first || !last) {
       setMessage({
         type: "error",
-        text: "First and last name are required.",
+        text: "First and last names are required.",
       });
       return;
     }
-
-    setBusy("personal");
-    setMessage(null);
-
-    const { data, error } = await supabaseClient
-      .from("profiles")
-      .update({
-        first_name: first,
-        last_name: last,
-      })
-      .eq("id", profile.id)
-      .select("id");
-
-    setBusy(null);
-
-    if (error || !data || data.length === 0) {
-      setMessage({
-        type: "error",
-        text: error?.message ?? "Could not save your details.",
-      });
-      return;
-    }
-
-    setMessage({
-      type: "success",
-      text: "Your details were saved.",
-    });
-
-    await load();
-    invalidateAuthStore();
-  };
-
-  /*
-  CHANGE AUTHENTICATION EMAIL
-  */
-
-  const saveEmail = async () => {
-    if (!profile) return;
-
-    const newEmail = email.trim().toLowerCase();
-    const currentEmail = profile.email?.trim().toLowerCase() ?? "";
 
     if (!newEmail || !/^\S+@\S+\.\S+$/.test(newEmail)) {
       setMessage({
@@ -432,43 +386,77 @@ export const MyProfile = () => {
       return;
     }
 
-    if (newEmail === currentEmail) {
-      setMessage({
-        type: "error",
-        text: "This is already your current email address.",
-      });
-      return;
-    }
-
-    setBusy("email");
+    setBusy("personal");
     setMessage(null);
 
-    const { error } = await supabaseClient.auth.updateUser(
-      { email: newEmail },
-      {
-        emailRedirectTo: `${window.location.origin}/`,
-      }
-    );
+    // Save first and last name
+    const { error: profileError } = await supabaseClient
+      .from("profiles")
+      .update({
+        first_name: first,
+        last_name: last,
+      })
+      .eq("id", profile.id);
 
-    setBusy(null);
-
-    if (error) {
+    if (profileError) {
+      setBusy(null);
       setMessage({
         type: "error",
-        text: error.message,
+        text: `Could not save your name: ${profileError.message}`,
       });
       return;
     }
 
-    setMessage({
-      type: "success",
-      text: "Confirmation email sent. Please check your inbox.",
-    });
+    // Request authentication email change only if it changed
+    if (newEmail !== currentEmail) {
+      const { error: emailError } = await supabaseClient.auth.updateUser(
+        { email: newEmail },
+        {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      );
+
+      if (emailError) {
+        setBusy(null);
+
+        setMessage({
+          type: "error",
+          text: `Your name was saved, but the email update failed: ${emailError.message}`,
+        });
+
+        await load();
+        invalidateAuthStore();
+        return;
+      }
+
+      setBusy(null);
+
+      setMessage({
+        type: "success",
+        text: "Your name was saved. Please check your inbox to confirm your new email address. Your profile email will update automatically after confirmation.",
+      });
+    } else {
+      setBusy(null);
+
+      setMessage({
+        type: "success",
+        text: "Your personal information was saved successfully.",
+      });
+    }
+
+    await load();
+    invalidateAuthStore();
   };
 
-  // Save vendor information
+  /*
+  SAVE VENDOR INFORMATION
+  */
+
+  const canManageVendor =
+    profile?.role === "vendor_admin" && profile.vendor_id !== null;
+
   const saveVendor = async () => {
-    if (!profile || profile.vendor_id === null) return;
+    if (!profile || profile.vendor_id === null || !canManageVendor) return;
 
     const email = contactEmail.trim();
 
@@ -515,7 +503,7 @@ export const MyProfile = () => {
   };
 
   /*
-  PAGE LAYOUT
+  PAGE HEADER
   */
 
   const pageHeader = (
@@ -572,9 +560,6 @@ export const MyProfile = () => {
       </Box>
     );
   }
-
-  const canManageVendor =
-    profile.role === "vendor_admin" && profile.vendor_id !== null;
 
   const initials =
     `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
@@ -697,8 +682,6 @@ export const MyProfile = () => {
               />
             </Box>
 
-            {/* EDITABLE AUTHENTICATION EMAIL */}
-
             <TextField
               label="Email address"
               type="email"
@@ -710,14 +693,9 @@ export const MyProfile = () => {
               sx={fieldSx(999)}
             />
 
-            <Box
-              sx={{
-                display: "flex",
-                gap: 2,
-                flexWrap: "wrap",
-                alignItems: "center",
-              }}
-            >
+            {/* ONE BUTTON FOR NAME AND EMAIL */}
+
+            <Box>
               <Button
                 variant="contained"
                 onClick={savePersonal}
@@ -725,15 +703,6 @@ export const MyProfile = () => {
                 sx={primaryButtonSx}
               >
                 {busy === "personal" ? "Saving…" : "Save changes"}
-              </Button>
-
-              <Button
-                variant="contained"
-                onClick={saveEmail}
-                disabled={busy !== null}
-                sx={primaryButtonSx}
-              >
-                {busy === "email" ? "Updating email…" : "Update email"}
               </Button>
             </Box>
           </Box>
