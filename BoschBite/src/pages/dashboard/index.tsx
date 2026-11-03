@@ -149,27 +149,31 @@ export const DashboardPage = () => {
 
   //Pie slices: the top 3 vendors, you (when you're not in the top 3) and everyone else together
   const pieData = useMemo(() => {
+    //The SQL already groups the smaller vendors into one "Other vendors" row, so it is never one of the top 3
     const sorted = [...(vendors.data ?? [])].sort((a, b) => b.orders - a.orders);
-    const shown = sorted.slice(0, 3);
+    const named = sorted.filter((s) => s.label !== "Other vendors");
+    const shown = named.slice(0, 3);
     const you = sorted.find((s) => s.is_you);
     if (you && !shown.includes(you)) shown.push(you);
     const rest = sorted.filter((s) => !shown.includes(s));
     //You always get the first colour, the other vendors the next ones
     let next = 1;
     const slices = shown.map((s, i) => ({
-      id: i, value: s.orders, label: `${s.label} · ${s.share_pct}%`,
+      id: i, value: s.orders, label: `${s.label} · ${s.share_pct}%`, name: s.label, share: Number(s.share_pct),
       colour: s.is_you ? PIE_COLOURS[0] : PIE_COLOURS[next++ % PIE_COLOURS.length], isYou: s.is_you,
     }));
     if (rest.length) {
       const share = Math.round(rest.reduce((a, s) => a + Number(s.share_pct), 0) * 10) / 10;
       slices.push({
         id: slices.length, value: rest.reduce((a, s) => a + s.orders, 0),
-        label: `${rest.length} other vendors · ${share}%`, colour: OTHER_COLOUR, isYou: false,
+        label: `Other vendors · ${share}%`, name: "Other vendors", share,
+        colour: OTHER_COLOUR, isYou: false,
       });
     }
     return slices;
   }, [vendors.data]);
   const totalOrders = (vendors.data ?? []).reduce((a, s) => a + s.orders, 0);
+  const yourSlice = pieData.find((p) => p.isYou);
 
   const hourRows = (hours.data ?? []).filter((h) => h.hour >= 7 && h.hour <= 23);
   const yourPeak = hourRows.reduce<HourRow | null>((b, h) => (!b || h.your_orders > b.your_orders ? h : b), null);
@@ -193,7 +197,7 @@ export const DashboardPage = () => {
         <Box>
           <Typography sx={pageTitle}>Business Dashboard</Typography>
           <Typography sx={pageSubtitle}>
-            Restaurants &amp; Cafés market on BoschCard · {longDay(day)} · other vendors stay anonymous
+            Restaurant Market on BoschCard · {longDay(day)} · other vendors stay anonymous
           </Typography>
         </Box>
         <TextField
@@ -247,28 +251,35 @@ export const DashboardPage = () => {
       <Box sx={{ flex: 1, minHeight: 0, display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", lg: "2fr 3fr" } }}>
         <Panel>
           <Typography variant="subtitle1" fontWeight={800}>Orders by vendor</Typography>
-          <Typography variant="body2" fontWeight={500}>Share of {count(totalOrders)} restaurant &amp; café transactions</Typography>
-          {/* Pie on the left, drawn at the exact size of its box so it is never cut off, list of vendors on the right */}
-          <Box sx={{ flex: 1, minHeight: 0, mt: 1, display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 2 }}>
-            <Box ref={pieBox.ref} sx={{ minHeight: 0, minWidth: 0 }}>
-              {vendors.loading ? <Skeleton variant="circular" width={140} height={140} sx={{ m: "8px auto" }} /> : (
-                pieBox.width > 0 && pieBox.height > 0 && (
+          <Typography variant="body2" fontWeight={500}>Share of {count(totalOrders)} restaurant transactions</Typography>
+          {/* Donut drawn at the exact size of its box so it is never cut off, your share in the middle */}
+          <Box ref={pieBox.ref} sx={{ flex: 1, minHeight: 0, mt: 1, position: "relative" }}>
+            {vendors.loading ? <Skeleton variant="circular" width={140} height={140} sx={{ m: "8px auto" }} /> : (
+              pieBox.width > 0 && pieBox.height > 0 && (
+                <>
                   <PieChart width={pieBox.width} height={pieBox.height} hideLegend
                             margin={{ top: 4, bottom: 4, left: 4, right: 4 }}
                             series={[{ data: pieData.map((p) => ({ id: p.id, value: p.value, label: p.label, color: p.colour })),
-                                       innerRadius: "45%", paddingAngle: 1, cornerRadius: 3 }]} />
-                )
-              )}
-            </Box>
-            {/* The top 3, you and the rest: short enough to never need scrolling */}
-            <Box sx={{ minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "center", gap: 0.75 }}>
-              {pieData.map((p) => (
-                <Stack key={p.id} direction="row" spacing={1} alignItems="center">
-                  <Box sx={{ width: 12, height: 12, borderRadius: "50%", flexShrink: 0, bgcolor: p.colour }} />
-                  <Typography variant="body2" noWrap fontWeight={p.isYou ? 800 : 500}>{p.label}</Typography>
-                </Stack>
-              ))}
-            </Box>
+                                       innerRadius: "62%", paddingAngle: 1, cornerRadius: 3 }]} />
+                  <Box sx={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                    <Typography variant="body2" fontWeight={800} sx={{ color: PIE_COLOURS[0] }}>You</Typography>
+                    <Typography fontWeight={900} letterSpacing={-0.5} lineHeight={1.1} sx={{ fontSize: 28 }}>
+                      {yourSlice ? `${yourSlice.share}%` : "0%"}
+                    </Typography>
+                    <Typography variant="caption" fontWeight={600} sx={{ color: C.taupe }}>of orders</Typography>
+                  </Box>
+                </>
+              )
+            )}
+          </Box>
+          {/* The top 3 and everyone else as small chips in one or two rows under the donut */}
+          <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 0.75, mt: 1, flexShrink: 0 }}>
+            {pieData.filter((p) => !p.isYou).map((p) => (
+              <Chip key={p.id} size="small"
+                    icon={<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: p.colour, ml: "8px !important" }} />}
+                    label={`${p.name} ${p.share}%`}
+                    sx={{ bgcolor: C.cream, fontWeight: 700 }} />
+            ))}
           </Box>
         </Panel>
 
@@ -276,7 +287,7 @@ export const DashboardPage = () => {
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
             <Box>
               <Typography variant="subtitle1" fontWeight={800}>Orders by hour</Typography>
-              <Typography variant="body2" fontWeight={500}>Your orders against the average restaurant &amp; café</Typography>
+              <Typography variant="body2" fontWeight={500}>Your orders against the average restaurant</Typography>
             </Box>
             <Stack direction="row" spacing={2}>
               <LegendKey colour={CHART.market} label="Market average" />
