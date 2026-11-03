@@ -8,12 +8,6 @@ import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import { supabaseClient } from "../../providers/supabaseClient";
 
-
-/* 
-   SETTINGS
-   Same colours as the rest of the app
- */
-
 const BROWN = "#382322";
 const CREAM = "#f1e5d5";
 const ACCENT = "#F8E8A8";
@@ -42,8 +36,7 @@ const cardSx = {
 
 
 /* 
-   HELP FORM
-   Everyone can send a request to the BoschBite Admins
+HELP FORM: Everyone can send a request to the BoschBite Admins
  */
 
 export const HelpPage = () => {
@@ -91,7 +84,6 @@ export const HelpPage = () => {
     setSending(false);
 
     if (insertError) {
-      //42501 means the database refused it, which happens after 5 requests in an hour
       setError(
         insertError.code === "42501"
           ? "You have sent several requests recently. Please wait a while before sending another."
@@ -207,8 +199,7 @@ export const HelpPage = () => {
 
 
 /* 
-   HELP REQUESTS INBOX
-   Only BoschBite Admins can open this page
+HELP REQUESTS INBOX: Only BoschBite Admins can open this page
  */
 
 type Ticket = {
@@ -288,7 +279,6 @@ export const HelpRequests = () => {
 
   const visible = tickets.filter((t) => t.status === tab);
 
-  //Checks after all hooks
   if (identityLoading || !me) return null;
 
   if (!isBosch) return <Navigate to="/" replace />;

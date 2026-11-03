@@ -1,8 +1,6 @@
-import { useMany } from "@refinedev/core";
 import { EditButton, List, useDataGrid, DateField, DeleteButton, ExportButton } from "@refinedev/mui";
 import React from "react";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import type { ICategory, IPost } from "../../interfaces";
 import { ShowButton } from "@refinedev/mui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGetIdentity, useExport } from "@refinedev/core";
@@ -289,7 +287,7 @@ const EMPTY_TEXT: Record<Status, string> = {
 
 
 /*
-   ONE PERSON
+ONE PERSON
  */
 
 type PersonRowProps = {
@@ -420,7 +418,7 @@ const PersonRow = ({ p, me, isBosch, vendorName, logo, onStatus, onRole, onRemov
 
 
 /*
-   PAGE
+PAGE
  */
 
 export const ProfileList = () => {

@@ -8,17 +8,12 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { supabaseClient } from "../providers/supabaseClient";
 import { siderStyles } from "../providers/theme";
 
-
-/* 
-   SETTINGS
- */
-
 //Colour for the avatar and the selected menu item
 const ACCENT = "#F8E8A8";
 const TEXT = "#2B2B3A";
 
 //Pages shown in the top section, in this order
-export const INSIGHTS = ["dashboard", "Leaderboard", "CalendarPage","DemandForecastPage", "help"];
+export const INSIGHTS = ["dashboard", "Leaderboard", "CalendarPage", "DemandForecastPage", "help"];
 
 //Pages that are reached by clicking the avatar instead
 const NOT_IN_MENU = ["my-profile"];
@@ -50,9 +45,7 @@ type Identity = {
 };
 
 
-/* 
-   SIDE NAVIGATION CONTENT
- */
+/* SIDE NAVIGATION CONTENT */
 
 export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
   const { data: me } = useGetIdentity<Identity>();
@@ -81,7 +74,7 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
   const canSeeProfiles =
     me?.role === "boschbite_admin" || me?.role === "vendor_admin";
 
-    const visible = menuItems.filter(
+  const visible = menuItems.filter(
     (i) =>
       !NOT_IN_MENU.includes(i.name) &&
       (i.name !== "profiles" || canSeeProfiles) &&

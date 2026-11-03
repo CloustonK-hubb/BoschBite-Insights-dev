@@ -6,12 +6,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import MenuOpenIcon from "@mui/icons-material/MenuOpen";
 import { INSIGHTS } from "./SideContents";
 
-
-/* 
-   SETTINGS
-   Same colours as the side navigation
- */
-
 const BROWN = "#382322";
 const MUTED = "rgba(56, 35, 34, 0.6)";
 
@@ -29,9 +23,8 @@ const flatten = (items: TreeMenuItem[]): TreeMenuItem[] =>
 
 
 /* 
-   TOP BAR
-   Menu button, section name, then the breadcrumbs underneath
- */
+   TOP BAR: Menu button, section name, then the breadcrumbs underneath
+*/
 
 export const TopBar = () => {
   const { menuItems, selectedKey } = useMenu();
@@ -97,7 +90,6 @@ export const TopBar = () => {
         {breadcrumbs.map((crumb, i) => {
           const isLast = i === breadcrumbs.length - 1;
 
-          //Groups have no page of their own, so they are shown as plain text
           return crumb.href && !isLast ? (
             <Typography
               key={`${crumb.label}-${i}`}

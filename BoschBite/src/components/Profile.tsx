@@ -3,12 +3,6 @@ import { useGetIdentity, useInvalidateAuthStore } from "@refinedev/core";
 import { Alert, Avatar, Box, Button, Chip, Paper, Skeleton, TextField, Typography } from "@mui/material";
 import { supabaseClient } from "../providers/supabaseClient";
 
-
-/* 
-   SETTINGS
-   Same colours and card style as the Help and People pages
- */
-
 const BROWN = "#382322";
 const CREAM = "#f1e5d5";
 const ACCENT = "#F8E8A8";
@@ -106,8 +100,7 @@ const pathFromUrl = (url: string | null): string | null => {
 
 
 /* 
-   LOGO PICKER
-   Shows a blank avatar until a logo is uploaded.
+LOGO PICKER: Shows a blank avatar until a logo is uploaded.
  */
 
 type LogoPickerProps = {
@@ -175,7 +168,7 @@ const LogoPicker = ({ src, busy, onPick }: LogoPickerProps) => {
 
 
 /* 
-   PAGE
+PAGE
  */
 
 export const MyProfile = () => {

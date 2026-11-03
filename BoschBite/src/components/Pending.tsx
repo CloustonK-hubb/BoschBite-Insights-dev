@@ -4,12 +4,6 @@ import { useEffect } from "react";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import { supabaseClient } from "../providers/supabaseClient";
 
-
-/* 
-   SETTINGS
-   Same colours as the login page
- */
-
 const BROWN = "#382322";
 const CREAM = "#f1e5d5";
 const ORANGE = "#E8832A";

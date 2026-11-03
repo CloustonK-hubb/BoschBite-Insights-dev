@@ -3,18 +3,11 @@ import { supabaseClient } from "../providers/supabaseClient";
 import { useNavigate } from "react-router";
 import { Alert, Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 
-
-/* 
-   SETTINGS
-   Same colours as the login page
- */
-
 const BROWN = "#382322";
 const CREAM = "#f1e5d5";
 
 const RESTAURANT_TYPE_ID = "77fb2c0a-9f29-478f-bcd7-fb5e6967d9e8";
 
-//Pill shaped fields with a cream fill, used by every input on the page
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: 999,
@@ -114,17 +107,9 @@ function Register() {
 
     navigate("/pending");
 
-    // setSuccess(
-    //   "Account created successfully. Your account is awaiting verification.",
-    // );
-
-    // setTimeout(() => {
-    //   navigate("/login");
-    // }, 1500);
   };
 
   return (
-    /* Soft beige background with a gentle glow behind the card */
     <Box
       sx={{
         minHeight: "100vh",
@@ -136,7 +121,6 @@ function Register() {
         background: "radial-gradient(circle at 50% 35%, #fbf4e9 0%, #f1e5d5 55%, #e8d8c0 100%)",
       }}
     >
-      {/* Raised rounded card */}
       <Paper
         elevation={0}
         sx={{
@@ -258,7 +242,6 @@ function Register() {
             </Select>
           </FormControl>
 
-          {/* Brown button, same as the login page */}
           <Button
             type="submit"
             fullWidth
