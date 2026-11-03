@@ -1,5 +1,5 @@
 # BoschBite Insights 
-BoschBite insights is a web-based dashboard for restaurants in the stellenbosch area, apart of the BoschCard loyalty programme. Vendors can sign in and see insights derived from BoschCard transactions data presented through feature such as the business dahsboard, leaderboard and calendar feature 
+BoschBite insights is a web-based dashboard for restaurants in the Stellenbosch area, apart of the BoschCard loyalty programme. Vendors can sign in and see insights derived from BoschCard transactions data presented through feature such as the business dahsboard, leaderboard and calendar feature 
 
 Our app was built using: 
 * Refine: React framework with Material UI (MUI)
@@ -7,7 +7,7 @@ Our app was built using:
 * Vite: development server
 * Supabase: database and authentication including Row Level Security sp each vendor only sees their own data 
 
-The adaption document is included in ADAPTION.md which will explain how we adapted the requirements provided by the product owners 
+The adaption document is included in Adaptations.md which will explain how we adapted the requirements provided by the product owners 
 
 ## 1. Requirements 
 Before you begin pelase ensure the following is installed on your computer:
