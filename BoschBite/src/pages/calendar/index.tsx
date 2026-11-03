@@ -71,6 +71,15 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const NO_END_DATE = "__no_end_date__";
 
+const promotionKey = (row: CalendarRow) =>
+  row.promo_id != null ? String(row.promo_id)
+    : `${String(row.vendor_id ?? "")}-${String(row.promo_number ?? "")}`;
+
+const startOfToday = () => {
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+};
+
 const parseDate = (value: unknown): Date | null => {
   if (typeof value !== "string" && typeof value !== "number") return null;
   let date: Date;
@@ -181,11 +190,20 @@ export const CalendarPage = () => {
   const isVendor = identity?.role === "vendor_admin" || identity?.role === "vendor_manager";
   const [rows, setRows] = useState<CalendarRow[]>([]);
   const [loadedPromoRows, setPromoRows] = useState<CalendarRow[]>([]);
+  const [addedPromoKeys, setAddedPromoKeys] = useState<Set<string>>(new Set());
   const promoRows = useMemo(
-    () => identityLoading || !identity ? [] : isVendor
-      ? loadedPromoRows.filter((row) => identity.vendor_id != null && String(row.vendor_id) === String(identity.vendor_id))
-      : loadedPromoRows,
-    [identityLoading, identity, isVendor, loadedPromoRows],
+    () => {
+      if (identityLoading || !identity) return [];
+      const today = startOfToday();
+      const visibleRows = loadedPromoRows.filter((row) => {
+        const start = parseDate(row.start_date);
+        return start != null && (start <= today || addedPromoKeys.has(promotionKey(row)));
+      });
+      return isVendor
+        ? visibleRows.filter((row) => identity.vendor_id != null && String(row.vendor_id) === String(identity.vendor_id))
+        : visibleRows;
+    },
+    [identityLoading, identity, isVendor, loadedPromoRows, addedPromoKeys],
   );
   const [promoLoadError, setPromoLoadError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -212,7 +230,6 @@ export const CalendarPage = () => {
   const [promotionDiscount, setPromotionDiscount] = useState("");
   const [promotionWeekday, setPromotionWeekday] = useState("");
   const [promotionError, setPromotionError] = useState("");
-  const [initialMonthSet, setInitialMonthSet] = useState(false);
 
   useEffect(() => {
     if (identityLoading || !identity) return;
@@ -288,21 +305,6 @@ export const CalendarPage = () => {
         : pairedEndDateField(nextDateField, dateFields),
     );
   }, [dateFields, dateField, endDateFields]);
-
-  useEffect(() => {
-    if (loading || initialMonthSet || !dateField) return;
-    const latestDate = [...rows, ...promoRows].reduce<Date | null>((latest, row, index) => {
-      const isPromotion = index >= rows.length;
-      const date = isPromotion
-        ? parseDate(row.end_date) ?? parseDate(row.start_date)
-        : parseDate(endDateField === NO_END_DATE ? row[dateField] : row[endDateField]) ?? parseDate(row[dateField]);
-      return date && (!latest || date > latest) ? date : latest;
-    }, null);
-    if (latestDate) {
-      setVisibleMonth(new Date(latestDate.getFullYear(), latestDate.getMonth(), 1));
-    }
-    setInitialMonthSet(true);
-  }, [dateField, endDateField, initialMonthSet, loading, promoRows, rows]);
 
   const eventsByDay = useMemo(() => {
     const events = new Map<string, CalendarEvent[]>();
@@ -420,6 +422,11 @@ export const CalendarPage = () => {
       }).select("*").single();
       if (error) throw error;
       setPromoRows((current) => [...current, data as CalendarRow]);
+      setAddedPromoKeys((current) => {
+        const next = new Set(current);
+        next.add(promotionKey(data as CalendarRow));
+        return next;
+      });
       setVisibleMonth(new Date(start.getFullYear(), start.getMonth(), 1));
       setPromotionSuccess(`Promo "${promotionName.trim()}" added.`);
       setPromotionDialogOpen(false);
@@ -644,6 +651,10 @@ export const CalendarPage = () => {
                   <Box key={weekIndex} sx={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", height: 140 }}>
                     {days.map((day, column) => {
                       const inMonth = day.getMonth() === visibleMonth.getMonth();
+                      const now = new Date();
+                      const isToday = day.getFullYear() === now.getFullYear()
+                        && day.getMonth() === now.getMonth()
+                        && day.getDate() === now.getDate();
                       const events = dayEvents[column];
                       const eventHeight = (88 - (laneCount - 1) * 4) / laneCount;
                       return (
@@ -660,9 +671,30 @@ export const CalendarPage = () => {
                               setSelectedDay(day);
                             }
                           }}
-                          sx={{ minWidth: 0, height: 140, boxSizing: "border-box", border: 0, boxShadow: "inset 0 0 0 1px rgba(128,128,128,0.25)", borderRadius: 0, bgcolor: inMonth ? "background.paper" : "action.hover", cursor: "pointer" }}
+                          sx={{
+                            minWidth: 0,
+                            height: 140,
+                            boxSizing: "border-box",
+                            border: 0,
+                            boxShadow: `inset 0 0 0 1px ${isToday ? C.brown : "rgba(128,128,128,0.25)"}`,
+                            borderRadius: 0,
+                            bgcolor: inMonth ? "background.paper" : "action.hover",
+                            cursor: "pointer",
+                          }}
                         >
-                          <Typography variant="caption" color={inMonth ? "text.primary" : "text.disabled"} sx={{ display: "block", px: 0.75, height: 28 }}>
+                          <Typography
+                            variant="caption"
+                            color={inMonth ? "text.primary" : "text.disabled"}
+                            sx={{
+                              display: "block",
+                              px: 0.75,
+                              height: 28,
+                              fontWeight: isToday ? 800 : 400,
+                              color: isToday ? C.brown : undefined,
+                              textDecoration: isToday ? "underline" : undefined,
+                              textUnderlineOffset: 3,
+                            }}
+                          >
                             {day.getDate()}
                           </Typography>
                           <Box
