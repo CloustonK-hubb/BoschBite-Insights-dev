@@ -20,7 +20,7 @@ export const LandingPage = () => {
   //Constant variable required
   const { result, query } = useList({
     resource: "Vendor_logo",
-    pagination: { mode: "off" },
+    pagination: { currentPage: 1, pageSize: 15 },
 
     });
     const logos = (result?.data ?? []).filter(

@@ -25,7 +25,7 @@ npm -v
 ```
 in your terminal.  
 Both commands should print a version number. If a version number is not returned these requirements may not yet be installed. 
-> **Note :** you do not need to set up Supabase. The app connects to our existing Supabase project, and all tables, data and security rules are already in place
+> **Note :** you do not need to set up Supabase. The app connects to our existing Supabase project, and all tables, data and security rules are already in place. This happens through the VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set in .env
 
 ## 2. Installation 
 ### Step 1: Close the Github repository from the Github bundle 

@@ -219,6 +219,7 @@ const { triggerExport, isLoading: exportLoading } = useExport({
     () => [
       //{ field: "promo_id", headerName: "Promotion ID", width: 90 },
       { field: "vendor_id", headerName: "Vendor name", flex: 1.3, minWidth: 160, renderCell: ({ row }) => row.vendor?.name ?? "-", },
+      { field: "promo_name", headerName: "Promotion name", flex: 0.9, minWidth: 130 },
       { field: "promo_number", headerName: "Promotion number", flex: 0.9, minWidth: 130 },
       { field: "promo_type", headerName: "Promotion type", flex: 1, minWidth: 130 },
       { field: "start_date", headerName: "Start date", flex: 0.8, minWidth: 110 },

@@ -129,23 +129,6 @@ export const StudentShow: React.FC = () => {
   );
 };
 
-//Show object for the Calendar table
-export const CalendarShow: React.FC = () => {
-  const { query } = useShow({ resource: "calendar_event", meta: { idColumnName: "id" } });
-  const calendar = query.data?.data;
-
-  return (
-    <ThemedShow title="Calendar event" subtitle="A key date in the academic year." isLoading={query.isLoading} errorMessage={loadError(query)}>
-      <Field label="ID" value={calendar?.period_id} />
-      <Field label="Calendar function" value={calendar?.function} />
-      <Field label="Year" value={calendar?.year} />
-      <Field label="Period category" value={calendar?.period_type} />
-      <Field label="Start date" value={calendar?.start_date} />
-      <Field label="End date" value={calendar?.end_date} />
-    </ThemedShow>
-  );
-};
-
 //Show object for the Promo_Window table
 
 //Lookup list for the weekday column in the Promo_Window table to return the day of hte week instead of the number
@@ -167,6 +150,7 @@ export const PromoWindowShow: React.FC = () => {
   return (
     <ThemedShow title="Promotion window" subtitle="One promotion run by a BoschBite vendor." isLoading={query.isLoading} errorMessage={loadError(query)} idColumnName="promo_id">
       <Field label="Vendor name" value={promo?.vendor?.name} />
+      <Field label="Promotion name" value={promo?.promo_name} />
       <Field label="Promotion number" value={promo?.promo_number} />
       <Field label="Promotion type" value={promo?.promo_type} />
       <Field label="Discount of promo" value={percent(promo?.discount)} />
