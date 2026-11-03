@@ -28,10 +28,10 @@ Both commands should print a version number. If a version number is not returned
 > **Note :** you do not need to set up Supabase. The app connects to our existing Supabase project, and all tables, data and security rules are already in place
 
 ## 2. Installation 
-### Step 1: close the Github repository from the Github bundle 
+### Step 1: Close the Github repository from the Github bundle 
 Open a terminal in the folder where the bundle file is saved and run:
 ```
-git clone 6-honours-2026.bundle BoschBite-Insights-dev
+git clone group6-honours-2026.bundle BoschBite-Insights-dev
 cd BoschBite-Insights-dev
 git checkout main
 ```
@@ -42,7 +42,7 @@ The app is installed inside the `BoschBite` folder, hence direct yourself into t
 ```
 cd BoschBite
 ```
-### Step 3: install the dependencies 
+### Step 3: Install the dependencies 
 Once directed into the `BoschBite` folder, use:
 ```
 npm install
