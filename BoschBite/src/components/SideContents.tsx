@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useGetIdentity, useLogout, useMenu, type TreeMenuItem } from "@refinedev/core";
 import { Link } from "react-router";
-import { Avatar, Box, Button, Chip, Collapse, Divider, List, ListItemButton, ListItemIcon, ListItemText, Tooltip, Typography } from "@mui/material";
+import { alpha, Avatar, Box, Button, Chip, Collapse, Divider, List, ListItemButton, ListItemIcon, ListItemText, Tooltip, Typography } from "@mui/material";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { supabaseClient } from "../providers/supabaseClient";
 import { siderStyles } from "../providers/theme";
+import { insightsColours as C } from "../providers/theme";
 
 //Colour for the avatar and the selected menu item
 const ACCENT = "#F8E8A8";
@@ -126,14 +127,20 @@ export const SiderContent = ({ collapsed }: { collapsed: boolean }) => {
         </ListItemIcon>
       ) : null;
 
-    const text = collapsed ? null : (
-      <ListItemText
-        primary={label}
-        primaryTypographyProps={{
-          fontSize: 13,
-          fontWeight: hasChildren ? 600 : 400,
-        }}
-      />
+        const text = collapsed ? null : (
+      <>
+        <ListItemText
+          primary={label}
+          primaryTypographyProps={{
+            fontSize: 13,
+            fontWeight: hasChildren ? 600 : 400,
+          }}
+        />
+        {/* BETA pill for pages that are still a proposal (meta.beta in App.tsx) */}
+        {item.meta?.beta && (
+          <Chip size="small" label="BETA" sx={{ height: 22, fontSize: 11, fontWeight: 800, letterSpacing: 1, bgcolor: C.yellow, color: C.brown, border: `1px solid ${alpha(C.brown, 0.25)}` }} />
+        )}
+      </>
     );
 
     //Groups (e.g. BoschCard data) open and close

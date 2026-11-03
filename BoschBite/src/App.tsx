@@ -542,7 +542,7 @@ SUPABASE AUTH PROVIDER
               { name: "dashboard", list: "/dashboard", meta: { label: "Business Dashboard", icon: <InsightsIcon /> } },
               { name: "CalendarPage", list: "/CalendarPage", meta: { label: "Calendar", icon: <CalendarMonthIcon /> } },
               { name: "Leaderboard", list: "/leaderboard", meta: { label: "Leaderboard", icon: <LeaderboardIcon /> } },
-              { name: "DemandForecastPage", list: "/DemandForecastPage", meta: { label: "Demand forecast (BETA)", icon: <QueryStatsIcon /> } },
+              { name: "DemandForecastPage", list: "/DemandForecastPage", meta: { label: "Demand Forecast", icon: <QueryStatsIcon /> ,beta: true} },
               { name: "my-profile", list: "/my-profile", meta: { label: "My Profile", icon: <AccountCircleIcon /> } },
               { name: "help", list: "/help", meta: { label: "Help", icon: <HelpOutlineIcon /> } },
               { name: "help-requests", list: "/help-requests", meta: { label: "Help Requests", icon: <SupportAgentIcon /> } },
