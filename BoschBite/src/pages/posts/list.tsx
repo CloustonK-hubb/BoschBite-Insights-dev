@@ -227,7 +227,7 @@ const { triggerExport, isLoading: exportLoading } = useExport({
       { field: "duration_days", headerName: "Duration (days)", flex: 0.8, minWidth: 120 },
       { field: "actions", headerName: "", sortable: false, width: 132, renderCell: ({ row }) => ( <Box sx={listStyles.actionIcons}>
         <ShowButton hideText recordItemId={row.promo_id} />
-        <DeleteButton hideText recordItemId= {row.promo_id} meta ={{ idColumnName: "promo_id"}}/>
+        {/*<DeleteButton hideText recordItemId= {row.promo_id} meta ={{ idColumnName: "promo_id"}}/>*/}
       </Box>
       )},
     ],

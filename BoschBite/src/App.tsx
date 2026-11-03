@@ -707,7 +707,7 @@ SUPABASE AUTH PROVIDER
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
               {
                 name: "promo_window_v2", list: "/promo_window_v2", show: "/promo_window_v2/show/:id",
-                meta: { label: "Promotion Window", parent: "BoschBites-data", canDelete: true }
+                meta: { label: "Promotion Window", parent: "BoschBites-data"}
               },
               { name: "profiles", list: "/profiles", meta: { label: "Accounts", icon: <PersonAddAltIcon /> } },
             ]}
