@@ -32,6 +32,7 @@ import { supabaseClient } from "../../providers/supabaseClient";
 import {
   insightsColours,
   insightsLayout,
+  calendarStyles,
   pageSubtitle,
   pageTitle,
   pillButton,
@@ -39,10 +40,16 @@ import {
 } from "../../providers/theme";
 import { promotionRunsOnDay, selectDailyPromotions } from "./promotions";
 
+/*
+   CALENDAR PAGE
+ */
+
+//Database and component state shapes
 type CalendarRow = Record<string, unknown>;
 
 const SIDE_MARGIN = insightsLayout.sideMargin;
 const C = insightsColours;
+const CALENDAR = calendarStyles;
 
 type Identity = {
   role?: string | null;
@@ -71,6 +78,11 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const NO_END_DATE = "__no_end_date__";
 
+/*
+   SETTINGS
+   Layout, colours and shared page styles live in providers/theme.ts.
+ */
+
 const promotionKey = (row: CalendarRow) =>
   row.promo_id != null ? String(row.promo_id)
     : `${String(row.vendor_id ?? "")}-${String(row.promo_number ?? "")}`;
@@ -79,6 +91,10 @@ const startOfToday = () => {
   const today = new Date();
   return new Date(today.getFullYear(), today.getMonth(), today.getDate());
 };
+
+/*
+   DATE AND VALUE HELPERS
+ */
 
 const parseDate = (value: unknown): Date | null => {
   if (typeof value !== "string" && typeof value !== "number") return null;
@@ -185,6 +201,10 @@ const summarizeRow = (row: CalendarRow, dateField: string, endDateField: string)
   return field ? formatValue(row[field]) : "";
 };
 
+/*
+   CALENDAR PAGE
+ */
+
 export const CalendarPage = () => {
   const { data: identity, isLoading: identityLoading } = useGetIdentity<Identity>();
   const isVendor = identity?.role === "vendor_admin" || identity?.role === "vendor_manager";
@@ -231,6 +251,7 @@ export const CalendarPage = () => {
   const [promotionWeekday, setPromotionWeekday] = useState("");
   const [promotionError, setPromotionError] = useState("");
 
+  //Loads calendar events, promotions and vendor types for the signed-in account.
   useEffect(() => {
     if (identityLoading || !identity) return;
     let active = true;
@@ -306,6 +327,7 @@ export const CalendarPage = () => {
     );
   }, [dateFields, dateField, endDateFields]);
 
+  //Maps calendar ranges and promotions onto each visible date.
   const eventsByDay = useMemo(() => {
     const events = new Map<string, CalendarEvent[]>();
 
@@ -368,6 +390,7 @@ export const CalendarPage = () => {
       return { days, dayEvents, laneCount: Math.min(3, Math.max(1, ...dayEvents.map((events) => events.length))) };
     }), [gridDays, eventsByDay]);
 
+  //Adds the promotion entered in the frontend to the current calendar data.
   const handlePromotionSubmit = async () => {
     if (promotionSaving) return;
     setPromotionError("");
@@ -481,14 +504,15 @@ export const CalendarPage = () => {
     }
   };
 
+  /* ---------- page layout ---------- */
   return (
-    <Box sx={{ px: SIDE_MARGIN, pb: 3, color: C.brown, maxWidth: 1500, mx: "auto" }}>
+    <Box sx={{ ...CALENDAR.page, px: SIDE_MARGIN, color: C.brown }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={1.5}
         alignItems={{ xs: "stretch", sm: "center" }}
         justifyContent="space-between"
-        sx={{ mb: 2 }}
+        sx={CALENDAR.pageHeader}
       >
         <Box>
           <Typography sx={pageTitle}>Calendar</Typography>
@@ -510,7 +534,7 @@ export const CalendarPage = () => {
       {promoLoadError && <Alert severity="warning" sx={{ mb: 2 }}>{promoLoadError}</Alert>}
       {loadError && <Alert severity="error" sx={{ mb: 2 }}>{loadError}</Alert>}
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+        <Box sx={CALENDAR.loading}>
           <CircularProgress />
         </Box>
       ) : (
@@ -524,31 +548,25 @@ export const CalendarPage = () => {
             spacing={2}
             alignItems={{ md: "center" }}
             justifyContent="space-between"
-            sx={{ mb: 2 }}
+            sx={CALENDAR.monthControls}
           >
             <Stack direction="row" spacing={1} alignItems="center">
               <IconButton
                 aria-label="Previous month"
                 onClick={() => moveMonth(-1)}
-                sx={{ color: C.brown }}
+                sx={CALENDAR.iconButton}
               >
                 <ArrowBackIcon />
               </IconButton>
               <Typography
-                sx={{
-                  minWidth: 180,
-                  textAlign: "center",
-                  fontSize: 18,
-                  fontWeight: 800,
-                  color: C.brown,
-                }}
+                sx={CALENDAR.monthTitle}
               >
                 {visibleMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
               </Typography>
               <IconButton
                 aria-label="Next month"
                 onClick={() => moveMonth(1)}
-                sx={{ color: C.brown }}
+                sx={CALENDAR.iconButton}
               >
                 <ArrowForwardIcon />
               </IconButton>
@@ -556,7 +574,7 @@ export const CalendarPage = () => {
 
             {dateFields.length > 0 && (
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                <FormControl size="small" sx={{ minWidth: 190 }}>
+                <FormControl size="small" sx={CALENDAR.dateField}>
                   <InputLabel id="calendar-start-field-label">Calendar date field</InputLabel>
                   <Select
                     labelId="calendar-start-field-label"
@@ -578,7 +596,7 @@ export const CalendarPage = () => {
                       .map((field) => <MenuItem key={field} value={field}>{field}</MenuItem>)}
                   </Select>
                 </FormControl>
-                <FormControl size="small" sx={{ minWidth: 190 }}>
+                <FormControl size="small" sx={CALENDAR.dateField}>
                   <InputLabel id="calendar-end-field-label">Range end field</InputLabel>
                   <Select
                     labelId="calendar-end-field-label"
@@ -629,26 +647,19 @@ export const CalendarPage = () => {
               </TableContainer>
             </Stack>
           ) : (
-            <Box sx={{ overflowX: "auto" }}>
-              <Box sx={{ minWidth: 760, display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 0.5 }}>
+            <Box sx={CALENDAR.gridScroller}>
+              <Box sx={CALENDAR.grid}>
                 {WEEKDAYS.map((weekday) => (
                   <Typography
                     key={weekday}
                     align="center"
-                    sx={{
-                      py: 1,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: 1,
-                      textTransform: "uppercase",
-                      color: "text.secondary",
-                    }}
+                    sx={CALENDAR.weekdayLabel}
                   >
                     {weekday}
                   </Typography>
                 ))}
                 {calendarWeeks.map(({ days, dayEvents, laneCount }, weekIndex) => (
-                  <Box key={weekIndex} sx={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", height: 140 }}>
+                  <Box key={weekIndex} sx={CALENDAR.week}>
                     {days.map((day, column) => {
                       const inMonth = day.getMonth() === visibleMonth.getMonth();
                       const now = new Date();
@@ -686,9 +697,7 @@ export const CalendarPage = () => {
                             variant="caption"
                             color={inMonth ? "text.primary" : "text.disabled"}
                             sx={{
-                              display: "block",
-                              px: 0.75,
-                              height: 28,
+                              ...CALENDAR.dayNumber,
                               fontWeight: isToday ? 800 : 400,
                               color: isToday ? C.brown : undefined,
                               textDecoration: isToday ? "underline" : undefined,
@@ -702,7 +711,7 @@ export const CalendarPage = () => {
                             tabIndex={events.length > 3 ? 0 : undefined}
                             role="region"
                             aria-label={`Events for ${day.toLocaleDateString()}`}
-                            sx={{ height: 88, overflowY: "auto", overflowX: "hidden", overscrollBehaviorY: "contain", scrollSnapType: "y mandatory", scrollbarWidth: "thin" }}
+                            sx={CALENDAR.eventScroller}
                           >
                             {events.map((event, eventIndex) => {
                               const previousDay = new Date(day);
@@ -825,7 +834,7 @@ export const CalendarPage = () => {
               `${selectedDay.getFullYear()}-${selectedDay.getMonth()}-${selectedDay.getDate()}`,
             ) ?? [];
             return dayEvents.length ? (
-              <Box sx={{ ...showStyles.card, m: 2, gridTemplateColumns: "1fr" }}>
+              <Box sx={{ ...CALENDAR.dialogCard, gridTemplateColumns: "1fr" }}>
                 {dayEvents.map((event) => (
                   <Button
                     key={`${event.isPromotion ? "promo" : "event"}-${event.rowIndex}`}
@@ -880,7 +889,7 @@ export const CalendarPage = () => {
         </DialogTitle>
         <DialogContent sx={{ p: 0 }}>
           {selectedEvent && (
-            <Box sx={{ ...showStyles.card, m: 2 }}>
+            <Box sx={CALENDAR.dialogCard}>
               {promoNameError && <Alert severity="error">{promoNameError}</Alert>}
               {editingPromoName && (
                 <TextField

@@ -326,6 +326,54 @@ export const insightsLayout = {
   sideMargin: { xs: 1, md: 4, lg: 8 },
 };
 
+//Calendar page: shared layout and typography, kept separate from event colours
+export const calendarStyles = {
+  page: { maxWidth: 1500, mx: "auto", pb: 3 } as Sx,
+  pageHeader: { mb: 2 } as Sx,
+  monthControls: { mb: 2 } as Sx,
+  iconButton: { color: brown } as Sx,
+  monthTitle: { minWidth: 180, textAlign: "center", fontSize: 18, fontWeight: 800, color: brown } as Sx,
+  weekdayLabel: {
+    py: 1,
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: "text.secondary",
+  } as Sx,
+  dateField: { minWidth: 190 } as Sx,
+  gridScroller: { overflowX: "auto" } as Sx,
+  grid: { minWidth: 760, display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 0.5 } as Sx,
+  week: { gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", height: 140 } as Sx,
+  loading: { display: "flex", justifyContent: "center", py: 8 } as Sx,
+  dayNumber: {
+    display: "block",
+    px: 0.75,
+    height: 28,
+    textUnderlineOffset: 3,
+  } as Sx,
+  eventScroller: {
+    height: 88,
+    overflowY: "auto",
+    overflowX: "hidden",
+    overscrollBehaviorY: "contain",
+    scrollSnapType: "y mandatory",
+    scrollbarWidth: "thin",
+  } as Sx,
+  recordCard: { m: 2 } as Sx,
+  dialogCard: {
+    bgcolor: "#fff",
+    borderRadius: 4,
+    boxShadow: shadow,
+    m: 2,
+    p: { xs: 2.5, md: 3.5 },
+    display: "grid",
+    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+    columnGap: 4,
+    rowGap: 3,
+  } as Sx,
+};
+
 
 /*
    APP THEME
