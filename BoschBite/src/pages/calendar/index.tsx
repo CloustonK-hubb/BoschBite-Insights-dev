@@ -715,7 +715,7 @@ export const CalendarPage = () => {
                             height: 140,
                             boxSizing: "border-box",
                             border: 0,
-                            boxShadow: `inset 0 0 0 1px ${isToday ? C.brown : "rgba(128,128,128,0.25)"}`,
+                            boxShadow: "inset 0 0 0 1px rgba(128,128,128,0.25)",
                             borderRadius: 0,
                             bgcolor: inMonth ? "background.paper" : "action.hover",
                             cursor: "pointer",
@@ -733,6 +733,11 @@ export const CalendarPage = () => {
                             }}
                           >
                             {day.getDate()}
+                            {isToday && (
+                              <Box component="span" sx={{ display: "inline-block", ml: 0.75, fontWeight: 800, letterSpacing: 0.5 }}>
+                                TODAY
+                              </Box>
+                            )}
                           </Typography>
                           <Box
                             key={`${day.toISOString()}-${dateField}-${endDateField}`}
