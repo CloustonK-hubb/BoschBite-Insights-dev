@@ -83,10 +83,16 @@ const eventLabel = (event: CalendarEvent) => event.isPromotion
     (event.row.discount != null && event.row.discount !== "" ? formatDiscount(event.row.discount) : "Promotion")
   : formatValue(event.row.period_type ?? event.row.event_type ?? "Other");
 
-//Second line on the bar: "Promotion", or the event's name
+//Second part of the bar: "Promotion", or the event's function, name, title or description (same order as the calendar page)
 const eventSummary = (event: CalendarEvent) => event.isPromotion
   ? "Promotion"
-  : formatValue(event.row.name ?? event.row.title ?? event.row.description ?? "");
+  : formatValue(event.row.function ?? event.row.name ?? event.row.title ?? event.row.description ?? "");
+
+//Start of today on this computer, the same as the calendar page uses to hide promotions that haven't started
+const startOfToday = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+};
 
 const dayKey = (day: Date) => `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
 
@@ -133,7 +139,11 @@ export const CalendarWeekStrip = ({ start, today, onOpenCalendar }: { start: str
       if (!active) return;
       if (error) setLoadError(`Unable to load the calendar: ${error.message}`);
       setRows(error ? [] : ((data ?? []) as CalendarRow[]));
-      const promoData = (promotions.data ?? []) as CalendarRow[];
+      //Like the calendar page: promotions that haven't started yet are not shown
+      const promoData = ((promotions.data ?? []) as CalendarRow[]).filter((row) => {
+        const promoStart = parseDate(row.start_date);
+        return promoStart != null && promoStart <= startOfToday();
+      });
       if (promoData.length > 0) {
         //Vendor type for each promotion, so the same promotions are picked per day as on the calendar page
         const { data: vendors } = await supabaseClient.from("vendor").select("id,type_id")
@@ -252,24 +262,26 @@ export const CalendarWeekStrip = ({ start, today, onOpenCalendar }: { start: str
           onKeyDown={(e: KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenCalendar(); } }}
           sx={{
             gridColumn: col + 1, gridRow: "2 / -1", minWidth: 0, border: 0, borderRadius: 0, cursor: "pointer",
-            boxShadow: "inset 0 0 0 1px rgba(128,128,128,0.25)", bgcolor: "background.paper",
+            boxShadow: "inset 0 0 0 1px rgba(128,128,128,0.25)",
+            bgcolor: "background.paper",
             marginBottom: "-3px",
           }} />
       ))}
 
-      {/* Day numbers, today in a dark circle, and how many bars didn't fit */}
+      {/* Day numbers (today bold and underlined, like the calendar page) and how many bars didn't fit */}
       {days.map((day, col) => {
         const isToday = todayDate != null && dayKey(day) === dayKey(todayDate);
         return (
           <Box key={`n${dayKey(day)}`} sx={{ gridColumn: col + 1, gridRow: 2, px: 0.75, display: "flex", alignItems: "center", gap: 0.5, pointerEvents: "none", zIndex: 1 }}>
-            {isToday ? (
-              <Box sx={{ minWidth: 20, height: 20, px: 0.5, borderRadius: 10, bgcolor: C.brown, color: C.cream, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Typography variant="caption" fontWeight={800}>{day.getDate()}</Typography>
-              </Box>
-            ) : (
-              <Typography variant="caption">{day.getDate()}</Typography>
-            )}
-            {isToday && <Typography variant="caption" fontWeight={800}>Today</Typography>}
+            <Typography variant="caption" sx={{
+              fontWeight: isToday ? 800 : 400,
+              color: isToday ? C.brown : undefined,
+              textDecoration: isToday ? "underline" : undefined,
+              textUnderlineOffset: 3,
+            }}>
+              {day.getDate()}
+            </Typography>
+            {isToday && <Typography variant="caption" sx={{ fontWeight: 800, color: C.brown, letterSpacing: 0.5 }}>TODAY</Typography>}
             {hidden[col] > 0 && <Typography variant="caption" sx={{ ml: "auto", color: "text.secondary" }}>+{hidden[col]} more</Typography>}
           </Box>
         );
