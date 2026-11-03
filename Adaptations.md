@@ -22,7 +22,17 @@ The original six feature areas were:
 
 ### Revised Features
 
-The initial promotion analysis feature evolved into promotion performance tracking based on customer reach and loyalty, with promotion efficiency also contributing to the vendor leaderboard. Anonymised peer benchmarking became an anonymous leaderboard that ranks vendors by promotion reach, promotion loyalty, efficiency, and location. The business dashboard shifted from individual vendor sales analytics to a restaurant market dashboard showing market share, a linked leaderboard position, active promotion discounts, and market concentration, because detailed everyday transaction data was unavailable for each vendor. The academic calendar was retained to highlight periods such as exams and recess that may affect student activity; clients decided to leave out social events. Demand forecasting was carried forward as a beta feature.
+The original features were based on the synthetic data that our clients provided. This data included a calendar table and a promotional windows table, which were to be added to the ERD prescribed by BoschCard. We started by developing the basic application, setting up the back end and front end with a basic sign-in and dashboard.
+
+Once it became clear that our clients would not be able to provide a promotional windows table, and that all transactions were discounted, meaning there were no baseline transactions, we had to adapt their initial features. Instead, we used calculations on the transaction data to derive the promotional windows. We identified two types of promotional windows: ongoing and weekly. Ongoing promotions run over consecutive days, whereas weekly promotions run on the same weekday every week, for instance a burger special every Monday.
+
+The initial promotion analysis feature evolved into promotion effectiveness tracking based on customer reach and loyalty, with promotion efficiency and location also contributing to each vendor’s overall score. Anonymised peer benchmarking became an anonymous leaderboard that ranks vendors by promotion reach, promotion loyalty, efficiency and location.
+
+The business dashboard shifted from individual vendor sales analytics to a restaurant market dashboard showing market share, a linked leaderboard position, active promotion discounts and market concentration, because detailed everyday transaction data was not available for each vendor. Showing market statistics also provides more value to individual vendors, because it gives them insights beyond their own data, which they already have access to.
+
+The academic calendar was retained to highlight periods such as exams and recess that may affect student activity, and to show promotional windows. Our clients decided to remove the social calendar and to use only the calendar data provided by BoschCard. Demand forecasting was carried forward as a beta feature.
+
+After discussing the capacity and staffing planner with our clients, and since they were not able to provide staffing schedules, we decided that the data presented in the new features will be used by individual vendor admins and managers to make their own capacity and staffing decisions. 
 
 ## Users and Access
 
