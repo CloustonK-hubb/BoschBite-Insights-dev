@@ -106,7 +106,7 @@ export const HelpPage = () => {
   return (
     <Box sx={{ maxWidth: 640, mx: "auto", py: 1 }}>
       <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: 30, fontWeight: 800, color: BROWN, lineHeight: 1.1 }}>Help & support</Typography>
+        <Typography sx={{ fontSize: 30, fontWeight: 800, color: BROWN, lineHeight: 1.1 }}>Help & Support</Typography>
         <Typography sx={{ color: "text.secondary", mt: 0.5 }}>
           Something not working? Tell us what happened and a BoschBite Admin will get back to you by email.
         </Typography>

@@ -559,7 +559,7 @@ SUPABASE AUTH PROVIDER
                 name: "promo_window_v2", list: "/promo_window_v2", show: "/promo_window_v2/show/:id",
                 meta: { label: "Promotion Window", parent: "BoschBites-data", canDelete: true }
               },
-              { name: "profiles", list: "/profiles", meta: { label: "People", icon: <PersonAddAltIcon /> } },
+              { name: "profiles", list: "/profiles", meta: { label: "Accounts", icon: <PersonAddAltIcon /> } },
             ]}
             options={{
               syncWithLocation: true,
