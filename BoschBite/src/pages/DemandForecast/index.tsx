@@ -538,7 +538,7 @@ const OngoingPromo = ({ promo, today }: { promo: PromoOption; today: string }) =
   const Segment = ({ a, b, bg, colour, dashed, text }: { a: string; b: string; bg: string; colour?: string; dashed?: boolean; text: string }) => (
     <Box title={text} sx={{
       position: "absolute", top: 0, bottom: 0, left: `${pos(a)}%`, width: `${width(a, b)}%`,
-      bgcolor: bg, color: colour ?? C.brown, borderRadius: 1.5, border: dashed ? "1px dashed #d8b850" : "none",
+      bgcolor: bg, color: colour ?? C.brown, borderRadius: 1.5, border: dashed ? `1.5px dashed ${C.midBlue}` : "none",
       display: "flex", alignItems: "center", px: 0.75, overflow: "hidden",
     }}>
       <Typography noWrap sx={{ fontSize: 11, fontWeight: 700 }}>{text}</Typography>
@@ -577,7 +577,7 @@ const OngoingPromo = ({ promo, today }: { promo: PromoOption; today: string }) =
                          text={`So far · ${count(s.orders_per_day)} a day`} />
               )}
               {end && Number(s.remaining_days ?? 0) > 0 && (
-                <Segment a={planned ? promo.start_date : today} b={end} bg={C.yellow} dashed
+                <Segment a={planned ? promo.start_date : today} b={end} bg={alpha(C.midBlue, 0.5)} dashed
                          text={`Forecast · ~${count(perDayAhead)} a day`} />
               )}
               {today >= from && today <= to && (
@@ -658,7 +658,7 @@ export const DemandForecastPage = () => {
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 2, flexWrap: "wrap", flexShrink: 0 }}>
         <Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-            <Typography sx={pageTitle}>Demand forecast</Typography>
+            <Typography sx={pageTitle}>Demand Forecast</Typography>
             <Chip size="small" label="BETA" sx={{ height: 22, fontSize: 11, fontWeight: 800, letterSpacing: 1, bgcolor: C.yellow, color: C.brown, border: `1px solid ${alpha(C.brown, 0.25)}` }} />
           </Box>
           <Typography sx={pageSubtitle}>What to expect over the next weeks, based on your own sales up to today</Typography>
