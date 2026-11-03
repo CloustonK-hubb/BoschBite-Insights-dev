@@ -15,7 +15,7 @@ Before you begin pelase ensure the following is installed on your computer:
 | Requirement | Notes |
 | ------------| ----- |
 | Node.js | Download from nodejs.org. npm is installed automatically with Node.js|
-| Git | Needed to cloe the repository |
+| Git | Needed to clone the repository |
 | A web browser | E.g Chrome, Edge, Safari, Firefox. The app was mainly tested through Chrome and Edge |
 
 To check that Node.js and npm are installed, please run: 
@@ -23,7 +23,7 @@ To check that Node.js and npm are installed, please run:
 node -v 
 npm -v
 ```
-in your terminal.  
+in either your codespace or computers  terminal.  
 Both commands should print a version number. If a version number is not returned these requirements may not yet be installed. 
 > **Note :** you do not need to set up Supabase. The app connects to our existing Supabase project, and all tables, data and security rules are already in place. This happens through the VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set in .env
 

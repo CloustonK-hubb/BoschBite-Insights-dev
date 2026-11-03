@@ -5,7 +5,8 @@
 BoschBite Insights was imagined as an analytics tools for student-focused restaurants and takeaways in Stellenbosch. It would use anonymised BoschCard data to help restaurant vendors understand demand, promotions, and repeat or late-night ordering, so they can make better decisions about staffing, capacity, delivery hours, and promotions.
 
 ## Revised Concepet
-The product direction taken focuses on the restaurant vendor type. The revised direction focuses on restaurant-specific demand and promotion insights. The logo and colour palette have changed, and the side navigation is organised into **Insights** and **Admin Tools**.
+The adapted direction taken focuses on the restaurant vendor type. This adaption to use only the restaurant vendor type was discussed with our client and agreed upon since their features, which were adapted, more closely aligned with restaurant charcteristics then specific takeaway characteristics. The revised direction focuses on restaurant-specific demand and promotion insights. 
+In terms of the UI design, the logo and colour palette changed to align with the requests of the clients, and the side navigation  organised into **Insights** and **Admin Tools**.
 
 
 ## Features
@@ -22,17 +23,21 @@ The original six feature areas were:
 
 ### Revised Features
 
-The original features were based on the synthetic data that our clients provided. This data included a calendar table and a promotional windows table, which were to be added to the ERD prescribed by BoschCard. We started by developing the basic application, setting up the back end and front end with a basic sign-in and dashboard.
+The original features were based on the synthetic data that our clients provided. This data included a calendar table and a promotional windows table. The calendar table, associated with university dates and public holidays, was then included in the ERD prescribed by BoschCard. We started by developing the basic application, setting up the back end and front end with a basic sign-in and dashboard.
 
-Once it became clear that our clients would not be able to provide a promotional windows table, and that all transactions were discounted, meaning there were no baseline transactions, we had to adapt their initial features. Instead, we used calculations on the transaction data to derive the promotional windows. We identified two types of promotional windows: ongoing and weekly. Ongoing promotions run over consecutive days, whereas weekly promotions run on the same weekday every week, for instance a burger special every Monday.
+It became clear that our clients would not be able to provide a promotional windows table, and that there woudl be no baseline data as all transactions were discount values. We had to adapt their initial features since they heavily relied on comparison between baseline and discount data. 
 
-The initial promotion analysis feature evolved into promotion effectiveness tracking based on customer reach and loyalty, with promotion efficiency and location also contributing to each vendor’s overall score. Anonymised peer benchmarking became an anonymous leaderboard that ranks vendors by promotion reach, promotion loyalty, efficiency and location.
+Instead, the promotional windows table was derived using calculations based on the transaction data. We identified two types of promotional windows: ongoing and weekly. Ongoing promotions run over consecutive days, whereas weekly promotions run on the same weekday every week, for instance a burger special every Monday.
 
-The business dashboard shifted from individual vendor sales analytics to a restaurant market dashboard showing market share, a linked leaderboard position, active promotion discounts and market concentration, because detailed everyday transaction data was not available for each vendor. Showing market statistics also provides more value to individual vendors, because it gives them insights beyond their own data, which they already have access to.
+The initial promotion analysis feature evolved into promotional effectiveness which tracks customer reach and loyalty. This feature was then intrgreated into the Leaderboard feature where the leaderbaord feature evolved from thier annonymised peer benchmarking. The leaderboard ranks vendors by promotional effectiveness, efficiency and location. We included the leaderboard feature to make use of more diverse data from BoschCard (such as location) instead of simply focussing on transaction data. The leaderbaord also provided insight into how a vendor could improve as well as promoting competition between vendors. 
 
-The academic calendar was retained to highlight periods such as exams and recess that may affect student activity, and to show promotional windows. Our clients decided to remove the social calendar and to use only the calendar data provided by BoschCard. Demand forecasting was carried forward as a beta feature.
+The business dashboard was adapted from individual vendor sales analytics to a restaurant-wide market dashboard that showed broad market share. It therefore included features that were broadly based on the market, such as total market share, total orders, active promotions across the entire market and more. This shift enabled for a greater use of diverse data provided by BoachCard, rather than using internal trasnaction data for each vendor which they already had at their disposal. 
 
-After discussing the capacity and staffing planner with our clients, and since they were not able to provide staffing schedules, we decided that the data presented in the new features will be used by individual vendor admins and managers to make their own capacity and staffing decisions. 
+The academic calendar was retained to highlight periods such as exams and recess that may affect student activity, and to show promotional windows. Our clients decided to remove the social calendar and to use only the calendar data provided by BoschCard. 
+
+We initially removed demand forecasting as a feature, due to concerns about the prediction accuracy. However, during final development, after providing the client with the minimal viable product, they requested us to look further into this feature. Therefore a beta version of the feature was developed and will be presented to the client. However, the concerns around prediction accuracy still reamin, therefore, we included a "Forecast accuracy" KPI which presents the accuracy of the previous promotions forecasting and therefore warns the user against possible accuracy concerns. 
+
+After discussing the capacity and staffing planner with our clients, and based on their being no data relating to staffing from BoschCard as well as out clients being unable to provide staffing schedules, we decided that the feature would get removed. Instead, the feature could be included implicitly through the demand forecasting feature.
 
 ## Users and Access
 
