@@ -69,6 +69,46 @@ const scoreParts = [
     { label: "Location", weight: 25 },
 ];
 
+//defining the score intervals and the points associated with each interval.
+//Efficiency, reach and location use the same intervals (1 = normal), loyalty uses percentages.
+const ratioBands = [
+    { range: "Under 0.5", points: "2.5" },
+    { range: "0.5 to under 0.8", points: "6.25" },
+    { range: "0.8 to under 1.0", points: "10" },
+    { range: "1.0 to under 1.2", points: "13.75" },
+    { range: "1.2 to under 1.5", points: "17.5" },
+    { range: "1.5 to under 2.0", points: "21.25" },
+    { range: "2.0 or more", points: "25" },
+];
+
+const efficiencyBands = [{ range: "No benchmark available", points: "0" }, ...ratioBands];
+
+const locationBands = [{ range: "No location available", points: "0" }, ...ratioBands];
+
+const loyaltyBands = [
+    { range: "Under 40%", points: "2.5" },
+    { range: "40% to under 55%", points: "6.25" },
+    { range: "55% to under 70%", points: "10" },
+    { range: "70% to under 80%", points: "13.75" },
+    { range: "80% to under 90%", points: "17.5" },
+    { range: "90% to under 97%", points: "21.25" },
+    { range: "97% or more", points: "25" },
+];
+
+//Table of intervals and their points, used for every part of the score
+const BandTable = ({ title, bands }: { title: string; bands: { range: string; points: string }[] }) => (
+    <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", columnGap: 2, rowGap: 0.5, mb: 1.5 }}>
+        <Typography variant="caption" color="text.secondary">{title}</Typography>
+        <Typography variant="caption" color="text.secondary" textAlign="right">Points</Typography>
+        {bands.map((band) => (
+            <Box key={band.range} sx={{ display: "contents" }}>
+                <Typography variant="body2">{band.range}</Typography>
+                <Typography variant="body2" textAlign="right">{band.points}</Typography>
+            </Box>
+        ))}
+    </Box>
+);
+
 //defining the different intervals for efficiency scores and the points associated with that interval. 
 const efficiencyBands = [
     { range: "No benchmark available", points: "0" },
@@ -132,13 +172,13 @@ export const ScoreBreakdownFooter = () => {
                     <GreyCard>
                         <Typography variant="body2" fontWeight={500}>Reach</Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Total customers the promotion reached
+                            Total customers the promotion reached, compared with the typical (median) restaurant in the same period
                         </Typography>
                     </GreyCard>
                     <GreyCard>
                         <Typography variant="body2" fontWeight={500}>Loyalty</Typography>
                         <Typography variant="body2" color="text.secondary">
-                            How many of those customers came back during the promotion period
+                            The share of those customers who came back (2 or more purchases) during the promotion period
                         </Typography>
                     </GreyCard>
                 </Box>
@@ -175,11 +215,18 @@ export const ScoreBreakdownFooter = () => {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         Compares each restaurant's address with the vendors around it.
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         If the restaurant is in the vicinity of other vendor types, this could promote
                         cross-spending and bring in a new customer base, as well as potentially provide
                         opportunities for promotions.
                     </Typography>
+                    <GreyCard>
+                        <Typography variant="body2" fontWeight={500}>Location net</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Other vendor types within 300 m minus other restaurants within 300 m, compared with the
+                            typical (median) restaurant on campus
+                        </Typography>
+                    </GreyCard>
                 </Box>
             </Box>
 
@@ -200,9 +247,14 @@ export const ScoreBreakdownFooter = () => {
                             <Chip label="Reach 25%" size="small" color="primary" variant="outlined" />
                             <Chip label="Loyalty 25%" size="small" color="primary" variant="outlined" />
                         </Box>
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ mb: 1 }}>
                             More customers reached and more returning customers raise your score.
                         </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            Reach score = your customers ÷ the typical restaurant's customers (1 = typical).
+                        </Typography>
+                        <BandTable title="Reach score intervals" bands={ratioBands} />
+                        <BandTable title="Loyalty intervals (customers who came back)" bands={loyaltyBands} />
                     </Box>
 
                     {/* Efficiency points section*/}
@@ -213,6 +265,7 @@ export const ScoreBreakdownFooter = () => {
                         <Typography variant="body2" sx={{ mb: 1 }}>
                             Earning more per day than your usual benchmark raises your score.
                         </Typography>
+                        <BandTable title="Efficiency score intervals" bands={efficiencyBands} />
                         <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", columnGap: 2, rowGap: 0.5 }}>
                             <Typography variant="caption" color="text.secondary">Efficiency score intervals</Typography>
                             <Typography variant="caption" color="text.secondary" textAlign="right">Points</Typography>
@@ -230,9 +283,13 @@ export const ScoreBreakdownFooter = () => {
                         <Box sx={{ mb: 1 }}>
                             <Chip label="Location 25%" size="small" color="primary" variant="outlined" />
                         </Box>
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ mb: 1 }}>
                             More nearby vendors of other types raise your score; more nearby restaurants lower it.
                         </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            Location score = your location net ÷ the typical restaurant's location net (1 = typical).
+                        </Typography>
+                        <BandTable title="Location score intervals" bands={locationBands} />
                     </Box>
                 </Box>
 
