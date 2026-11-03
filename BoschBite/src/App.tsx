@@ -9,7 +9,6 @@ import { BrowserRouter, Routes, Route, Outlet, Navigate, useNavigate } from "rea
 import { dataProvider } from "./providers/dataProvider";
 import { TransactionList, StudentList, PromoWindowList, ProfileList } from "../src/pages/posts";
 import { TransactionShow, StudentShow, PromoWindowShow } from "./pages/posts/show";
-import { PromoWindowEdit } from "./pages/posts/edit";
 import StorageIcon from "@mui/icons-material/Storage";
 import { DashboardPage } from "./pages/dashboard";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -557,7 +556,7 @@ SUPABASE AUTH PROVIDER
               { name: "student", list: "/student", show: "/student/show/:id", edit: "/student/edit/:id", meta: { label: "Students", parent: "BoschCard-data" } },
               //Adding the relevant CRUD pages to the second grouping using: meta: { label: "BoschBites data"}
               {
-                name: "promo_window_v2", list: "/promo_window_v2", show: "/promo_window_v2/show/:id", edit: "/promo_window_v2/edit/:id",
+                name: "promo_window_v2", list: "/promo_window_v2", show: "/promo_window_v2/show/:id",
                 meta: { label: "Promotion Window", parent: "BoschBites-data", canDelete: true }
               },
               { name: "profiles", list: "/profiles", meta: { label: "People", icon: <PersonAddAltIcon /> } },
@@ -627,7 +626,6 @@ SUPABASE AUTH PROVIDER
                 <Route path="/promo_window_v2">
                   <Route index element={<PromoWindowList />} />
                   <Route path="show/:id" element={<PromoWindowShow />} />
-                  <Route path="edit/:id" element={<PromoWindowEdit />} />
                 </Route>
 
 
