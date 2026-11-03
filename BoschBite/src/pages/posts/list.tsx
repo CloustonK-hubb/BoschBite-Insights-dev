@@ -577,7 +577,7 @@ export const ProfileList = () => {
       {/* Title and search */}
       <Box sx={peopleStyles.header}>
         <Box>
-          <Typography sx={peopleStyles.title}>People</Typography>
+          <Typography sx={peopleStyles.title}>Accounts</Typography>
           <Typography sx={peopleStyles.subtitle}>
             {isBosch ? "Approve new sign-ups and manage who has access." : "Manage the people in your company."}
           </Typography>
