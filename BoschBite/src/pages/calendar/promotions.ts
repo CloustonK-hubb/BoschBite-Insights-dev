@@ -1,5 +1,21 @@
 type Promotion = Record<string, unknown>;
 
+export const MANUAL_PROMOTION_KEYS_STORAGE = "boschbite.manualPromotionKeys";
+
+export const readManualPromotionKeys = () => {
+  if (typeof window === "undefined") return new Set<string>();
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(MANUAL_PROMOTION_KEYS_STORAGE) ?? "[]");
+    return new Set(Array.isArray(stored) ? stored.map(String) : []);
+  } catch {
+    return new Set<string>();
+  }
+};
+
+export const promotionKey = (row: Promotion) =>
+  row.promo_id != null ? String(row.promo_id)
+    : `${String(row.vendor_id ?? "")}-${String(row.promo_number ?? "")}`;
+
 const weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
 export const promotionRunsOnDay = (row: Promotion, day: Date) => {

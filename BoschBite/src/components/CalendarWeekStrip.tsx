@@ -3,7 +3,12 @@ import { useGetIdentity } from "@refinedev/core";
 import { Box, Button, Paper, Skeleton, Typography } from "@mui/material";
 import { supabaseClient } from "../providers/supabaseClient";
 import { insightsColours } from "../providers/theme";
-import { promotionRunsOnDay, selectDailyPromotions } from "../pages/calendar/promotions";
+import {
+  promotionKey,
+  promotionRunsOnDay,
+  readManualPromotionKeys,
+  selectDailyPromotions,
+} from "../pages/calendar/promotions";
 
 
 /*
@@ -108,6 +113,7 @@ export const CalendarWeekStrip = ({ start, today, onOpenCalendar }: { start: str
   const isVendor = identity?.role === "vendor_admin" || identity?.role === "vendor_manager";
   const [rows, setRows] = useState<CalendarRow[]>([]);
   const [promoRows, setPromoRows] = useState<CalendarRow[]>([]);
+  const [manualPromotionKeys] = useState(readManualPromotionKeys);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -142,7 +148,8 @@ export const CalendarWeekStrip = ({ start, today, onOpenCalendar }: { start: str
       //Like the calendar page: promotions that haven't started yet are not shown
       const promoData = ((promotions.data ?? []) as CalendarRow[]).filter((row) => {
         const promoStart = parseDate(row.start_date);
-        return promoStart != null && promoStart <= startOfToday();
+        return promoStart != null &&
+          (promoStart <= startOfToday() || manualPromotionKeys.has(promotionKey(row)));
       });
       if (promoData.length > 0) {
         //Vendor type for each promotion, so the same promotions are picked per day as on the calendar page
@@ -179,7 +186,10 @@ export const CalendarWeekStrip = ({ start, today, onOpenCalendar }: { start: str
       const day = new Date(Math.max(startDate.getTime(), firstDay.getTime()));
       const lastVisibleDay = new Date(Math.min(end.getTime(), lastDay.getTime()));
       while (day <= lastVisibleDay) {
-        if (!isPromotion || promotionRunsOnDay(row, day)) {
+        const isFutureDatabasePromotion = isPromotion &&
+          !manualPromotionKeys.has(promotionKey(row)) &&
+          day > startOfToday();
+        if (!isFutureDatabasePromotion && (!isPromotion || promotionRunsOnDay(row, day))) {
           events.set(dayKey(day), [...(events.get(dayKey(day)) ?? []), event]);
         }
         day.setDate(day.getDate() + 1);

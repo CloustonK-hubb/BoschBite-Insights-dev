@@ -38,7 +38,13 @@ import {
   pillButton,
   showStyles,
 } from "../../providers/theme";
-import { promotionRunsOnDay, selectDailyPromotions } from "./promotions";
+import {
+  MANUAL_PROMOTION_KEYS_STORAGE,
+  promotionKey,
+  promotionRunsOnDay,
+  readManualPromotionKeys,
+  selectDailyPromotions,
+} from "./promotions";
 
 /*
    CALENDAR PAGE
@@ -77,26 +83,10 @@ const PERIOD_COLORS = [
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const NO_END_DATE = "__no_end_date__";
-const MANUAL_PROMOTION_KEYS_STORAGE = "boschbite.manualPromotionKeys";
-
 /*
    SETTINGS
    Layout, colours and shared page styles live in providers/theme.ts.
  */
-
-const promotionKey = (row: CalendarRow) =>
-  row.promo_id != null ? String(row.promo_id)
-    : `${String(row.vendor_id ?? "")}-${String(row.promo_number ?? "")}`;
-
-const readManualPromotionKeys = () => {
-  if (typeof window === "undefined") return new Set<string>();
-  try {
-    const stored = JSON.parse(window.localStorage.getItem(MANUAL_PROMOTION_KEYS_STORAGE) ?? "[]");
-    return new Set(Array.isArray(stored) ? stored.map(String) : []);
-  } catch {
-    return new Set<string>();
-  }
-};
 
 const startOfToday = () => {
   const today = new Date();
@@ -386,7 +376,10 @@ export const CalendarPage = () => {
 
       while (day <= lastVisibleDay) {
         const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
-        if (!isPromotion || promotionRunsOnDay(row, day)) {
+        const isFutureDatabasePromotion = isPromotion &&
+          !addedPromoKeys.has(promotionKey(row)) &&
+          day > currentDate;
+        if (!isFutureDatabasePromotion && (!isPromotion || promotionRunsOnDay(row, day))) {
           events.set(key, [...(events.get(key) ?? []), event]);
         }
         day.setDate(day.getDate() + 1);
@@ -397,7 +390,7 @@ export const CalendarPage = () => {
       events.set(key, selectDailyPromotions(dayEvents));
     }
     return events;
-  }, [dateField, endDateField, rows, promoRows, visibleMonth]);
+  }, [addedPromoKeys, currentDate, dateField, endDateField, rows, promoRows, visibleMonth]);
 
   const gridDays = useMemo(() => {
     const first = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1);
