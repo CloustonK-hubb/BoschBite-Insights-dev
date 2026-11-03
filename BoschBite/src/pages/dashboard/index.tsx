@@ -1,6 +1,5 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  alpha,
   Alert,
   Box,
   Card,
@@ -24,9 +23,11 @@ import {
   PieChart,
   ChartsContainer,
 } from "@mui/x-charts";
+import { rainbowSurgePalette } from "@mui/x-charts/colorPalettes";
 import { useGo } from "@refinedev/core";
 import { useRpc } from "../../hooks/useRpc";
-import { insightsColours, chartColours, eventColours, insightsLayout, pageTitle, pageSubtitle } from "../../providers/theme";
+import { insightsColours, chartColours, insightsLayout, pageTitle, pageSubtitle } from "../../providers/theme";
+import { CalendarWeekStrip } from "../../components/CalendarWeekStrip";
 
 /* ---------- layout + colours ---------- */
 // Margins and colours now live in providers/theme.ts so the dashboard and leaderboard share them.
@@ -35,7 +36,10 @@ const LAYOUT_OFFSET_PX = insightsLayout.offsetPx;
 const SIDE_MARGIN = insightsLayout.sideMargin;
 const C = insightsColours;
 const CHART = chartColours;
-const EVENT_COLORS = eventColours;
+//Pie colours, the same MUI palette the pie used before, also used for its list of vendors
+const PIE_COLOURS = rainbowSurgePalette("light");
+//The "other vendors" slice
+const OTHER_COLOUR = "#CFC6C3";
 
 /* ---------- types returned by the SQL functions ---------- */
 type Cards = {
@@ -54,7 +58,6 @@ type Cards = {
 };
 type VendorSlice = { label: string; orders: number; share_pct: number; is_you: boolean };
 type HourRow = { hour: number; your_orders: number; market_avg_orders: number };
-type WeekRow = { day: string; events: string[]; period_type: string | null };
 
 /* ---------- date + number helpers (South African time) ---------- */
 const saDate = (d: Date) =>
@@ -87,17 +90,22 @@ const Panel = ({ children }: { children: ReactNode }) => (
   </Card>
 );
 
+//Key figure card: kept compact so the charts below get more room
 const Kpi = ({ title, value, note, badge, loading }: {
   title: string; value: string; note: string; badge?: string | null; loading: boolean;
 }) => (
-  <Panel>
-    <Typography variant="subtitle2" fontWeight={700}>{title}</Typography>
-    {loading ? <Skeleton width="70%" height={44} /> : (
-      <Typography variant="h4" fontWeight={900} letterSpacing={-1} lineHeight={1.15}>{value}</Typography>
-    )}
-    <Typography variant="body2" fontWeight={500}>{note}</Typography>
-    {badge && <Chip label={badge} size="small" sx={{ mt: 1, alignSelf: "flex-start", bgcolor: C.cream, fontWeight: 700 }} />}
-  </Panel>
+  <Card variant="outlined" sx={{ borderRadius: 4, borderColor: C.border, height: "100%" }}>
+    <CardContent sx={{ px: 2, py: 1.5, "&:last-child": { pb: 1.5 } }}>
+      <Typography variant="body2" fontWeight={700}>{title}</Typography>
+      {loading ? <Skeleton width="70%" height={36} /> : (
+        <Typography fontWeight={900} letterSpacing={-0.5} lineHeight={1.15} sx={{ fontSize: 28 }}>{value}</Typography>
+      )}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+        <Typography variant="body2" fontWeight={500}>{note}</Typography>
+        {badge && <Chip label={badge} size="small" sx={{ height: 22, bgcolor: C.cream, fontWeight: 700 }} />}
+      </Box>
+    </CardContent>
+  </Card>
 );
 
 const LegendKey = ({ colour, label, line }: { colour: string; label: string; line?: boolean }) => (
@@ -109,9 +117,25 @@ const LegendKey = ({ colour, label, line }: { colour: string; label: string; lin
   </Stack>
 );
 
+//Width and height of a box on the screen, so a chart can be drawn at exactly that size
+const useSize = <T extends HTMLElement>() => {
+  const ref = useRef<T | null>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setSize({ width: Math.floor(entry.contentRect.width), height: Math.floor(entry.contentRect.height) });
+    });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+  return { ref, ...size };
+};
+
 /* ---------- the page ---------- */
 export const DashboardPage = () => {
   const go = useGo();
+  const pieBox = useSize<HTMLDivElement>();
   const push = (to: string) => go({ to });
   const [day, setDay] = useState(() => saDate(new Date(Date.now() - 864e5))); // yesterday
   const today = addDays(day, 1);
@@ -119,18 +143,37 @@ export const DashboardPage = () => {
   const cards = useRpc<Cards>("bb_dashboard_cards", { p_day: day });
   const vendors = useRpc<VendorSlice>("bb_dashboard_orders_by_vendor", { p_day: day });
   const hours = useRpc<HourRow>("bb_dashboard_orders_by_hour", { p_day: day });
-  const week = useRpc<WeekRow>("bb_dashboard_week", { p_today: today });
 
   const k = cards.data?.[0];
-  const error = cards.error || vendors.error || hours.error || week.error;
+  const error = cards.error || vendors.error || hours.error;
 
-  const pieData = useMemo(
-    () => (vendors.data ?? []).map((s, i) => ({
-      id: i, value: s.orders, label: `${s.label} · ${s.share_pct}%`,
-    })),
-    [vendors.data],
-  );
+  //Pie slices: the top 3 vendors, you (when you're not in the top 3) and everyone else together
+  const pieData = useMemo(() => {
+    //The SQL already groups the smaller vendors into one "Other vendors" row, so it is never one of the top 3
+    const sorted = [...(vendors.data ?? [])].sort((a, b) => b.orders - a.orders);
+    const named = sorted.filter((s) => s.label !== "Other vendors");
+    const shown = named.slice(0, 3);
+    const you = sorted.find((s) => s.is_you);
+    if (you && !shown.includes(you)) shown.push(you);
+    const rest = sorted.filter((s) => !shown.includes(s));
+    //You always get the first colour, the other vendors the next ones
+    let next = 1;
+    const slices = shown.map((s, i) => ({
+      id: i, value: s.orders, label: `${s.label} · ${s.share_pct}%`, name: s.label, share: Number(s.share_pct),
+      colour: s.is_you ? PIE_COLOURS[0] : PIE_COLOURS[next++ % PIE_COLOURS.length], isYou: s.is_you,
+    }));
+    if (rest.length) {
+      const share = Math.round(rest.reduce((a, s) => a + Number(s.share_pct), 0) * 10) / 10;
+      slices.push({
+        id: slices.length, value: rest.reduce((a, s) => a + s.orders, 0),
+        label: `Other vendors · ${share}%`, name: "Other vendors", share,
+        colour: OTHER_COLOUR, isYou: false,
+      });
+    }
+    return slices;
+  }, [vendors.data]);
   const totalOrders = (vendors.data ?? []).reduce((a, s) => a + s.orders, 0);
+  const yourSlice = pieData.find((p) => p.isYou);
 
   const hourRows = (hours.data ?? []).filter((h) => h.hour >= 7 && h.hour <= 23);
   const yourPeak = hourRows.reduce<HourRow | null>((b, h) => (!b || h.your_orders > b.your_orders ? h : b), null);
@@ -154,7 +197,7 @@ export const DashboardPage = () => {
         <Box>
           <Typography sx={pageTitle}>Business Dashboard</Typography>
           <Typography sx={pageSubtitle}>
-            Restaurants &amp; Cafés market on BoschCard · {longDay(day)} · other vendors stay anonymous
+            Restaurant Market on BoschCard · {longDay(day)} · other vendors stay anonymous
           </Typography>
         </Box>
         <TextField
@@ -181,25 +224,25 @@ export const DashboardPage = () => {
         <Card sx={{ borderRadius: 4, bgcolor: C.yellow, boxShadow: "none" }}>
           <CardActionArea
             onClick={() => push("/leaderboard")}
-            sx={{ p: 2.5, height: "100%", display: "flex", flexDirection: "column", alignItems: "stretch", justifyContent: "flex-start" }}
+            sx={{ px: 2, py: 1.5, height: "100%", display: "flex", flexDirection: "column", alignItems: "stretch", justifyContent: "flex-start" }}
           >
-            <Typography variant="subtitle2" fontWeight={700}>Your vendor score</Typography>
-            {cards.loading ? <Skeleton width="60%" height={44} /> : (
-              <Typography variant="h4" fontWeight={900} letterSpacing={-1} lineHeight={1.15}>
+            <Typography variant="body2" fontWeight={700}>Your vendor score</Typography>
+            {cards.loading ? <Skeleton width="60%" height={36} /> : (
+              <Typography fontWeight={900} letterSpacing={-0.5} lineHeight={1.15} sx={{ fontSize: 28 }}>
                 {k?.your_score ?? "–"} <Typography component="span" variant="subtitle1" fontWeight={700}>/ 100</Typography>
               </Typography>
             )}
             <Typography variant="body2" fontWeight={600}>
               Rank {k?.your_rank ?? "–"} of {k?.vendors_ranked ?? "–"} · market average {k?.market_avg_score ?? "–"}
             </Typography>
-            <Box sx={{ position: "relative", mt: 1.25 }}>
+            <Box sx={{ position: "relative", mt: 0.75 }}>
               <LinearProgress variant="determinate" value={Number(k?.your_score ?? 0)}
                 sx={{ height: 8, borderRadius: 4, bgcolor: "#fff", "& .MuiLinearProgress-bar": { bgcolor: C.brown } }} />
               {k?.market_avg_score != null && (
                 <Box sx={{ position: "absolute", top: -4, bottom: -4, left: `${k.market_avg_score}%`, borderLeft: `2px dashed ${C.brown}` }} />
               )}
             </Box>
-            <Typography variant="body2" fontWeight={800} sx={{ mt: 1 }}>View leaderboard →</Typography>
+            <Typography variant="body2" fontWeight={800} sx={{ mt: 0.5 }}>View leaderboard →</Typography>
           </CardActionArea>
         </Card>
       </Box>
@@ -208,11 +251,35 @@ export const DashboardPage = () => {
       <Box sx={{ flex: 1, minHeight: 0, display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", lg: "2fr 3fr" } }}>
         <Panel>
           <Typography variant="subtitle1" fontWeight={800}>Orders by vendor</Typography>
-          <Typography variant="body2" fontWeight={500}>Share of {count(totalOrders)} restaurant &amp; café transactions</Typography>
-          <Box sx={{ flex: 1, minHeight: 0, mt: 1 }}>
-            {vendors.loading ? <Skeleton variant="circular" width={160} height={160} sx={{ m: "8px auto" }} /> : (
-              <PieChart series={[{ data: pieData, innerRadius: "45%", paddingAngle: 1, cornerRadius: 3 }]} />
+          <Typography variant="body2" fontWeight={500}>Share of {count(totalOrders)} restaurant transactions</Typography>
+          {/* Donut drawn at the exact size of its box so it is never cut off, your share in the middle */}
+          <Box ref={pieBox.ref} sx={{ flex: 1, minHeight: 0, mt: 1, position: "relative" }}>
+            {vendors.loading ? <Skeleton variant="circular" width={140} height={140} sx={{ m: "8px auto" }} /> : (
+              pieBox.width > 0 && pieBox.height > 0 && (
+                <>
+                  <PieChart width={pieBox.width} height={pieBox.height} hideLegend
+                            margin={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                            series={[{ data: pieData.map((p) => ({ id: p.id, value: p.value, label: p.label, color: p.colour })),
+                                       innerRadius: "62%", paddingAngle: 1, cornerRadius: 3 }]} />
+                  <Box sx={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                    <Typography variant="body2" fontWeight={800} sx={{ color: PIE_COLOURS[0] }}>You</Typography>
+                    <Typography fontWeight={900} letterSpacing={-0.5} lineHeight={1.1} sx={{ fontSize: 28 }}>
+                      {yourSlice ? `${yourSlice.share}%` : "0%"}
+                    </Typography>
+                    <Typography variant="caption" fontWeight={600} sx={{ color: C.taupe }}>of orders</Typography>
+                  </Box>
+                </>
+              )
             )}
+          </Box>
+          {/* The top 3 and everyone else as small chips in one or two rows under the donut */}
+          <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 0.75, mt: 1, flexShrink: 0 }}>
+            {pieData.filter((p) => !p.isYou).map((p) => (
+              <Chip key={p.id} size="small"
+                    icon={<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: p.colour, ml: "8px !important" }} />}
+                    label={`${p.name} ${p.share}%`}
+                    sx={{ bgcolor: C.cream, fontWeight: 700 }} />
+            ))}
           </Box>
         </Panel>
 
@@ -220,15 +287,17 @@ export const DashboardPage = () => {
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
             <Box>
               <Typography variant="subtitle1" fontWeight={800}>Orders by hour</Typography>
-              <Typography variant="body2" fontWeight={500}>Your orders against the average restaurant &amp; café</Typography>
+              <Typography variant="body2" fontWeight={500}>Your orders against the average restaurant</Typography>
             </Box>
             <Stack direction="row" spacing={2}>
               <LegendKey colour={CHART.market} label="Market average" />
               <LegendKey colour={CHART.you} label="You" line />
             </Stack>
           </Stack>
-          <Box sx={{ flex: 1, minHeight: 0 }}>
-            {hours.loading ? <Skeleton variant="rectangular" height="100%" sx={{ mt: 1, borderRadius: 2 }} /> : (
+          {/* The chart fills all the height the panel has left, so the y axis is as tall as possible */}
+          <Box sx={{ flex: 1, minHeight: 160, position: "relative", mt: 1 }}>
+            {hours.loading ? <Skeleton variant="rectangular" height="100%" sx={{ borderRadius: 2 }} /> : (
+              <Box sx={{ position: "absolute", inset: 0 }}>
               <ChartsContainer
                 margin={{ top: 16, right: 16, bottom: 28, left: 36 }}
                 xAxis={[{ id: "hours", scaleType: "band", data: hourRows.map((h) => hh(h.hour)) }]}
@@ -245,6 +314,7 @@ export const DashboardPage = () => {
                 <ChartsAxisHighlight x="band" />
                 <ChartsTooltip trigger="axis" />
               </ChartsContainer>
+              </Box>
             )}
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -262,7 +332,7 @@ export const DashboardPage = () => {
       {/* week strip */}
       <Box sx={{ flexShrink: 0 }}>
         <Panel>
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-end" sx={{ mb: 1.25 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-end" sx={{ mb: 0.75 }}>
             <Box>
               <Typography variant="subtitle1" fontWeight={800}>This week on campus</Typography>
               <Typography variant="body2" fontWeight={500}>Today and the next 6 days. Plan staff and stock around these.</Typography>
@@ -271,39 +341,8 @@ export const DashboardPage = () => {
               Full calendar →
             </Typography>
           </Stack>
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 1 }}>
-            {(week.data ?? []).map((d) => {
-              const isToday = d.day === today;
-              const date = new Date(`${d.day}T12:00:00Z`);
-              return (
-                <Box key={d.day} sx={{ bgcolor: C.cream, borderRadius: 3, p: 1.25, minHeight: 92, display: "flex", flexDirection: "column", gap: 0.5 }}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="caption" fontWeight={800} letterSpacing={0.5}>
-                      {date.toLocaleDateString("en-ZA", { weekday: "short", timeZone: "UTC" }).toUpperCase()}
-                    </Typography>
-                    {isToday
-                      ? <Chip size="small" label={`Today ${date.getUTCDate()}`} sx={{ height: 20, bgcolor: C.brown, color: C.cream, fontWeight: 800 }} />
-                      : <Typography variant="caption" fontWeight={700}>
-                          {date.toLocaleDateString("en-ZA", { day: "numeric", month: "short", timeZone: "UTC" })}
-                        </Typography>}
-                  </Stack>
-                {d.events.map((e) => {
-                  const kind = /exam/i.test(e) ? "exam" : /lecture|recess/i.test(e) ? "term" : "event";
-                  const colour = EVENT_COLORS[kind];
-                  return (
-                    <Box key={e} title={e} sx={{
-                      borderRadius: 2, px: 0.75, py: 0.25, fontSize: 12, fontWeight: 700, lineHeight: 1.3,
-                      bgcolor: alpha(colour, 0.15),
-                      borderLeft: `4px solid ${colour}`,
-                      color: C.brown,
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    }}>{e}</Box>
-                  );
-                })}
-                </Box>
-              );
-            })}
-          </Box>
+          {/* The same week view as the calendar page (components/CalendarWeekStrip.tsx) */}
+          <CalendarWeekStrip start={today} today={today} onOpenCalendar={() => push("/CalendarPage")} />
         </Panel>
       </Box>
     </Box>

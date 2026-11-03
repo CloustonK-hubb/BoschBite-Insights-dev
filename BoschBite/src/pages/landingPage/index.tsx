@@ -20,7 +20,8 @@ export const LandingPage = () => {
   //Constant variable required
   const { result, query } = useList({
     resource: "Vendor_logo",
-    pagination: { mode: "off" },
+    //selecting 15 logos to show in the carousel
+    pagination: { currentPage: 1, pageSize: 15 },
 
     });
     const logos = (result?.data ?? []).filter(

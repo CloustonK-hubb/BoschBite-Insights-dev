@@ -102,6 +102,13 @@ type ScoreRow = {
   efficiency_result: string | null;
   nearby_other_types: number | null;
   nearby_restaurants: number | null;
+  //Reach score: your students / the median restaurant's students this period
+  reach_ratio: number | null;
+  typical_reach: number | null;
+  //Nearby vendor mix (other vendor types nearby, each nearby restaurant counting against it) and its score against the median restaurant
+  location_net: number | null;
+  location_ratio: number | null;
+  typical_location: number | null;
 };
 
 
@@ -114,9 +121,26 @@ const rand = (n: number | null | undefined) =>
 
 const points = (n: number | null | undefined) => (n == null ? "–" : Number(n).toFixed(1));
 
-//Efficiency points keep up to 2 decimals (2.5, 6.25, 13.75, 21.25)
+//Part points keep up to 2 decimals (2.5, 6.25, 13.75, 21.25)
 const effPoints = (n: number | null | undefined) =>
   n == null ? "–" : String(Number(Number(n).toFixed(2)));
+
+//The interval a ratio score falls in (efficiency, reach and location use the same intervals)
+const ratioBand = (ratio: number) =>
+  ratio >= 2 ? "2.0 or more" : ratio >= 1.5 ? "1.5 - 1.999" : ratio >= 1.2 ? "1.2 - 1.499"
+    : ratio >= 1 ? "1.0 - 1.199" : ratio >= 0.8 ? "0.8 - 0.999" : ratio >= 0.5 ? "0.5 - 0.799" : "0 - 0.499";
+
+//The interval a loyalty percentage falls in
+const loyaltyBand = (pct: number) =>
+  pct >= 97 ? "97% or more" : pct >= 90 ? "90% - 96.9%" : pct >= 80 ? "80% - 89.9%"
+    : pct >= 70 ? "70% - 79.9%" : pct >= 55 ? "55% - 69.9%" : pct >= 40 ? "40% - 54.9%" : "0% - 39.9%";
+
+//A score against the median restaurant, for example "Reach score 1.54 (above 1)"
+const ratioScore = (name: string, ratio: number | null | undefined) =>
+  ratio == null ? `No ${name.toLowerCase()} data` : `${name} score ${String(Number(Number(ratio).toFixed(2)))} (${Number(ratio) >= 1 ? "above" : "below"} 1)`;
+
+//Signed whole number, for example +12 or -3
+const signed = (n: number | null | undefined) => (n == null ? "–" : `${Number(n) > 0 ? "+" : ""}${Math.round(Number(n))}`);
 
 //Exact efficiency score, up to 4 decimals (2.2861, 0.998, 1.05)
 const exact = (n: number) => String(Number(n.toFixed(4)));
@@ -291,10 +315,10 @@ const LeaderRow = ({ r }: { r: LeaderboardRow }) => (
         ]} />
       </Box>
       <Typography variant="caption" fontWeight={600} component="div">
-        <Dot colour={PART_COLOURS.reach}>Reach {points(r.reach_points)}</Dot>
-        <Dot colour={PART_COLOURS.loyalty}>Loyalty {points(r.loyalty_points)}</Dot>
+        <Dot colour={PART_COLOURS.reach}>Reach {effPoints(r.reach_points)}</Dot>
+        <Dot colour={PART_COLOURS.loyalty}>Loyalty {effPoints(r.loyalty_points)}</Dot>
         <Dot colour={PART_COLOURS.efficiency}>Efficiency {effPoints(r.efficiency_points)}</Dot>
-        <Dot colour={PART_COLOURS.location}>Location {points(r.location_points)}</Dot>
+        <Dot colour={PART_COLOURS.location}>Location {effPoints(r.location_points)}</Dot>
       </Typography>
     </Box>
     <Typography variant="h5" fontWeight={900} letterSpacing={-0.5} sx={{ flexShrink: 0 }}>
@@ -351,8 +375,15 @@ export const LeaderboardPage = () => {
         { key: "location" as const, label: "Location", value: Number(now.location_points ?? 0) },
       ]
     : [];
-  const strongest = parts.length ? parts.reduce((b, p) => (p.value > b.value ? p : b)) : null;
-  const weakest = parts.length ? parts.reduce((b, p) => (p.value < b.value ? p : b)) : null;
+  //Strongest part, every part with the highest points when they tie
+  const best = parts.length ? Math.max(...parts.map((p) => p.value)) : null;
+  const strongest = best == null ? null : parts.filter((p) => p.value === best).map((p) => p.label).join(" and ");
+  //Most room to grow: only the parts a vendor can change (location is where the restaurant is),
+  //every part with the lowest points when they tie
+  const changeable = parts.filter((p) => p.key !== "location");
+  const low = changeable.length ? Math.min(...changeable.map((p) => p.value)) : null;
+  const weakest = low == null || best == null || low >= best ? null
+    : changeable.filter((p) => p.value === low).map((p) => p.label).join(" and ");
 
 
   //Function to scroll to the score breakdown footer when the info icon is clicked
@@ -500,24 +531,26 @@ export const LeaderboardPage = () => {
                   ))}
                 </Typography>
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1.25, mb: 0.5 }}>
-                  {strongest && <Chip size="small" label={`Strongest: ${strongest.label}`} sx={{ bgcolor: alpha(C.up, 0.12), color: C.up, fontWeight: 700 }} />}
-                  {weakest && weakest.key !== strongest?.key && (
-                    <Chip size="small" label={`Most room to grow: ${weakest.label}`} sx={{ bgcolor: C.cream, fontWeight: 700 }} />
+                  {strongest && <Chip size="small" label={`Strongest: ${strongest}`} sx={{ bgcolor: alpha(C.up, 0.12), color: C.up, fontWeight: 700 }} />}
+                  {weakest && (
+                    <Chip size="small" label={`Most room to grow: ${weakest}`} sx={{ bgcolor: C.cream, fontWeight: 700 }} />
                   )}
                 </Box>
 
                 <ScorePart part="reach" icon={<CampaignOutlinedIcon fontSize="small" />} title="Reach"
-                           value={now.reach_points} pointsText={points(now.reach_points)}
-                           headline={`${now.customers_reached} students bought from you`}
-                           lastYear={ly && <>Last year: {ly.customers_reached} students · {points(ly.reach_points)} pts<Change now={now.reach_points} before={ly.reach_points} /></>}>
-                  Over {now.promo_days} day{now.promo_days === 1 ? "" : "s"} of discounted sales this period
+                           value={now.reach_points} pointsText={effPoints(now.reach_points)}
+                           headline={`${now.customers_reached} students bought from you · ${ratioScore("Reach", now.reach_ratio)}`}
+                           lastYear={ly && <>Last year: {ly.customers_reached} students · {ratioScore("Reach", ly.reach_ratio)} · {effPoints(ly.reach_points)} pts<Change now={now.reach_points} before={ly.reach_points} /></>}>
+                  <Box>The median restaurant reached {now.typical_reach ?? "–"} students this period, over {now.promo_days} day{now.promo_days === 1 ? "" : "s"} of discounted sales</Box>
+                  {now.reach_ratio != null && <Box>Interval {ratioBand(Number(now.reach_ratio))} → {effPoints(now.reach_points)} points</Box>}
                 </ScorePart>
 
                 <ScorePart part="loyalty" icon={<RepeatOutlinedIcon fontSize="small" />} title="Loyalty"
-                           value={now.loyalty_points} pointsText={points(now.loyalty_points)}
+                           value={now.loyalty_points} pointsText={effPoints(now.loyalty_points)}
                            headline={`${now.loyalty_pct ?? 0}% came back for more`}
-                           lastYear={ly && <>Last year: {ly.loyalty_pct ?? 0}% · {points(ly.loyalty_points)} pts<Change now={now.loyalty_points} before={ly.loyalty_points} /></>}>
-                  {now.returning_customers} of your {now.customers_reached} students bought 2 or more times
+                           lastYear={ly && <>Last year: {ly.loyalty_pct ?? 0}% · {effPoints(ly.loyalty_points)} pts<Change now={now.loyalty_points} before={ly.loyalty_points} /></>}>
+                  <Box>{now.returning_customers} of your {now.customers_reached} students bought 2 or more times</Box>
+                  {now.loyalty_pct != null && <Box>Interval {loyaltyBand(Number(now.loyalty_pct))} → {effPoints(now.loyalty_points)} points</Box>}
                 </ScorePart>
 
                 <ScorePart part="efficiency" icon={<BalanceOutlinedIcon fontSize="small" />} title="Efficiency"
@@ -543,10 +576,12 @@ export const LeaderboardPage = () => {
                 </ScorePart>
 
                 <ScorePart part="location" icon={<PlaceOutlinedIcon fontSize="small" />} title="Location"
-                           value={now.location_points} pointsText={points(now.location_points)}
-                           headline={`${now.nearby_other_types} other vendors and ${now.nearby_restaurants} restaurants nearby`}
-                           lastYear={ly && <>Last year: {points(ly.location_points)} pts<Change now={now.location_points} before={ly.location_points} /></>}>
-                  Within 300 m. Other vendor types bring new customers, other restaurants compete with you
+                           value={now.location_points} pointsText={effPoints(now.location_points)}
+                           headline={`${now.nearby_other_types} other vendors and ${now.nearby_restaurants} restaurants nearby · ${ratioScore("Location", now.location_ratio)}`}
+                           lastYear={ly && <>Last year: {effPoints(ly.location_points)} pts<Change now={now.location_points} before={ly.location_points} /></>}>
+                  <Box>Within 300 m. Other vendor types bring new customers, other restaurants compete with you</Box>
+                  <Box>Your nearby vendor mix {signed(now.location_net)} against {signed(now.typical_location)} for the median restaurant in the whole area.</Box>
+                  {now.location_ratio != null && <Box>Interval {ratioBand(Number(now.location_ratio))} → {effPoints(now.location_points)} points</Box>}
                 </ScorePart>
               </Panel>
             </>

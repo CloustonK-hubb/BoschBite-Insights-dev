@@ -77,6 +77,7 @@ const PERIOD_COLORS = [
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const NO_END_DATE = "__no_end_date__";
+const MANUAL_PROMOTION_KEYS_STORAGE = "boschbite.manualPromotionKeys";
 
 /*
    SETTINGS
@@ -86,6 +87,16 @@ const NO_END_DATE = "__no_end_date__";
 const promotionKey = (row: CalendarRow) =>
   row.promo_id != null ? String(row.promo_id)
     : `${String(row.vendor_id ?? "")}-${String(row.promo_number ?? "")}`;
+
+const readManualPromotionKeys = () => {
+  if (typeof window === "undefined") return new Set<string>();
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(MANUAL_PROMOTION_KEYS_STORAGE) ?? "[]");
+    return new Set(Array.isArray(stored) ? stored.map(String) : []);
+  } catch {
+    return new Set<string>();
+  }
+};
 
 const startOfToday = () => {
   const today = new Date();
@@ -210,20 +221,20 @@ export const CalendarPage = () => {
   const isVendor = identity?.role === "vendor_admin" || identity?.role === "vendor_manager";
   const [rows, setRows] = useState<CalendarRow[]>([]);
   const [loadedPromoRows, setPromoRows] = useState<CalendarRow[]>([]);
-  const [addedPromoKeys, setAddedPromoKeys] = useState<Set<string>>(new Set());
+  const [addedPromoKeys, setAddedPromoKeys] = useState<Set<string>>(readManualPromotionKeys);
+  const [currentDate, setCurrentDate] = useState(startOfToday);
   const promoRows = useMemo(
     () => {
       if (identityLoading || !identity) return [];
-      const today = startOfToday();
       const visibleRows = loadedPromoRows.filter((row) => {
         const start = parseDate(row.start_date);
-        return start != null && (start <= today || addedPromoKeys.has(promotionKey(row)));
+        return start != null && (start <= currentDate || addedPromoKeys.has(promotionKey(row)));
       });
       return isVendor
         ? visibleRows.filter((row) => identity.vendor_id != null && String(row.vendor_id) === String(identity.vendor_id))
         : visibleRows;
     },
-    [identityLoading, identity, isVendor, loadedPromoRows, addedPromoKeys],
+    [identityLoading, identity, isVendor, loadedPromoRows, addedPromoKeys, currentDate],
   );
   const [promoLoadError, setPromoLoadError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -250,6 +261,23 @@ export const CalendarPage = () => {
   const [promotionDiscount, setPromotionDiscount] = useState("");
   const [promotionWeekday, setPromotionWeekday] = useState("");
   const [promotionError, setPromotionError] = useState("");
+
+  useEffect(() => {
+    const refreshCurrentDate = () => setCurrentDate(startOfToday());
+    const timer = window.setInterval(refreshCurrentDate, 60_000);
+    window.addEventListener("focus", refreshCurrentDate);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshCurrentDate);
+    };
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      MANUAL_PROMOTION_KEYS_STORAGE,
+      JSON.stringify([...addedPromoKeys]),
+    );
+  }, [addedPromoKeys]);
 
   //Loads calendar events, promotions and vendor types for the signed-in account.
   useEffect(() => {
@@ -687,7 +715,7 @@ export const CalendarPage = () => {
                             height: 140,
                             boxSizing: "border-box",
                             border: 0,
-                            boxShadow: `inset 0 0 0 1px ${isToday ? C.brown : "rgba(128,128,128,0.25)"}`,
+                            boxShadow: "inset 0 0 0 1px rgba(128,128,128,0.25)",
                             borderRadius: 0,
                             bgcolor: inMonth ? "background.paper" : "action.hover",
                             cursor: "pointer",
@@ -705,6 +733,11 @@ export const CalendarPage = () => {
                             }}
                           >
                             {day.getDate()}
+                            {isToday && (
+                              <Box component="span" sx={{ display: "inline-block", ml: 0.75, fontWeight: 800, letterSpacing: 0.5 }}>
+                                TODAY
+                              </Box>
+                            )}
                           </Typography>
                           <Box
                             key={`${day.toISOString()}-${dateField}-${endDateField}`}

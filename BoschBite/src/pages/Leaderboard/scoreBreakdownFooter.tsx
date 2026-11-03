@@ -7,7 +7,6 @@ import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
 import BalanceOutlinedIcon from "@mui/icons-material/BalanceOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
-import Chip from "@mui/material/Chip";
 import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
 
 
@@ -69,17 +68,45 @@ const scoreParts = [
     { label: "Location", weight: 25 },
 ];
 
-//defining the different intervals for efficiency scores and the points associated with that interval. 
-const efficiencyBands = [
-    { range: "No benchmark available", points: "0" },
-    { range: "0 to 4.99", points: "2.5" },
-    { range: "0.5 to 7.99", points: "6.25" },
-    { range: "0.8 to 0.99", points: "10" },
-    { range: "1.0 to 1.199", points: "13.75" },
-    { range: "1.2 to under 1.499", points: "17.5" },
-    { range: "1.5 to under 1.99", points: "21.25" },
+//defining the score intervals and the points associated with each interval.
+//Efficiency, reach and location use the same intervals (1 = normal), loyalty uses percentages.
+const ratioBands = [
+    { range: "0 - 0.499", points: "2.5" },
+    { range: "0.5 - 0.799", points: "6.25" },
+    { range: "0.8 - 0.999", points: "10" },
+    { range: "1.0 - 1.199", points: "13.75" },
+    { range: "1.2 - 1.499", points: "17.5" },
+    { range: "1.5 - 1.999", points: "21.25" },
     { range: "2.0 or more", points: "25" },
 ];
+
+const efficiencyBands = [{ range: "No benchmark available", points: "0" }, ...ratioBands];
+
+const locationBands = [{ range: "No location available", points: "0" }, ...ratioBands];
+
+const loyaltyBands = [
+    { range: "0% - 39.9%", points: "2.5" },
+    { range: "40% - 54.9%", points: "6.25" },
+    { range: "55% - 69.9%", points: "10" },
+    { range: "70% - 79.9%", points: "13.75" },
+    { range: "80% - 89.9%", points: "17.5" },
+    { range: "90% - 96.9%", points: "21.25" },
+    { range: "97% or more", points: "25" },
+];
+
+//Table of intervals and their points, used for every part of the score
+const BandTable = ({ title, bands }: { title: string; bands: { range: string; points: string }[] }) => (
+    <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", columnGap: 2, rowGap: 0.5, mb: 1.5 }}>
+        <Typography variant="caption" color="text.secondary">{title}</Typography>
+        <Typography variant="caption" color="text.secondary" textAlign="right">Points</Typography>
+        {bands.map((band) => (
+            <Box key={band.range} sx={{ display: "contents" }}>
+                <Typography variant="body2">{band.range}</Typography>
+                <Typography variant="body2" textAlign="right">{band.points}</Typography>
+            </Box>
+        ))}
+    </Box>
+);
 
 //Represents the actual content inside the three columns of the footer component: text for reach and loyatly, the efficiency table and the location points
 //This part uses the building blocks from the previous code block 
@@ -132,13 +159,13 @@ export const ScoreBreakdownFooter = () => {
                     <GreyCard>
                         <Typography variant="body2" fontWeight={500}>Reach</Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Total customers the promotion reached
+                            Total customers the promotion reached, compared with the median restaurant in the same period
                         </Typography>
                     </GreyCard>
                     <GreyCard>
                         <Typography variant="body2" fontWeight={500}>Loyalty</Typography>
                         <Typography variant="body2" color="text.secondary">
-                            How many of those customers came back during the promotion period
+                            The share of those customers who came back (2 or more purchases) during the promotion period
                         </Typography>
                     </GreyCard>
                 </Box>
@@ -175,18 +202,26 @@ export const ScoreBreakdownFooter = () => {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         Compares each restaurant's address with the vendors around it.
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         If the restaurant is in the vicinity of other vendor types, this could promote
                         cross-spending and bring in a new customer base, as well as potentially provide
                         opportunities for promotions.
                     </Typography>
+                    <GreyCard>
+                        <Typography variant="body2" fontWeight={500}>Nearby vendor mix</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            We count the vendors near you (within 300 m) that aren't restaurants. Each nearby restaurant
+                            counts against you, because it competes for the same customers. Your mix is then compared
+                            with the median restaurant on campus
+                        </Typography>
+                    </GreyCard>
                 </Box>
             </Box>
 
 
             {/* Score breakdown row; final section of the footer */}
             <Box sx={{ borderTop: 1, borderColor: "divider" }}>
-                <Box sx={{ px: 2, pt: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ px: 2, py: 1.5, display: "flex", alignItems: "center", gap: 1, borderBottom: 1, borderColor: "divider" }}>
                     <EmojiEventsOutlinedIcon fontSize="small" color="action" />
                     <Typography variant="subtitle2" color="text.secondary">
                         How each part affects your overall score (out of 100)
@@ -196,43 +231,33 @@ export const ScoreBreakdownFooter = () => {
                 {/* Promtional effectiveness score section */}
                 <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" } }}>
                     <Box sx={{ p: 2, borderRight: { md: 1 }, borderColor: "divider" }}>
-                        <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
-                            <Chip label="Reach 25%" size="small" color="primary" variant="outlined" />
-                            <Chip label="Loyalty 25%" size="small" color="primary" variant="outlined" />
-                        </Box>
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ mb: 1 }}>
                             More customers reached and more returning customers raise your score.
                         </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            Reach score = your customers ÷ the median restaurant's customers (1 = the same as the median).
+                        </Typography>
+                        <BandTable title="Reach score intervals" bands={ratioBands} />
+                        <BandTable title="Loyalty intervals (customers who came back)" bands={loyaltyBands} />
                     </Box>
 
                     {/* Efficiency points section*/}
                     <Box sx={{ p: 2, borderRight: { md: 1 }, borderColor: "divider" }}>
-                        <Box sx={{ mb: 1 }}>
-                            <Chip label="Efficiency 25%" size="small" color="primary" variant="outlined" />
-                        </Box>
                         <Typography variant="body2" sx={{ mb: 1 }}>
                             Earning more per day than your usual benchmark raises your score.
                         </Typography>
-                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", columnGap: 2, rowGap: 0.5 }}>
-                            <Typography variant="caption" color="text.secondary">Efficiency score intervals</Typography>
-                            <Typography variant="caption" color="text.secondary" textAlign="right">Points</Typography>
-                            {efficiencyBands.map((band) => (
-                                <Box key={band.range} sx={{ display: "contents" }}>
-                                    <Typography variant="body2">{band.range}</Typography>
-                                    <Typography variant="body2" textAlign="right">{band.points}</Typography>
-                                </Box>
-                            ))}
-                        </Box>
+                        <BandTable title="Efficiency score intervals" bands={efficiencyBands} />
                     </Box>
 
                     {/* Location points section */}
                     <Box sx={{ p: 2 }}>
-                        <Box sx={{ mb: 1 }}>
-                            <Chip label="Location 25%" size="small" color="primary" variant="outlined" />
-                        </Box>
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ mb: 1 }}>
                             More nearby vendors of other types raise your score; more nearby restaurants lower it.
                         </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            Location score = your nearby vendor mix ÷ the median restaurant's nearby vendor mix (1 = the same as the median).
+                        </Typography>
+                        <BandTable title="Location score intervals" bands={locationBands} />
                     </Box>
                 </Box>
 

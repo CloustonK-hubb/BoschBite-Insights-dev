@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Refine, type AuthProvider, Authenticated, } from "@refinedev/core";
+import { Refine, type AuthProvider, Authenticated, useForgotPassword } from "@refinedev/core";
 import { ThemedLayout, ErrorComponent, RefineThemes, useNotificationProvider, RefineSnackbarProvider, AuthPage, ThemedSider } from "@refinedev/mui";
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
@@ -34,6 +34,8 @@ import { TopBar } from "./components/TopBar";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import { DemandForecastPage } from "./pages/DemandForecast";
 import { queryClient } from "./queryClient";
+import { Alert, Button, Card, CardContent, Link, TextField } from "@mui/material";
+import { Link as RouterLink } from "react-router";
 
 
 
@@ -171,6 +173,154 @@ const authPageProps = {
       "& .MuiLink-root": { color: "#382322" },
     },
   },
+};
+
+// Forgot password page: sends the reset email and prevents repeated requests for 1 minute
+
+const ForgotPasswordPage = () => {
+  const [email, setEmail] = useState("");
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [emailSent, setEmailSent] = useState(false);
+
+  const { mutate: sendInstructions, isPending } =
+    useForgotPassword<{ email: string }>();
+
+  const storageKey =
+    `boschbite-password-reset:${email.trim().toLowerCase()}`;
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const until = Number(localStorage.getItem(storageKey) ?? 0);
+      const remaining = Math.max(
+        0,
+        Math.ceil((until - Date.now()) / 1000),
+      );
+
+      setSecondsLeft(remaining);
+
+      if (until && remaining === 0) {
+        localStorage.removeItem(storageKey);
+      }
+    };
+
+    updateCountdown();
+
+    const timer = window.setInterval(updateCountdown, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [storageKey]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    sendInstructions(
+      { email: email.trim() },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            localStorage.setItem(
+              storageKey,
+              String(Date.now() + 60_000),
+            );
+            setSecondsLeft(60);
+            setEmailSent(true);
+          }
+        },
+      },
+    );
+  };
+
+  return (
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        p: 2,
+        background:
+          "radial-gradient(circle at 50% 35%, #fbf4e9 0%, #f1e5d5 55%, #e8d8c0 100%)",
+      }}
+    >
+      <Card
+        sx={{
+          width: "100%",
+          maxWidth: 440,
+          borderRadius: 5,
+          boxShadow: "0 20px 50px rgba(56, 35, 34, 0.12)",
+        }}
+      >
+        <CardContent sx={{ p: 5 }}>
+          <Typography
+            variant="h1"
+            sx={{ mb: 1, fontSize: 26, fontWeight: 800, textAlign: "center" }}
+
+          >
+            Forgot password?
+          </Typography>
+
+          <Typography sx={{ mb: 3 }}>
+            Enter your email address and we’ll send password reset instructions.
+          </Typography>
+
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              required
+              type="email"
+              label="Email"
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                setEmailSent(false);
+              }}
+              sx={{ mb: 2 }}
+            />
+
+            <Button
+              fullWidth
+              type="submit"
+              disabled={isPending || secondsLeft > 0}
+              sx={{
+                borderRadius: 999,
+                py: 1.25,
+                fontWeight: 700,
+                color: "#f1e5d5",
+                backgroundColor: "#382322",
+                opacity: secondsLeft > 0 ? 0.55 : 1,
+                "&:hover": { backgroundColor: "#4d3130" },
+                "&.Mui-disabled": {
+                  color: "#f1e5d5",
+                  backgroundColor: "#382322",
+                  opacity: 0.55,
+                },
+              }}
+            >
+              {isPending
+                ? "Sending..."
+                : secondsLeft > 0
+                  ? `Try again in ${secondsLeft}s`
+                  : "Send instructions"}
+            </Button>
+
+            {emailSent && (
+              <Alert severity="success" role="status" sx={{ mt: 2 }}>
+                If this email is registered, reset instructions have been sent.
+                Please wait 1 minute before trying again.
+              </Alert>
+            )}
+          </Box>
+
+          <Link
+            component={RouterLink}
+            to="/login"
+            sx={{ display: "block", mt: 3, textAlign: "center" }}
+          >
+            Back to Sign In
+          </Link>
+        </CardContent>
+      </Card>
+    </Box>
+  );
 };
 
 const App: React.FC = () => {
@@ -542,7 +692,7 @@ SUPABASE AUTH PROVIDER
               { name: "dashboard", list: "/dashboard", meta: { label: "Business Dashboard", icon: <InsightsIcon /> } },
               { name: "CalendarPage", list: "/CalendarPage", meta: { label: "Calendar", icon: <CalendarMonthIcon /> } },
               { name: "Leaderboard", list: "/leaderboard", meta: { label: "Leaderboard", icon: <LeaderboardIcon /> } },
-              { name: "DemandForecastPage", list: "/DemandForecastPage", meta: { label: "Demand forecast (BETA)", icon: <QueryStatsIcon /> } },
+              { name: "DemandForecastPage", list: "/DemandForecastPage", meta: { label: "Demand Forecast", icon: <QueryStatsIcon />, beta: true } },
               { name: "my-profile", list: "/my-profile", meta: { label: "My Profile", icon: <AccountCircleIcon /> } },
               { name: "help", list: "/help", meta: { label: "Help", icon: <HelpOutlineIcon /> } },
               { name: "help-requests", list: "/help-requests", meta: { label: "Help Requests", icon: <SupportAgentIcon /> } },
@@ -559,7 +709,7 @@ SUPABASE AUTH PROVIDER
                 name: "promo_window_v2", list: "/promo_window_v2", show: "/promo_window_v2/show/:id",
                 meta: { label: "Promotion Window", parent: "BoschBites-data", canDelete: true }
               },
-              { name: "profiles", list: "/profiles", meta: { label: "People", icon: <PersonAddAltIcon /> } },
+              { name: "profiles", list: "/profiles", meta: { label: "Accounts", icon: <PersonAddAltIcon /> } },
             ]}
             options={{
               syncWithLocation: true,
@@ -661,7 +811,7 @@ SUPABASE AUTH PROVIDER
                 <Route path="/register" element={<Register />} />
                 <Route
                   path="/forgot-password"
-                  element={<AuthPage type="forgotPassword" {...authPageProps} />}
+                  element={<ForgotPasswordPage />}
                 />
 
               </Route>

@@ -438,7 +438,7 @@ export const customTheme = createTheme({
         rowHeight: 48,
         columnHeaderHeight: 52,
         disableRowSelectionOnClick: true,
-        disableColumnMenu: true,
+        //disableColumnMenu: true,
       },
       //Tables: one white rounded card with thin lines between the rows (matches the People page)
       styleOverrides: {

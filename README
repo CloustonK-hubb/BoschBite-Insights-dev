@@ -13,12 +13,65 @@ The adaption document is included in ADAPTION.md which will explain how we adapt
 Before you begin pelase ensure the following is installed on your computer:
 
 | Requirement | Notes |
+| ------------| ----- |
 | Node.js | Download from nodejs.org. npm is installed automatically with Node.js|
-| Git | Needed to cloe the repository |
+| Git | Needed to clone the repository |
 | A web browser | E.g Chrome, Edge, Safari, Firefox. The app was mainly tested through Chrome and Edge |
 
 To check that Node.js and npm are installed, please run: 
+```
 node -v 
 npm -v
-in your terminal.
+```
+in either your codespace or computers  terminal.  
 Both commands should print a version number. If a version number is not returned these requirements may not yet be installed. 
+> **Note :** you do not need to set up Supabase. The app connects to our existing Supabase project, and all tables, data and security rules are already in place. This happens through the VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set in .env
+
+## 2. Installation 
+### Step 1: Close the Github repository from the Github bundle 
+Open a terminal in the folder where the bundle file is saved and run:
+```
+git clone group6-honours-2026.bundle BoschBite-Insights-dev
+cd BoschBite-Insights-dev
+git checkout main
+```
+This creates a normal project folder called `BoschBite-Insights-dev` from the bundle and makes sure you are in the *main* branch 
+
+### Step 2: Go into the app folder 
+The app is installed inside the `BoschBite` folder, hence direct yourself into this folder using:
+```
+cd BoschBite
+```
+### Step 3: Install the dependencies 
+Once directed into the `BoschBite` folder, use:
+```
+npm install
+```
+This installs all the packages the app needs (including Refine and MUI).  
+npm reads the `package.json` to see which packages the app requires, and `package-lock.json` to install the exact version needed.
+> **Note :**  please use npm (over yarn) so that the versions in `package-lock.json` are used. 
+
+## 3. Running the app
+From inside the `BoschBite` folder, run: 
+```
+npm run dev
+```
+Then open the following address in your browser:
+http://localhost:5173/ 
+The app will open to the landing page, where you will be able to then sign in or sign up.
+To stop the app, please select Ctrl + C in the terminal. 
+> **Note :** Each time you want to run the app again, open the terminal, make sure to `cd` into the `BoschBite` file (if you are not already), and run npm run dev
+
+## 4. Test accounts 
+You can use the following test accounts to sign in. Each account has a different role, so the data and the functionality will change.  
+| Role | Email | Password|
+| ---- | ----- | ------- |
+|BoschBite admin | 	ukho@boschbite.com | helloworld|
+| Vendor admin | john@tbk.com | helloworld |
+| Vendor admin | bensom@fk.com | helloworld |
+| Vendor admin | liebeviljoen@hat.com | helloworld |
+| Vendor manager | tanyasmit@tw.com | helloworld |
+| Vendor manager | abbylr@hat.com | helloworld |
+> **Note :** These accounts are given simply for testing purposes. There are more accounts to test with, which can be found in the `profiles` table in *Supabase*.   
+> These above example accounts were included  to present each level of functionality and allow for comparions between vendors.  
+> One admin account is available to verify accounts and view all data on the BoschBites app. There are 3 different Vendor Admin accounts provided to allow for comparison between different vendor admins and hence show the RLS functionality across vendors. Two vendor manager accounts are provided. One aligns with the respective vendor admin account to directly compare the view and functionality between a vendor admin and manager for the same vendor. The second vendor manager account always for comparison between different vendors at a manager level. 
